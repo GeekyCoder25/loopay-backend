@@ -28,6 +28,7 @@ const handlephoneNumber = (req, res) => {
 };
 
 exports.registerAccount = (req, res) => {
+	console.log(req.body);
 	handlephoneNumber(req, res);
 	User.create(req.body)
 		.then(data =>

@@ -7,10 +7,7 @@ const authRoutes = require('./routes/authRoutes');
 dotEnv.config();
 const PORT = process.env.PORT;
 // const dbURI = 'mongodb://127.0.0.1:27017/item7';
-const dbURI =
-	process.env.NODE_ENV === 'development' &&
-	// ? 'mongodb://127.0.0.1:27017/loopay'
-	process.env.MONGO_URI;
+const dbURI = process.env.MONGO_URI;
 const app = express();
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());

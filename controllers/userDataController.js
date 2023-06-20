@@ -28,7 +28,6 @@ const postUserData = async (req, res) => {
 };
 
 const putUserData = async (req, res) => {
-	console.log('put', req.body);
 	if (req.user) {
 		try {
 			const userData = await UserDataModel.updateOne(

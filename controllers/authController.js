@@ -51,66 +51,64 @@ const registerAccount = async (req, res) => {
 		const hash = await bcrypt.hash(password, salt);
 		req.body.password = hash;
 	}
-
-	User.create(req.body)
-		.then(data => {
-			const {email, fullName, userName, phoneNumber} = data;
-			res.status(200).json({
-				success: 'Account Created Successfully',
-				data: {
-					email,
-					fullName,
-					userName,
-					phoneNumber,
-					token: generateToken(data._id),
-				},
-			});
-		})
-		.catch(err => {
-			console.log(err);
-			if (err.code === 11000) {
-				res.status(400).json({
-					[Object.keys(err.keyPattern)[0]]:
-						Object.keys(err.keyPattern)[0] === 'email'
-							? 'Email has already been used with another account'
-							: 'Phone number has already been used with another account',
-				});
-			} else if (err.message.includes('user validation failed')) {
-				const errors = handleErrors(err);
-				res
-					.status(400)
-					.json({[Object.keys(errors)[0]]: Object.values(errors)[0]});
-			}
+	try {
+		const result = await User.create(req.body);
+		const {email, fullName, userName, phoneNumber} = result;
+		res.status(200).json({
+			success: 'Account Created Successfully',
+			data: {
+				email,
+				fullName,
+				userName,
+				phoneNumber,
+				token: generateToken(result._id),
+			},
 		});
+	} catch (err) {
+		console.log(err);
+		if (err.code === 11000) {
+			res.status(400).json({
+				[Object.keys(err.keyPattern)[0]]:
+					Object.keys(err.keyPattern)[0] === 'email'
+						? 'Email has already been used with another account'
+						: 'Phone number has already been used with another account',
+			});
+		} else if (err.message.includes('user validation failed')) {
+			const errors = handleErrors(err);
+			res
+				.status(400)
+				.json({[Object.keys(errors)[0]]: Object.values(errors)[0]});
+		}
+	}
 };
 
-const loginAccount = (req, res) => {
-	User.findOne({email: req.body.email})
-		.then(result => {
-			if (result === null) throw '';
-			else if (!bcrypt.compare(req.body.password, result.password))
-				res.status(400).json({password: 'Incorect Password'});
-			else {
-				res.status(200).json({
-					data: {
-						email: result.email,
-						phoneNumber: result.phoneNumber,
-						fullName: result.fullName,
-						token: generateToken(result._id),
-					},
-				});
-			}
-		})
-		.catch(err => {
-			res.status(400).json({email: 'No account is associated with this email'});
-			console.log(err);
-		});
+const loginAccount = async (req, res) => {
+	const result = await User.findOne({email: req.body.email});
+	const compare = await bcrypt.compare(req.body.password, result.password);
+	try {
+		if (result === null) throw '';
+		else if (!compare) res.status(400).json({password: 'Incorect Password'});
+		else {
+			res.status(200).json({
+				data: {
+					email: result.email,
+					phoneNumber: result.phoneNumber,
+					fullName: result.fullName,
+					token: generateToken(result._id),
+				},
+			});
+		}
+	} catch (err) {
+		res.status(400).json({email: 'No account is associated with this email'});
+		console.log(err);
+	}
 };
 const forgetPassword = (req, res) => {
 	let otpCode = '';
 	for (let i = 0; i < 4; i++) {
 		otpCode += _.random(9);
 	}
+	console.log(otpCode);
 	User.findOne({email: req.body.email})
 		.then(result => {
 			if (result === null) throw '';

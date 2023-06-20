@@ -1,16 +1,19 @@
 const User = require('../models/user');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const {isStrongPassword} = require('validator');
+const {protect} = require('../middleware/authMiddleware');
 
 const handleErrors = err => {
 	let errors = {};
-	console.log(err.message, err.code);
 	Object.values(err.errors).forEach(({properties}) => {
 		errors[properties.path] = properties.message;
 	});
 	return errors;
 };
 
-const handlephoneNumber = (req, res) => {
+const handlephoneNumber = req => {
 	if (req.body.phoneNumber.startsWith('0')) {
 		const tempNumber = req.body.phoneNumber.replace('0', '+234');
 		req.body.phoneNumber = tempNumber;
@@ -27,23 +30,44 @@ const handlephoneNumber = (req, res) => {
 	}
 };
 
-exports.registerAccount = (req, res) => {
-	console.log(req.body);
-	handlephoneNumber(req, res);
+// console.log(app);
+// protect();
+const registerAccount = async (req, res) => {
+	// handlephoneNumber(req);
+	const {password} = req.body;
+	const passowrdSecurityOptions = {
+		minLength: 6,
+		minLowercase: 1,
+		minUppercase: 0,
+		minNumbers: 1,
+		minSymbols: 0,
+	};
+	if (!isStrongPassword(password, passowrdSecurityOptions)) {
+		return res.status(400).json({
+			password: 'Please input a stronger password',
+		});
+	} else if (password) {
+		const salt = await bcrypt.genSalt(10);
+		const hash = await bcrypt.hash(password, salt);
+		req.body.password = hash;
+	}
+
 	User.create(req.body)
-		.then(data =>
+		.then(data => {
+			const {email, fullName, userName, phoneNumber} = data;
 			res.status(200).json({
 				success: 'Account Created Successfully',
 				data: {
-					email: data.email,
-					fullName: data.fullName,
-					userName: data.userName,
-					phoneNumber: data.phoneNumber,
+					email,
+					fullName,
+					userName,
+					phoneNumber,
+					token: generateToken(data._id),
 				},
-			})
-		)
+			});
+		})
 		.catch(err => {
-			// process.env.NODE_ENV === 'development' && console.log(err);
+			console.log(err);
 			if (err.code === 11000) {
 				res.status(400).json({
 					[Object.keys(err.keyPattern)[0]]:
@@ -60,17 +84,19 @@ exports.registerAccount = (req, res) => {
 		});
 };
 
-exports.loginAccount = (req, res) => {
+const loginAccount = (req, res) => {
 	User.findOne({email: req.body.email})
 		.then(result => {
 			if (result === null) throw '';
-			else if (req.body.password !== result.password)
+			else if (!bcrypt.compare(req.body.password, result.password))
 				res.status(400).json({password: 'Incorect Password'});
 			else {
 				res.status(200).json({
 					data: {
 						email: result.email,
+						phoneNumber: result.phoneNumber,
 						fullName: result.fullName,
+						token: generateToken(result._id),
 					},
 				});
 			}
@@ -80,14 +106,11 @@ exports.loginAccount = (req, res) => {
 			console.log(err);
 		});
 };
-
-exports.forgetPassword = (req, res) => {
-	console.log(req.body);
+const forgetPassword = (req, res) => {
 	let otpCode = '';
 	for (let i = 0; i < 4; i++) {
 		otpCode += _.random(9);
 	}
-	console.log(otpCode);
 	User.findOne({email: req.body.email})
 		.then(result => {
 			if (result === null) throw '';
@@ -104,4 +127,14 @@ exports.forgetPassword = (req, res) => {
 			res.status(400).json({email: 'No account is associated with this email'});
 			console.log(err);
 		});
+};
+
+const generateToken = id => {
+	// eslint-disable-next-line no-undef
+	return jwt.sign({id}, process.env.JWT_SECRET, {expiresIn: '30d'});
+};
+module.exports = {
+	registerAccount,
+	loginAccount,
+	forgetPassword,
 };

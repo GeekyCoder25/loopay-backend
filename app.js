@@ -1,10 +1,15 @@
+/* eslint-disable no-undef */
 const express = require('express');
 const cors = require('cors');
 const dotEnv = require('dotenv');
 const mongoose = require('mongoose');
 const authRoutes = require('./routes/authRoutes');
 const userDataRoutes = require('./routes/userDataRoutes');
+const path = require('path');
+const fileUpload = require('express-fileupload');
+const cloudinary = require('cloudinary').v2;
 const {protect} = require('./middleware/authMiddleware');
+const {uploadPhoto} = require('./controllers/uploadPhoto');
 require('colors');
 
 dotEnv.config();
@@ -16,6 +21,8 @@ const app = express();
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 app.use(cors());
+app.use(fileUpload());
+app.use(express.static(path.join(__dirname, 'public')));
 mongoose
 	.connect(dbURI, {
 		useNewUrlParser: true,
@@ -33,6 +40,14 @@ mongoose
 		console.log("Couldn't connect to MonogoDB,".red.bold, err.message.red)
 	);
 
+// Cloudinary configuration
+cloudinary.config({
+	cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+	api_key: process.env.CLOUDINARY_API_KEY,
+	api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+app.post('/api/upload', protect, uploadPhoto);
 app.use('/api/auth', authRoutes);
 // app.use('/api', userDataRoutes);
 app.use('/api/user', protect, userDataRoutes);

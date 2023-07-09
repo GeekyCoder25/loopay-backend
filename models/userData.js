@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const {isEmail} = require('validator');
+// const UserProfile = require('./userProfile');
+const {isMobilePhone} = require('validator');
 
 const UserDataSchema = new Schema(
 	{
@@ -11,14 +13,27 @@ const UserDataSchema = new Schema(
 			validate: [isEmail, 'Invalid email address'],
 		},
 		userProfile: {
-			fullName: String,
-			userName: String,
-			phoneNumber: {
-				type: String,
-				unique: true,
+			type: {
+				firstName: String,
+				lastName: String,
+				userName: String,
+				dob: String,
+				phoneNumber: {
+					type: String,
+					required: [true, 'Please input your phone number'],
+					unique: true,
+					validate: [isMobilePhone, 'Invalid phone number'],
+				},
+				address: String,
+				city: String,
+				state: String,
+				zipCode: Number,
 			},
+			required: true,
 		},
-		accountType: String,
+		pin: String,
+		accNo: Number,
+		accountType: {type: String, enum: ['Personal', 'Business']},
 		currencies: [
 			{
 				currency: String,
@@ -30,6 +45,9 @@ const UserDataSchema = new Schema(
 			},
 		],
 		verficationStaus: Boolean,
+		notificationLength: Number,
+		photo: String,
+		photoURL: String,
 	},
 	{timestamps: true}
 );

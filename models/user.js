@@ -3,9 +3,13 @@ const Schema = mongoose.Schema;
 const {isEmail, isMobilePhone} = require('validator');
 const UserSchema = new Schema(
 	{
-		fullName: {
+		firstName: {
 			type: String,
-			required: [true, 'Please input Your first and last name'],
+			required: [true, 'Please input Your first name'],
+		},
+		lastName: {
+			type: String,
+			required: [true, 'Please input Your last name'],
 		},
 		userName: {
 			type: String,
@@ -33,6 +37,7 @@ const UserSchema = new Schema(
 			required: [true, 'Please input a password'],
 			minlength: [6, 'Your password must be at least 6 characters'],
 		},
+		otpCode: String,
 	},
 	{timestamps: true}
 );

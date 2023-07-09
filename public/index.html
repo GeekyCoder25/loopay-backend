@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Loopay API Documentation</title>
+	</head>
+	<body
+		style="font-family: 'Times New Roman', Times, serif; text-align: center"
+	>
+		<h1>Loopay API Documentation in progress</h1>
+
+		<div style="line-height: 30px; font-family: Arial, Helvetica, sans-serif">
+			<div style="text-align: center; transform: translateX(-100px)">
+				<img
+					src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.svg"
+					style="width: 200px; margin: 50px auto"
+				/>
+			</div>
+			<p>
+				Your One Time Password is <b>${otpCode}.</b> Please enter this OTP on
+				the verification page within ${process.env.RESET_PASSWORD_TIMEOUT} to
+				proceed. If you did not initiate this forget password OTP code or need
+				any assistance, please contact our support team immediately at
+				${process.env.SUPPORT_EMAIL}
+			</p>
+			<p>
+				Best regards,<br />
+				Loopay Support Team
+			</p>
+		</div>
+	</body>
+</html>

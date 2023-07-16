@@ -16,6 +16,7 @@ const UserDataSchema = new Schema(
 			type: {
 				firstName: String,
 				lastName: String,
+				fullName: String,
 				userName: String,
 				dob: String,
 				phoneNumber: {
@@ -31,6 +32,7 @@ const UserDataSchema = new Schema(
 			},
 			required: true,
 		},
+		tagName: {type: String, unique: true},
 		pin: String,
 		accNo: Number,
 		accountType: {type: String, enum: ['Personal', 'Business']},
@@ -48,7 +50,16 @@ const UserDataSchema = new Schema(
 		notificationLength: Number,
 		photo: String,
 		photoURL: String,
+		referralCode: String,
 	},
 	{timestamps: true}
 );
+
+UserDataSchema.pre('save', function (next) {
+	this.userProfile.fullName =
+		this.userProfile.firstName + ' ' + this.userProfile.lastName;
+	this.referralCode = Math.random().toString(36).substring(2, 8);
+	next();
+});
+
 module.exports = mongoose.model('userData', UserDataSchema);

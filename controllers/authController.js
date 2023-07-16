@@ -1,10 +1,12 @@
 const User = require('../models/user');
 const UserDataModel = require('../models/userData');
+const SessionModel = require('../models/session');
 const _ = require('lodash');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const {isStrongPassword} = require('validator');
 const {sendMail} = require('../utils/sendEmail');
+const {excludedFields} = require('../utils/mongodbExclude');
 
 const handleErrors = err => {
 	let errors = {};
@@ -40,21 +42,27 @@ const handlephoneNumber = req => {
 };
 
 const registerAccount = async (req, res) => {
-	// handlephoneNumber(req);
-	const {password} = req.body;
-	if (!isStrongPassword(password, passowrdSecurityOptions)) {
-		return res.status(400).json({
-			password: 'Please input a stronger password',
-		});
-	} else if (password) {
-		const salt = await bcrypt.genSalt(10);
-		const hash = await bcrypt.hash(password, salt);
-		req.body.password = hash;
-	}
 	try {
-		const result = await User.create(req.body);
+		const {formData, sessionData} = req.body;
+
+		// handlephoneNumber(req);
+		if (!formData || !sessionData)
+			throw new Error(
+				'Please provide formData for registering and sessionData for Devices and Sessions'
+			);
+		const {password} = formData;
+		if (!isStrongPassword(password, passowrdSecurityOptions)) {
+			return res.status(400).json({
+				password: 'Please input a stronger password',
+			});
+		} else if (password) {
+			const salt = await bcrypt.genSalt(10);
+			const hash = await bcrypt.hash(password, salt);
+			formData.password = hash;
+		}
+		const result = await User.create(formData);
 		const {email, firstName, lastName, userName, phoneNumber} = result;
-		const data = {
+		const userData = {
 			email,
 			userProfile: {
 				firstName,
@@ -63,9 +71,9 @@ const registerAccount = async (req, res) => {
 				phoneNumber,
 			},
 		};
-		await UserDataModel.create(data);
-
-		res.status(200).json({
+		await UserDataModel.create(userData);
+		await SessionModel.create({email, sessions: [sessionData]});
+		res.status(201).json({
 			success: 'Account Created Successfully',
 			data: {
 				email,
@@ -79,7 +87,7 @@ const registerAccount = async (req, res) => {
 	} catch (err) {
 		console.log(err.message);
 		if (err.code === 11000) {
-			res.status(400).json({
+			return res.status(400).json({
 				[Object.keys(err.keyPattern)[0]]:
 					Object.keys(err.keyPattern)[0] === 'email'
 						? 'Email has already been used with another account'
@@ -87,26 +95,25 @@ const registerAccount = async (req, res) => {
 			});
 		} else if (err.message.includes('user validation failed')) {
 			const errors = handleErrors(err);
-			res
+			return res
 				.status(400)
 				.json({[Object.keys(errors)[0]]: Object.values(errors)[0]});
 		}
+		return res.status(400).json(err.message);
 	}
 };
 
 const loginAccount = async (req, res) => {
 	try {
-		if (
-			!Object.keys(req.body).includes('email') ||
-			!Object.keys(req.body).includes('password')
-		) {
+		const {email, password} = req.body;
+		if (!email || !password) {
 			throw new Error('Please provide your email and password');
 		}
 		const result = await User.findOne({email: req.body.email});
 		const compare =
 			result && (await bcrypt.compare(req.body.password, result.password));
 		if (!result) throw new Error('Invalid Credentials');
-		else if (!compare) res.status(401).json({password: 'Incorect Password'});
+		else if (!compare) throw new Error('Invalid Credentials');
 		else {
 			if (result.otpCode) {
 				result.otpCode = undefined;
@@ -122,7 +129,7 @@ const loginAccount = async (req, res) => {
 			});
 		}
 	} catch (err) {
-		console.log(err.message);
+		console.log(err);
 		res.status(401).json({error: err.message});
 	}
 };
@@ -167,15 +174,16 @@ const forgetPassword = async (req, res) => {
 		}
 	} catch (err) {
 		res.status(400).json({email: err.message});
-		console.log(err.message);
+		console.log(err);
 	}
 };
 
-const forgetPasswordOTP = async (req, res) => {
-	const {otp} = req.params;
-
+const confirmOTP = async (req, res) => {
 	try {
-		const result = await User.findOne({email: req.body.email});
+		const {otp} = req.params;
+		const {email} = req.body;
+		if (!email) throw new Error('Please provide your email');
+		const result = await User.findOne({email});
 		if (!result) throw new Error('No account is associated with this email');
 		else {
 			const decoded = jwt.verify(result.otpCode, process.env.JWT_SECRET);
@@ -194,7 +202,7 @@ const forgetPasswordOTP = async (req, res) => {
 		}
 	} catch (err) {
 		console.log(err.message);
-		res.status(400).json({error: 'Invalid OTP Code'});
+		res.status(400).json({error: err.message});
 	}
 };
 
@@ -208,7 +216,7 @@ const checkPassword = async (req, res) => {
 		}
 		res.status(200).json(true);
 	} catch (err) {
-		console.log(err.message);
+		console.log(err);
 	}
 };
 
@@ -285,9 +293,10 @@ module.exports = {
 	registerAccount,
 	loginAccount,
 	forgetPassword,
-	forgetPasswordOTP,
+	confirmOTP,
 	checkPassword,
 	changePassword,
 	setTransactionPin,
 	checkTransactionPin,
+	handleErrors,
 };

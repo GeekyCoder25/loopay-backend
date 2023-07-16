@@ -3,6 +3,12 @@ const Schema = mongoose.Schema;
 const {isEmail, isMobilePhone} = require('validator');
 const UserSchema = new Schema(
 	{
+		email: {
+			type: String,
+			required: [true, 'Please input your email address'],
+			unique: true,
+			validate: [isEmail, 'Invalid email address'],
+		},
 		firstName: {
 			type: String,
 			required: [true, 'Please input Your first name'],
@@ -19,12 +25,6 @@ const UserSchema = new Schema(
 				16,
 				'Your username should not be more than 16 characters long',
 			],
-		},
-		email: {
-			type: String,
-			required: [true, 'Please input your email address'],
-			unique: true,
-			validate: [isEmail, 'Invalid email address'],
 		},
 		phoneNumber: {
 			type: String,

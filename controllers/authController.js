@@ -138,9 +138,6 @@ const forgetPassword = async (req, res) => {
 	try {
 		const otpCodeLength = req.body.otpCodeLength || 4;
 		let otpCode = '';
-		const date = new Date();
-		const mailDate = date.toLocaleDateString();
-		const mailTime = date.toLocaleTimeString();
 		const result = await User.findOne({email: req.body.email});
 		if (!result) throw new Error('No account is associated with this email');
 		else {
@@ -156,22 +153,20 @@ const forgetPassword = async (req, res) => {
 				html: String.raw`<div style="line-height: 30px; font-family: Arial, Helvetica, sans-serif">
 			<div style="text-align: center; transform: translateX(-100px)">
 				<img
-					src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.svg"
+					src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
 					style="width: 200px; margin: 50px auto"
 				/>
 			</div>
 			<p>
 				Your One Time Password is <b>${otpCode}.</b> Please enter this OTP on
 				the verification page within ${process.env.RESET_PASSWORD_TIMEOUT} to
-				proceed. If you did not initiate this request code or need
+				proceed. If you did not initiate this forget password OTP code or need
 				any assistance, please contact our support team immediately at
-				${process.env.SUPPORT_EMAIL}.
+				${process.env.SUPPORT_EMAIL}
 			</p>
 			<p>
 				Best regards,<br />
-				Loopay Support Team<br/>
-				${mailDate},<br/>
-				${mailTime}
+				Loopay Support Team
 			</p>
 		</div>`,
 			};
@@ -183,12 +178,11 @@ const forgetPassword = async (req, res) => {
 	}
 };
 
-const confirmOTP = async (req, res) => {
+const forgetPasswordOTP = async (req, res) => {
+	const {otp} = req.params;
+
 	try {
-		const {otp} = req.params;
-		const {email} = req.body;
-		if (!email) throw new Error('Please provide your email');
-		const result = await User.findOne({email});
+		const result = await User.findOne({email: req.body.email});
 		if (!result) throw new Error('No account is associated with this email');
 		else {
 			const decoded = jwt.verify(result.otpCode, process.env.JWT_SECRET);
@@ -207,7 +201,7 @@ const confirmOTP = async (req, res) => {
 		}
 	} catch (err) {
 		console.log(err.message);
-		res.status(400).json({error: err.message});
+		res.status(400).json({error: 'Invalid OTP Code'});
 	}
 };
 
@@ -298,7 +292,7 @@ module.exports = {
 	registerAccount,
 	loginAccount,
 	forgetPassword,
-	confirmOTP,
+	forgetPasswordOTP,
 	checkPassword,
 	changePassword,
 	setTransactionPin,

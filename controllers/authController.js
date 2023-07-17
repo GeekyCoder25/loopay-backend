@@ -138,6 +138,9 @@ const forgetPassword = async (req, res) => {
 	try {
 		const otpCodeLength = req.body.otpCodeLength || 4;
 		let otpCode = '';
+		const date = new Date();
+		const mailDate = date.toLocaleDateString();
+		const mailTime = date.toLocaleTimeString();
 		const result = await User.findOne({email: req.body.email});
 		if (!result) throw new Error('No account is associated with this email');
 		else {
@@ -160,13 +163,15 @@ const forgetPassword = async (req, res) => {
 			<p>
 				Your One Time Password is <b>${otpCode}.</b> Please enter this OTP on
 				the verification page within ${process.env.RESET_PASSWORD_TIMEOUT} to
-				proceed. If you did not initiate this forget password OTP code or need
+				proceed. If you did not initiate this request code or need
 				any assistance, please contact our support team immediately at
-				${process.env.SUPPORT_EMAIL}
+				${process.env.SUPPORT_EMAIL}.
 			</p>
 			<p>
 				Best regards,<br />
-				Loopay Support Team
+				Loopay Support Team<br/>
+				${mailDate},<br/>
+				${mailTime}
 			</p>
 		</div>`,
 			};

@@ -16,7 +16,7 @@ const router = express.Router();
 router.post('/register', registerAccount);
 router.post('/login', loginAccount);
 router.post('/forget-password', forgetPassword);
-router.post('/forget-password/:otp', forgetPasswordOTP);
+router.post('/confirm-otp/:otp', forgetPasswordOTP);
 router.post('/check-password/', protect, checkPassword);
 router.post('/change-password/:email', changePassword);
 

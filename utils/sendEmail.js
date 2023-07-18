@@ -6,7 +6,7 @@ const transporter = nodemailer.createTransport({
 		user: process.env.MAIL_USERNAME,
 		pass: process.env.MAIL_PASSWORD,
 	},
-	
+
 	// host: '127.0.0.1',
 	// port: 2526,
 });

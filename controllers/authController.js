@@ -151,9 +151,9 @@ const forgetPassword = async (req, res) => {
 				to: req.body.email,
 				subject: 'Loopay One-Time Password (OTP) for Account Verification',
 				html: String.raw`<div style="line-height: 30px; font-family: Arial, Helvetica, sans-serif">
-			<div style="text-align: center; transform: translateX(-100px)">
+			<div style="text-align: center">
 				<img
-					src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
+					src= ${process.env.CLOUDINARY_APP_ICON}
 					style="width: 200px; margin: 50px auto"
 				/>
 			</div>

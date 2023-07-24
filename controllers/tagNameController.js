@@ -1,11 +1,22 @@
 const UserDataModel = require('../models/userData');
 
 const getTagName = async (req, res) => {
-	const {tagName} = req.params;
-	const {senderTagName} = req.body;
+	const {senderTagName} = req.params;
+	let {tagName} = req.body;
 
 	if (!senderTagName)
-		return res.status(400).json('Please provide sender tagName');
+		return res.status(400).json("Please provide sender's tagName");
+	if (!tagName)
+		return res.status(400).json("Please provide receiver's tagName");
+
+	if (tagName.includes('#')) {
+		const syntaxCheck = tagName.split('#');
+		if (syntaxCheck.length > 2 || syntaxCheck[0]) {
+			return res.status(400).json('Please provide a valid tagName');
+		}
+		tagName = syntaxCheck[1];
+	}
+
 	const result = await UserDataModel.findOne({tagName}).select([
 		'email',
 		'userProfile.fullName',

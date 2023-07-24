@@ -146,11 +146,8 @@ const forgetPassword = async (req, res) => {
 			}
 			const otpToken = generateTokenForOTP(otpCode);
 			await User.findOneAndUpdate({email: req.body.email}, {otpCode: otpToken});
-			const mailOtptions = {
-				from: process.env.EMAIL,
-				to: req.body.email,
-				subject: 'Loopay One-Time Password (OTP) for Account Verification',
-				html: String.raw`<div style="line-height: 30px; font-family: Arial, Helvetica, sans-serif">
+
+			const message = String.raw`<div style="line-height: 30px; font-family: Arial, Helvetica, sans-serif">
 			<div style="text-align: center">
 				<img
 					src= ${process.env.CLOUDINARY_APP_ICON}
@@ -168,8 +165,15 @@ const forgetPassword = async (req, res) => {
 				Best regards,<br />
 				Loopay Support Team
 			</p>
-		</div>`,
+		</div>`;
+
+			const mailOtptions = {
+				from: process.env.EMAIL,
+				to: req.body.email,
+				subject: 'Loopay One-Time Password (OTP) for Account Verification',
+				html: message,
 			};
+
 			sendMail(mailOtptions, res, result);
 		}
 	} catch (err) {
@@ -178,7 +182,7 @@ const forgetPassword = async (req, res) => {
 	}
 };
 
-const forgetPasswordOTP = async (req, res) => {
+const confirmOTP = async (req, res) => {
 	const {otp} = req.params;
 
 	try {
@@ -292,7 +296,7 @@ module.exports = {
 	registerAccount,
 	loginAccount,
 	forgetPassword,
-	forgetPasswordOTP,
+	confirmOTP,
 	checkPassword,
 	changePassword,
 	setTransactionPin,

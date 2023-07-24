@@ -30,7 +30,7 @@ router.post('/set-pin', setTransactionPin);
 router.post('/check-pin', checkTransactionPin);
 router.route('/session').get(getSession).post(postSession);
 router.route('/session/:id').put(updateSession).delete(deleteSession);
-router.route('/get-tag/:tagName').post(getTagName);
+router.route('/get-tag/:senderTagName').post(getTagName);
 router.route('/beneficiary').get(getBeneficiaries).post(postBeneficiary);
 
 module.exports = router;

@@ -17,7 +17,7 @@ router.post('/register', registerAccount);
 router.post('/login', loginAccount);
 router.post('/forget-password', forgetPassword);
 router.post('/confirm-otp/:otp', confirmOTP);
-router.post('/check-password/', protect, checkPassword);
-router.post('/change-password/:email', changePassword);
+router.post('/check-password', protect, checkPassword);
+router.post('/change-password', protect, changePassword);
 
 module.exports = router;

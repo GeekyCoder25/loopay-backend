@@ -1,12 +1,13 @@
 const User = require('../models/user');
 const UserDataModel = require('../models/userData');
 const SessionModel = require('../models/session');
+const WalletModel = require('../models/wallet');
 const _ = require('lodash');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const {isStrongPassword} = require('validator');
 const {sendMail} = require('../utils/sendEmail');
-const {excludedFields} = require('../utils/mongodbExclude');
+const {createVirtualAccount} = require('../middleware/createVirtualAccount');
 
 const handleErrors = err => {
 	let errors = {};
@@ -24,28 +25,10 @@ const passowrdSecurityOptions = {
 	minSymbols: 0,
 };
 
-const handlephoneNumber = req => {
-	if (req.body.phoneNumber.startsWith('0')) {
-		const tempNumber = req.body.phoneNumber.replace('0', '+234');
-		req.body.phoneNumber = tempNumber;
-	} else if (
-		req.body.phoneNumber.startsWith('7') ||
-		req.body.phoneNumber.startsWith('8') ||
-		req.body.phoneNumber.startsWith('9')
-	) {
-		const tempNumber = req.body.phoneNumber.replace(
-			req.body.phoneNumber.charAt(0),
-			`+234${req.body.phoneNumber.charAt(0)}`
-		);
-		req.body.phoneNumber = tempNumber;
-	}
-};
-
 const registerAccount = async (req, res) => {
 	try {
 		const {formData, sessionData} = req.body;
 
-		// handlephoneNumber(req);
 		if (!formData || !sessionData)
 			throw new Error(
 				'Please provide formData for registering and sessionData for Devices and Sessions'
@@ -61,8 +44,10 @@ const registerAccount = async (req, res) => {
 			formData.password = hash;
 		}
 		const result = await User.create(formData);
-		const {email, firstName, lastName, userName, phoneNumber} = result;
+		const {_id, email, firstName, middleName, lastName, userName, phoneNumber} =
+			result;
 		const userData = {
+			_id,
 			email,
 			userProfile: {
 				firstName,
@@ -72,7 +57,45 @@ const registerAccount = async (req, res) => {
 			},
 		};
 		await UserDataModel.create(userData);
-		await SessionModel.create({email, sessions: [sessionData]});
+		await SessionModel.create({_id, email, sessions: [sessionData]});
+		const paystack = await createVirtualAccount({
+			email,
+			first_name: firstName,
+			middle_name: middleName,
+			last_name: lastName,
+			phone: phoneNumber,
+			preferred_bank: process.env.PREFERRED_BANK,
+			country: 'NG',
+		});
+		if (typeof paystack === 'string') {
+			await User.findByIdAndRemove(_id);
+			await UserDataModel.findByIdAndRemove(_id);
+			await SessionModel.findByIdAndRemove(_id);
+			return res.status(400).json({error: 'Server Error'});
+		}
+		const {id, customer, account_number, bank} = paystack.data;
+		delete paystack.data.assignment;
+		const apiData = paystack.data;
+		const paystackData = {
+			walletID: Number(id),
+			email: customer.email,
+			accNo: account_number,
+			accNo2: phoneNumber.slice(4),
+			bank: bank.name,
+			tagName: userName,
+			firstName: customer.first_name,
+			lastName: customer.last_name,
+			phoneNumber: customer.phone,
+			apiData,
+		};
+		try {
+			await WalletModel.create(paystackData);
+		} catch (err) {
+			await User.findByIdAndRemove(_id);
+			await UserDataModel.findByIdAndRemove(_id);
+			await SessionModel.findByIdAndRemove(_id);
+			throw new Error(err.message);
+		}
 		res.status(201).json({
 			success: 'Account Created Successfully',
 			data: {
@@ -81,7 +104,7 @@ const registerAccount = async (req, res) => {
 				lastName,
 				userName,
 				phoneNumber,
-				token: generateToken(result._id),
+				token: generateToken(_id),
 			},
 		});
 	} catch (err) {
@@ -138,7 +161,9 @@ const forgetPassword = async (req, res) => {
 	try {
 		const otpCodeLength = req.body.otpCodeLength || 4;
 		let otpCode = '';
-		const result = await User.findOne({email: req.body.email});
+		const {email} = req.body;
+		if (!email) throw new Error('Please provide your email');
+		const result = await User.findOne({email});
 		if (!result) throw new Error('No account is associated with this email');
 		else {
 			for (let i = 0; i < otpCodeLength; i++) {
@@ -183,10 +208,10 @@ const forgetPassword = async (req, res) => {
 };
 
 const confirmOTP = async (req, res) => {
-	const {otp} = req.params;
-
 	try {
-		const result = await User.findOne({email: req.body.email});
+		const {otp} = req.params;
+		const {email} = req.body;
+		const result = await User.findOne({email});
 		if (!result) throw new Error('No account is associated with this email');
 		else {
 			const decoded = jwt.verify(result.otpCode, process.env.JWT_SECRET);
@@ -211,6 +236,8 @@ const confirmOTP = async (req, res) => {
 
 const checkPassword = async (req, res) => {
 	try {
+		const {password} = req.body;
+		if (!password) throw new Error('Please provide your account password');
 		const result = await User.findOne({email: req.user.email});
 		const compare =
 			result && (await bcrypt.compare(req.body.password, result.password));
@@ -219,18 +246,16 @@ const checkPassword = async (req, res) => {
 		}
 		res.status(200).json(true);
 	} catch (err) {
-		console.log(err);
+		res.status(400).json(err.message);
+		console.log(err.message);
 	}
 };
 
 const changePassword = async (req, res) => {
 	try {
-		if (!Object.keys(req.body).includes('password'))
-			throw new Error('No password is provided');
-		const result = await User.findOne({email: req.params.email});
-
-		if (!result) throw new Error('No account is associated with this email');
 		const {password} = req.body;
+		if (!password) new Error('No password is provided');
+		const result = await User.findOne({email: req.user.email});
 		const compare =
 			result && (await bcrypt.compare(req.body.password, result.password));
 		if (compare)
@@ -250,39 +275,6 @@ const changePassword = async (req, res) => {
 	}
 };
 
-const setTransactionPin = async (req, res) => {
-	try {
-		if (!Object.keys(req.body).includes('pin'))
-			throw new Error('No pin is provided');
-		const {email} = req.user;
-		const result = await UserDataModel.findOne({email});
-		if (!result) throw new Error('No account is associated with this email');
-		const {pin} = req.body;
-		const salt = await bcrypt.genSalt(10);
-		const hash = await bcrypt.hash(pin, salt);
-		result.pin = hash;
-		result.save();
-		res.status(200).json('Transaction pin set successfully');
-	} catch (err) {
-		res.status(400).json(err.message);
-	}
-};
-
-const checkTransactionPin = async (req, res) => {
-	try {
-		if (!Object.keys(req.body).includes('pin'))
-			throw new Error('No pin is provided');
-		const {email} = req.user;
-		const result = await UserDataModel.findOne({email});
-		if (!result) throw new Error('No account is associated with this email');
-		if (!result.pin) throw new Error('Pin not set yet');
-		const compare = await bcrypt.compare(req.body.pin, result.pin);
-		if (!compare) throw new Error('Invalid Pin');
-		res.status(200).json(compare);
-	} catch (err) {
-		res.status(400).json(err.message);
-	}
-};
 const generateToken = id => {
 	return jwt.sign({id}, process.env.JWT_SECRET, {expiresIn: '30d'});
 };
@@ -299,7 +291,5 @@ module.exports = {
 	confirmOTP,
 	checkPassword,
 	changePassword,
-	setTransactionPin,
-	checkTransactionPin,
 	handleErrors,
 };

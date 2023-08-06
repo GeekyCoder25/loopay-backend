@@ -62,4 +62,18 @@ UserDataSchema.pre('save', function (next) {
 	next();
 });
 
+UserDataSchema.pre('findOneAndUpdate', function (next) {
+	if (
+		this._update?.userProfile?.firstName &&
+		this._update?.userProfile?.lastName
+	) {
+		this._update.userProfile.fullName =
+			this._update.userProfile.firstName +
+			' ' +
+			this._update.userProfile.lastName;
+	}
+	this.referralCode = Math.random().toString(36).substring(2, 8);
+	next();
+});
+
 module.exports = mongoose.model('userData', UserDataSchema);

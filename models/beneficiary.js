@@ -33,6 +33,11 @@ const BeneficiarySchema = new Schema(
 					required: [true, "Please provide user loopay's tag name"],
 					unique: true,
 				},
+				accNo: {
+					type: String,
+					required: [true, 'Please provide user account number'],
+					unique: true,
+				},
 			},
 		},
 	},

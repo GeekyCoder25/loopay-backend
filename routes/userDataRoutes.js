@@ -8,20 +8,27 @@ const {
 const {
 	setTransactionPin,
 	checkTransactionPin,
-} = require('../controllers/authController');
+} = require('../controllers/pinController');
 const {
 	postSession,
 	deleteSession,
 	getSession,
 	updateSession,
 } = require('../controllers/sessionController');
-const {getTagName} = require('../controllers/tagNameController');
+const {
+	getTagName,
+	createTagName,
+	getPhone,
+} = require('../controllers/tagNameController');
 const {
 	getBeneficiaries,
 	postBeneficiary,
 } = require('../controllers/beneficiaryController');
+const {getWallet, postWallet} = require('../controllers/walletController');
+const {
+	intitiateTransferToLoopay,
+} = require('../controllers/transferController');
 
-// const User = require('../models/users');
 const router = express.Router();
 
 router.route('/').get(getUserData).post(postUserData).put(putUserData);
@@ -31,6 +38,10 @@ router.post('/check-pin', checkTransactionPin);
 router.route('/session').get(getSession).post(postSession);
 router.route('/session/:id').put(updateSession).delete(deleteSession);
 router.route('/get-tag/:senderTagName').post(getTagName);
+router.route('/get-phone/:senderPhoneNo').post(getPhone);
+router.route('/tag-name').post(createTagName);
 router.route('/beneficiary').get(getBeneficiaries).post(postBeneficiary);
+router.route('/wallet').get(getWallet).post(postWallet);
+router.route('/loopay/transfer').post(intitiateTransferToLoopay);
 
 module.exports = router;

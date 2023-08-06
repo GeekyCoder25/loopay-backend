@@ -118,4 +118,5 @@ module.exports = {
 	postUserData,
 	putUserData,
 	updateProfile,
+	handleErrors,
 };

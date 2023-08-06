@@ -2,31 +2,41 @@ const BeneficiaryModel = require('../models/beneficiary');
 const UserDataModel = require('../models/userData');
 
 const getBeneficiaries = async (req, res) => {
-	const {email} = req.user;
+	try {
+		const {email} = req.user;
 
-	const result = await BeneficiaryModel.findOne({email});
-	if (!result) return res.status(400).json('No saved beneficaries');
-	let beneficiaries = result.beneficiaries;
-	let beneficiariesAfterPhotoCheck = [];
-	await Promise.all(
-		beneficiaries.map(async beneficiary => {
-			const result = await UserDataModel.find({email: beneficiary.email});
-			if (result[0].photoURL) {
-				beneficiariesAfterPhotoCheck.push({
-					...beneficiary,
-					photo: result[0].photoURL,
-				});
-			} else {
-				beneficiariesAfterPhotoCheck.push(beneficiary);
-			}
-		})
-	);
-	beneficiaries = beneficiariesAfterPhotoCheck;
-	const pluralS = beneficiaries.length > 1 ? 'ies' : 'y';
-	return res.status(200).json({
-		message: `${beneficiaries.length} beneficiar${pluralS} found`,
-		beneficiaries,
-	});
+		const result = await BeneficiaryModel.findOne({email});
+		if (!result) throw new Error('No saved beneficaries');
+		let beneficiaries = result.beneficiaries;
+		const beneficiariesAfterPhotoCheck = [];
+		await Promise.all(
+			beneficiaries.map(async beneficiary => {
+				const result = await UserDataModel.findOne({email: beneficiary.email});
+				if (result) {
+					beneficiariesAfterPhotoCheck.push({
+						...beneficiary,
+						photo: result.photoURL || '',
+						tagName: result.tagName,
+						fullName: result.userProfile.fullName,
+					});
+				}
+			})
+		);
+		beneficiaries = beneficiariesAfterPhotoCheck;
+		const pluralS = beneficiaries.length > 1 ? 'ies' : 'y';
+		const convertToNaira = amountInKobo => {
+			const naira = Math.floor(amountInKobo / 100);
+			const kobo = amountInKobo % 100;
+			return `${naira}.${kobo.toString().padStart(2, '0')}`;
+		};
+		console.log(convertToNaira());
+		return res.status(200).json({
+			message: `${beneficiaries.length} beneficiar${pluralS} found`,
+			beneficiaries,
+		});
+	} catch (err) {
+		res.status(400).json(err.messgae);
+	}
 };
 
 const postBeneficiary = async (req, res) => {
@@ -40,6 +50,7 @@ const postBeneficiary = async (req, res) => {
 			'photo',
 			'tagName',
 			'email',
+			'accNo',
 		];
 		let unavailableKeys = [];
 		requiredKeys.forEach(key => {

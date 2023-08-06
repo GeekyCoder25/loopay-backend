@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const {isEmail, isMobilePhone} = require('validator');
+const {handlephoneNumber} = require('../utils/checkPhoneNumber');
 const UserSchema = new Schema(
 	{
 		email: {
@@ -25,6 +26,7 @@ const UserSchema = new Schema(
 				16,
 				'Your username should not be more than 16 characters long',
 			],
+			unique: true,
 		},
 		phoneNumber: {
 			type: String,
@@ -42,4 +44,9 @@ const UserSchema = new Schema(
 	{timestamps: true}
 );
 
+UserSchema.pre('save', function (next) {
+	this.phoneNumber = handlephoneNumber(this.phoneNumber);
+	this.userName = this.userName.toLowerCase().split(' ').join('_');
+	next();
+});
 module.exports = mongoose.model('user', UserSchema);

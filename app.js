@@ -11,7 +11,6 @@ const cloudinary = require('cloudinary').v2;
 const {protect} = require('./middleware/authMiddleware');
 const {uploadPhoto} = require('./controllers/uploadPhoto');
 require('colors');
-
 dotEnv.config();
 // eslint-disable-next-line no-undef
 const PORT = process.env.PORT;

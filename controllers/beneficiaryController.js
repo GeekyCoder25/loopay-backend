@@ -24,12 +24,6 @@ const getBeneficiaries = async (req, res) => {
 		);
 		beneficiaries = beneficiariesAfterPhotoCheck;
 		const pluralS = beneficiaries.length > 1 ? 'ies' : 'y';
-		const convertToNaira = amountInKobo => {
-			const naira = Math.floor(amountInKobo / 100);
-			const kobo = amountInKobo % 100;
-			return `${naira}.${kobo.toString().padStart(2, '0')}`;
-		};
-		console.log(convertToNaira());
 		return res.status(200).json({
 			message: `${beneficiaries.length} beneficiar${pluralS} found`,
 			beneficiaries,
@@ -42,7 +36,6 @@ const getBeneficiaries = async (req, res) => {
 const postBeneficiary = async (req, res) => {
 	try {
 		const {email} = req.user;
-		const checkBeneficiaryExists = await BeneficiaryModel.findOne({email});
 		let beneficiaries;
 		const requiredKeys = [
 			'fullName',
@@ -63,6 +56,7 @@ const postBeneficiary = async (req, res) => {
 				.status(400)
 				.json(`Please provide all required keys '${[unavailableKeys]}'`);
 		}
+		const checkBeneficiaryExists = await BeneficiaryModel.findOne({email});
 		if (checkBeneficiaryExists) {
 			const previousBeneficiaries = checkBeneficiaryExists.beneficiaries;
 			const previousBeneficiariesNotTheSameWithNewBeneficiary =

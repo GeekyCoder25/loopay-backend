@@ -29,7 +29,6 @@ const Wallet = new Schema({
 	bank: {
 		type: String,
 		required: [true, 'please provide your bank name'],
-		unique: true,
 	},
 	tagName: {
 		type: String,

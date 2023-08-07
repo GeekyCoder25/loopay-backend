@@ -8,14 +8,15 @@ const jwt = require('jsonwebtoken');
 const {isStrongPassword} = require('validator');
 const {sendMail} = require('../utils/sendEmail');
 const {createVirtualAccount} = require('../middleware/createVirtualAccount');
+const {handleErrors} = require('./userDataController');
 
-const handleErrors = err => {
-	let errors = {};
-	Object.values(err.errors).forEach(({properties}) => {
-		errors[properties.path] = properties.message;
-	});
-	return errors;
-};
+// const handleErrors = err => {
+// 	let errors = {};
+// 	Object.values(err.errors).forEach(({properties}) => {
+// 		errors[properties.path] = properties.message;
+// 	});
+// 	return errors;
+// };
 
 const passowrdSecurityOptions = {
 	minLength: 6,
@@ -108,21 +109,7 @@ const registerAccount = async (req, res) => {
 			},
 		});
 	} catch (err) {
-		console.log(err.message);
-		if (err.code === 11000) {
-			return res.status(400).json({
-				[Object.keys(err.keyPattern)[0]]:
-					Object.keys(err.keyPattern)[0] === 'email'
-						? 'Email has already been used with another account'
-						: 'Phone number has already been used with another account',
-			});
-		} else if (err.message.includes('user validation failed')) {
-			const errors = handleErrors(err);
-			return res
-				.status(400)
-				.json({[Object.keys(errors)[0]]: Object.values(errors)[0]});
-		}
-		return res.status(400).json(err.message);
+		handleErrors(err, res);
 	}
 };
 
@@ -291,5 +278,4 @@ module.exports = {
 	confirmOTP,
 	checkPassword,
 	changePassword,
-	handleErrors,
 };

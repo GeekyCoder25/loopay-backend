@@ -32,7 +32,7 @@ const UserDataSchema = new Schema(
 			},
 			required: true,
 		},
-		tagName: {type: String, unique: true},
+		tagName: {type: String, unique: true, sparse: true},
 		pin: String,
 		accNo: Number,
 		accountType: {type: String, enum: ['Personal', 'Business']},

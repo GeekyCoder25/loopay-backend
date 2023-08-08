@@ -10,6 +10,7 @@ const fileUpload = require('express-fileupload');
 const cloudinary = require('cloudinary').v2;
 const {protect} = require('./middleware/authMiddleware');
 const {uploadPhoto} = require('./controllers/uploadPhoto');
+const {webhookHandler} = require('./controllers/webhook');
 require('colors');
 dotEnv.config();
 // eslint-disable-next-line no-undef
@@ -50,6 +51,8 @@ app.post('/api/upload', protect, uploadPhoto);
 app.use('/api/auth', authRoutes);
 // app.use('/api', userDataRoutes);
 app.use('/api/user', protect, userDataRoutes);
+app.use('/api/webhook', webhookHandler);
+
 app.get('/api/network', (req, res) => {
 	console.log('network request');
 	res.send({network: true});

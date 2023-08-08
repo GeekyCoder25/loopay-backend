@@ -2,6 +2,7 @@ const TransactionModel = require('../models/transaction');
 
 const postTransaction = async (req, res, transaction, wallet) => {
 	try {
+		console.log(transaction.metadata);
 		const {email} = req.user;
 		const {_id} = req.body;
 		const {reference, amount} = transaction;

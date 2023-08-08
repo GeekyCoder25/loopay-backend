@@ -28,7 +28,6 @@ const {getWallet, postWallet} = require('../controllers/walletController');
 const {
 	intitiateTransferToLoopay,
 } = require('../controllers/transferController');
-const {webhookHandler} = require('../controllers/webhook');
 
 const router = express.Router();
 
@@ -44,6 +43,5 @@ router.route('/tag-name').post(createTagName);
 router.route('/beneficiary').get(getBeneficiaries).post(postBeneficiary);
 router.route('/wallet').get(getWallet).post(postWallet);
 router.route('/loopay/transfer').post(intitiateTransferToLoopay);
-router.route('/webhook').post(webhookHandler);
 
 module.exports = router;

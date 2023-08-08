@@ -6,7 +6,7 @@ const getBeneficiaries = async (req, res) => {
 		const {email} = req.user;
 
 		const result = await BeneficiaryModel.findOne({email});
-		if (!result) throw new Error('No saved beneficaries');
+		if (!result) return res.status(204).json('No saved beneficaries');
 		let beneficiaries = result.beneficiaries;
 		const beneficiariesAfterPhotoCheck = [];
 		await Promise.all(
@@ -29,7 +29,7 @@ const getBeneficiaries = async (req, res) => {
 			beneficiaries,
 		});
 	} catch (err) {
-		res.status(400).json(err.messgae);
+		res.status(400).json(err.message);
 	}
 };
 

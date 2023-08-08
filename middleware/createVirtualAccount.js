@@ -16,7 +16,7 @@ const createVirtualAccount = async data => {
 			console.error('Error:', error.message);
 		}
 	};
-
+	console.log(data);
 	const url = 'https://api.paystack.co/customer';
 	const headers = {
 		Authorization: `Bearer ${SECRET_KEY}`,
@@ -24,6 +24,7 @@ const createVirtualAccount = async data => {
 	};
 	try {
 		const response = await axios.post(url, data, {headers});
+		console.log(response.data.data);
 		return await createDVA({customer: response.data.data.id});
 	} catch (error) {
 		return error.message;

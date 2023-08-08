@@ -1,12 +1,12 @@
 const Wallet = require('../models/wallet');
-const {handleErrors} = require('./userDataController');
+const {handleErrors} = require('../utils/ErrorHandler');
 const {createVirtualAccount} = require('../middleware/createVirtualAccount');
 const {excludedFieldsInObject} = require('../utils/mongodbExclude');
 
 const getWallet = async (req, res) => {
 	try {
-		const {phoneNumber} = req.user;
-		const wallet = await Wallet.findOne({phoneNumber}, excludedFieldsInObject);
+		const {email} = req.user;
+		const wallet = await Wallet.findOne({email}, excludedFieldsInObject);
 		if (!wallet) throw new Error('No wallet found');
 		const convertToNaira = amountInKobo => {
 			const naira = Math.floor(amountInKobo / 100);

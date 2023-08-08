@@ -36,21 +36,21 @@ const intitiateTransfer = async (req, res) => {
 	// const banks = await axios.get('https://api.paystack.co/bank');
 	// const bank_code = banks.data.find(walllet.apiData.bank.name === );
 
-	// const recipientData = {
-	// 	type: 'nuban',
-	// 	name,
-	// 	account_number,
-	// 	bank_code,
-	// 	currency: 'NGN',
-	// };
-
 	const recipientData = {
 		type: 'nuban',
-		name: 'Toyib Lawal',
-		account_number: '2123503170',
-		bank_code: '033',
+		name,
+		account_number,
+		bank_code,
 		currency: 'NGN',
 	};
+
+	// const recipientData = {
+	// 	type: 'nuban',
+	// 	name: 'Toyib Lawal',
+	// 	account_number: '2123503170',
+	// 	bank_code: '033',
+	// 	currency: 'NGN',
+	// };
 	const recipient = await transferRecipent(recipientData);
 	const convertToKobo = () => {
 		const naira = amount.split('.')[0];

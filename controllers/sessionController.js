@@ -1,5 +1,5 @@
 const SessionModel = require('../models/session');
-const {handleErrors} = require('./authController');
+const {handleErrors} = require('../utils/ErrorHandler');
 
 const getSession = async (req, res) => {
 	try {
@@ -24,6 +24,26 @@ const postSession = async (req, res) => {
 	try {
 		let sessions;
 		const {email} = req.user;
+		const requiredKeys = [
+			'deviceManufacturer',
+			'deviceName',
+			'deviceID',
+			'osName',
+			'osVersion',
+			'firstSignIn',
+			'lastSeen',
+		];
+		let unavailableKeys = [];
+		requiredKeys.forEach(key => {
+			if (!Object.keys(req.body).includes(key)) {
+				unavailableKeys.push(key);
+			}
+		});
+		if (unavailableKeys.length > 0) {
+			return res
+				.status(400)
+				.json(`Please provide all required keys '${[unavailableKeys]}'`);
+		}
 		const checkSessionExists = await SessionModel.findOne({email});
 
 		if (checkSessionExists) {
@@ -48,8 +68,7 @@ const postSession = async (req, res) => {
 			.status(200)
 			.json({message: 'Session saved successfully', session: req.body});
 	} catch (err) {
-		const error = handleErrors(err);
-		res.status(400).json(error);
+		handleErrors(err, res);
 	}
 };
 

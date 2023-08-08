@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken');
 const {isStrongPassword} = require('validator');
 const {sendMail} = require('../utils/sendEmail');
 const {createVirtualAccount} = require('../middleware/createVirtualAccount');
-const {handleErrors} = require('./userDataController');
+const {handleErrors} = require('../utils/ErrorHandler');
 
 // const handleErrors = err => {
 // 	let errors = {};
@@ -68,28 +68,28 @@ const registerAccount = async (req, res) => {
 			preferred_bank: process.env.PREFERRED_BANK,
 			country: 'NG',
 		});
-		if (typeof paystack === 'string') {
-			await User.findByIdAndRemove(_id);
-			await UserDataModel.findByIdAndRemove(_id);
-			await SessionModel.findByIdAndRemove(_id);
-			return res.status(400).json({error: 'Server Error'});
-		}
-		const {id, customer, account_number, bank} = paystack.data;
-		delete paystack.data.assignment;
-		const apiData = paystack.data;
-		const paystackData = {
-			walletID: Number(id),
-			email: customer.email,
-			accNo: account_number,
-			accNo2: phoneNumber.slice(4),
-			bank: bank.name,
-			tagName: userName,
-			firstName: customer.first_name,
-			lastName: customer.last_name,
-			phoneNumber: customer.phone,
-			apiData,
-		};
 		try {
+			if (typeof paystack === 'string') {
+				await User.findByIdAndRemove(_id);
+				await UserDataModel.findByIdAndRemove(_id);
+				await SessionModel.findByIdAndRemove(_id);
+				return res.status(500).json('Server Error');
+			}
+			const {id, customer, account_number, bank} = paystack.data;
+			delete paystack.data.assignment;
+			const apiData = paystack.data;
+			const paystackData = {
+				walletID: Number(id),
+				email: customer.email,
+				accNo: account_number,
+				accNo2: phoneNumber.slice(4),
+				bank: bank.name,
+				tagName: userName,
+				firstName: customer.first_name,
+				lastName: customer.last_name,
+				phoneNumber: customer.phone,
+				apiData,
+			};
 			await WalletModel.create(paystackData);
 		} catch (err) {
 			await User.findByIdAndRemove(_id);

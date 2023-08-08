@@ -61,19 +61,19 @@ const createTagName = async (req, res) => {
 
 const getPhone = async (req, res) => {
 	try {
-		const {senderPhoneNo} = req.params;
-		let {phoneNumber} = req.body;
+		const {phoneNumber: senderPhoneNo} = req.user;
+		let {phoneNumber: sendeePhoneNo} = req.body;
 
 		if (!senderPhoneNo)
 			return res.status(400).json("Please provide sender's phone number");
-		if (!phoneNumber)
+		if (!sendeePhoneNo)
 			return res.status(400).json("Please provide receiver's phone number");
 
-		if (phoneNumber.length < 13)
+		if (sendeePhoneNo.length < 13)
 			throw new Error('Please provide a valid phone number');
 
 		const result = await UserDataModel.findOne({
-			'userProfile.phoneNumber': phoneNumber,
+			'userProfile.phoneNumber': sendeePhoneNo,
 		}).select([
 			'email',
 			'userProfile.fullName',
@@ -82,11 +82,13 @@ const getPhone = async (req, res) => {
 			'tagName',
 		]);
 		if (!result) throw new Error('No user found with this phone number');
-		if (senderPhoneNo === result.tagName)
-			throw new Error('No user found with this tag name');
+		if (senderPhoneNo === result.userProfile.phoneNumber)
+			throw new Error('No user found with this phone number');
 		let userName;
 		if (!result.tagName)
-			userName = await UserModel.findOne({phoneNumber}).select('userName');
+			userName = await UserModel.findOne({phoneNumber: sendeePhoneNo}).select(
+				'userName'
+			);
 		const response = {
 			email: result.email,
 			fullName: result.userProfile.fullName,

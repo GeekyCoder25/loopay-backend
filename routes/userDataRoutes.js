@@ -39,7 +39,7 @@ router.post('/check-pin', checkTransactionPin);
 router.route('/session').get(getSession).post(postSession);
 router.route('/session/:id').put(updateSession).delete(deleteSession);
 router.route('/get-tag/:senderTagName').post(getTagName);
-router.route('/get-phone/:senderPhoneNo').post(getPhone);
+router.route('/get-phone').post(getPhone);
 router.route('/tag-name').post(createTagName);
 router.route('/beneficiary').get(getBeneficiaries).post(postBeneficiary);
 router.route('/wallet').get(getWallet).post(postWallet);

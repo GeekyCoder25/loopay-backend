@@ -16,10 +16,10 @@ const postTransaction = async (req, res, transaction, wallet) => {
 			throw new Error(
 				`Please provide all required keys '${[unavailableKeys]}'`
 			);
-		const transactionsExits = await TransactionModel.findOne({email});
+		const transactionsExists = await TransactionModel.findOne({email});
 		let transactions;
-		if (transactionsExits) {
-			const previousTransactions = transactionsExits.transactions;
+		if (transactionsExists) {
+			const previousTransactions = transactionsExists.transactions;
 			const transactionExist = previousTransactions.find(
 				transaction => transaction.reference === reference
 			);
@@ -39,9 +39,13 @@ const postTransaction = async (req, res, transaction, wallet) => {
 				}
 			);
 		} else {
-			await TransactionModel.create({_id, email, transactions: [transaction]});
 			wallet.balance += amount;
 			await wallet.save();
+			await TransactionModel.create({
+				_id,
+				email,
+				transactions: [transaction],
+			});
 		}
 	} catch (err) {
 		console.log(err.message);

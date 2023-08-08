@@ -109,6 +109,7 @@ const registerAccount = async (req, res) => {
 			},
 		});
 	} catch (err) {
+		console.log(err.message);
 		handleErrors(err, res);
 	}
 };

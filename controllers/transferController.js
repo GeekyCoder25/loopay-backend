@@ -1,5 +1,6 @@
 const axios = require('axios');
 const WalletModel = require('../models/wallet');
+const TransactionModel = require('../models/transaction');
 
 const transferRecipent = async recipientData => {
 	const SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
@@ -80,7 +81,9 @@ const intitiateTransfer = async (req, res) => {
 
 const intitiateTransferToLoopay = async (req, res) => {
 	try {
-		const {phoneNumber, tagName, userName, amount} = req.body;
+		const {_id} = req.body;
+		const {phoneNumber, tagName, userName, amount, id, description, metadata} =
+			req.body;
 		const sendeeWallet = await WalletModel.findOne({phoneNumber});
 		const senderWallet = await WalletModel.findOne({
 			phoneNumber: req.user.phoneNumber,
@@ -97,6 +100,91 @@ const intitiateTransferToLoopay = async (req, res) => {
 		};
 		if (senderWallet.balance < convertToKobo())
 			throw new Error('Insufficient funds');
+
+		const transaction = {
+			id,
+			status: 'success',
+			senderAccount: senderWallet.aacNo2,
+			receiverAccount: sendeeWallet.accNo2,
+			sourceBank: 'Loopay',
+			destinationBank: 'Loopay',
+			amount,
+			description,
+			transactionReference: `TR${id}`,
+			currency: 'NGN',
+			metadata: metadata || null,
+		};
+		const senderTransactionModelExists = await TransactionModel.findOne({
+			phoneNumber,
+		});
+		const sendeeTransactionModelExists = await TransactionModel.findOne({
+			phoneNumber: sendeeWallet.phoneNumber,
+		});
+		let senderTransactions;
+		let sendeeTransactions;
+		if (senderTransactionModelExists) {
+			const previousTransactions = senderTransactionModelExists.transactions;
+			const transactionExist = previousTransactions.find(
+				transaction => transaction.id === id
+			);
+			if (transactionExist) {
+				senderTransactions = previousTransactions;
+			} else {
+				senderTransactions = [
+					{...transaction, transactionType: 'Debit'},
+					...previousTransactions,
+				];
+			}
+			await TransactionModel.findOneAndUpdate(
+				{email: senderWallet.email},
+				{transactions: senderTransactions},
+				{
+					new: true,
+					runValidators: true,
+				}
+			);
+		} else {
+			await TransactionModel.create({
+				_id,
+				email: senderWallet.email,
+				phoneNumber,
+				transactions: [{...transaction, transactionType: 'Debit'}],
+			});
+		}
+
+		if (sendeeTransactionModelExists) {
+			const previousTransactions = sendeeTransactionModelExists.transactions;
+			const transactionExist = previousTransactions.find(
+				transaction => transaction.id === id
+			);
+			if (transactionExist) {
+				sendeeTransactions = previousTransactions;
+			} else {
+				sendeeTransactions = [
+					{...transaction, transactionType: 'Credit'},
+					...previousTransactions,
+				];
+			}
+			await TransactionModel.findOneAndUpdate(
+				{email: sendeeWallet.email},
+				{transactions: sendeeTransactions},
+				{
+					new: true,
+					runValidators: true,
+				}
+			);
+		} else {
+			await TransactionModel.create({
+				_id: sendeeWallet._id,
+				email: sendeeWallet.email,
+				phoneNumber: sendeeWallet.phoneNumber,
+				transactions: [{...transaction, transactionType: 'Credit'}],
+			});
+		}
+		// await TransactionModel.findOneAndUpdate(
+		// 	{phoneNumber},
+		// 	{transactions: transa}
+		// );
 		senderWallet.balance -= convertToKobo();
 		sendeeWallet.balance += convertToKobo();
 		await senderWallet.save();

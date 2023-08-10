@@ -10,7 +10,7 @@ const fileUpload = require('express-fileupload');
 const cloudinary = require('cloudinary').v2;
 const {protect} = require('./middleware/authMiddleware');
 const {uploadPhoto} = require('./controllers/uploadPhoto');
-const {webhookHandler} = require('./controllers/webhook');
+const {webhookHandler} = require('./controllers/webhookController');
 require('colors');
 dotEnv.config();
 // eslint-disable-next-line no-undef

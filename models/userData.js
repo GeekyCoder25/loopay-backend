@@ -1,8 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-const {isEmail} = require('validator');
+const {isEmail, isMobilePhone} = require('validator');
 // const UserProfile = require('./userProfile');
-const {isMobilePhone} = require('validator');
 
 const UserDataSchema = new Schema(
 	{

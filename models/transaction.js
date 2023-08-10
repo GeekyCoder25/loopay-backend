@@ -18,6 +18,10 @@ const transactionSchema = new Schema(
 			type: String,
 			required: [true, "Please provide transaction sender's account"],
 		},
+		senderName: {
+			type: String,
+			required: [true, "Please provide transaction sender's name"],
+		},
 		receiverAccount: {
 			type: String,
 			required: [true, "Please provide transaction receiver's account"],

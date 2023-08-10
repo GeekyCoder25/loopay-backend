@@ -82,8 +82,16 @@ const intitiateTransfer = async (req, res) => {
 const intitiateTransferToLoopay = async (req, res) => {
 	try {
 		const {_id} = req.body;
-		const {phoneNumber, tagName, userName, amount, id, description, metadata} =
-			req.body;
+		const {
+			phoneNumber,
+			tagName,
+			userName,
+			fullName,
+			amount,
+			id,
+			description,
+			metadata,
+		} = req.body;
 		const sendeeWallet = await WalletModel.findOne({phoneNumber});
 		const senderWallet = await WalletModel.findOne({
 			phoneNumber: req.user.phoneNumber,
@@ -100,17 +108,25 @@ const intitiateTransferToLoopay = async (req, res) => {
 		};
 		if (senderWallet.balance < convertToKobo())
 			throw new Error('Insufficient funds');
-
+		const uo = {
+			accNo: '8147256349',
+			email: 'jrizzy@loopay.com',
+			fullName: 'John Rari John Rari',
+			phoneNumber: '+2348147256349',
+			photo: '',
+			tagName: 'iamjrizzy',
+		};
 		const transaction = {
 			id,
 			status: 'success',
-			senderAccount: senderWallet.aacNo2,
+			senderAccount: senderWallet.accNo2,
+			senderName: fullName,
 			receiverAccount: sendeeWallet.accNo2,
 			sourceBank: 'Loopay',
 			destinationBank: 'Loopay',
 			amount,
 			description,
-			transactionReference: `TR${id}`,
+			reference: `TR${id}`,
 			currency: 'NGN',
 			metadata: metadata || null,
 		};
@@ -181,10 +197,7 @@ const intitiateTransferToLoopay = async (req, res) => {
 				transactions: [{...transaction, transactionType: 'Credit'}],
 			});
 		}
-		// await TransactionModel.findOneAndUpdate(
-		// 	{phoneNumber},
-		// 	{transactions: transa}
-		// );
+
 		senderWallet.balance -= convertToKobo();
 		sendeeWallet.balance += convertToKobo();
 		await senderWallet.save();

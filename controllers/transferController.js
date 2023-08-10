@@ -92,10 +92,10 @@ const intitiateTransferToLoopay = async (req, res) => {
 			description,
 			metadata,
 		} = req.body;
-		const sendeeWallet = await WalletModel.findOne({phoneNumber});
 		const senderWallet = await WalletModel.findOne({
 			phoneNumber: req.user.phoneNumber,
 		});
+		const sendeeWallet = await WalletModel.findOne({phoneNumber});
 		if (sendeeWallet.tagName !== (tagName || userName))
 			throw new Error('Invalid Account Transfer');
 		const convertToKobo = () => {
@@ -108,14 +108,7 @@ const intitiateTransferToLoopay = async (req, res) => {
 		};
 		if (senderWallet.balance < convertToKobo())
 			throw new Error('Insufficient funds');
-		const uo = {
-			accNo: '8147256349',
-			email: 'jrizzy@loopay.com',
-			fullName: 'John Rari John Rari',
-			phoneNumber: '+2348147256349',
-			photo: '',
-			tagName: 'iamjrizzy',
-		};
+
 		const transaction = {
 			id,
 			status: 'success',
@@ -131,10 +124,10 @@ const intitiateTransferToLoopay = async (req, res) => {
 			metadata: metadata || null,
 		};
 		const senderTransactionModelExists = await TransactionModel.findOne({
-			phoneNumber,
+			phoneNumber: req.user.phoneNumber,
 		});
 		const sendeeTransactionModelExists = await TransactionModel.findOne({
-			phoneNumber: sendeeWallet.phoneNumber,
+			phoneNumber,
 		});
 		let senderTransactions;
 		let sendeeTransactions;
@@ -163,7 +156,7 @@ const intitiateTransferToLoopay = async (req, res) => {
 			await TransactionModel.create({
 				_id,
 				email: senderWallet.email,
-				phoneNumber,
+				phoneNumber: req.user.phoneNumber,
 				transactions: [{...transaction, transactionType: 'Debit'}],
 			});
 		}

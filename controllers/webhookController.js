@@ -17,16 +17,16 @@ const webhookHandler = async (req, res) => {
 			if (!event.data.amount.toString().includes('.')) {
 				event.data.amount += Number('.00');
 			}
-			const addingDecimal = value => {
-				if (!value.toString().includes('.')) {
-					return value + '.00';
-				} else if (value.toString().split('.')[1].length === 0) {
-					return value + '00';
-				} else if (value.toString().split('.')[1].length === 1) {
-					return value + '0';
-				}
-				return value.toString();
-			};
+			// const addingDecimal = value => {
+			// 	if (!value.toString().includes('.')) {
+			// 		return value + '.00';
+			// 	} else if (value.toString().split('.')[1].length === 0) {
+			// 		return value + '00';
+			// 	} else if (value.toString().split('.')[1].length === 1) {
+			// 		return value + '0';
+			// 	}
+			// 	return value.toString();
+			// };
 
 			const transaction = {
 				id: event.data.id,
@@ -38,7 +38,7 @@ const webhookHandler = async (req, res) => {
 				receiverName: userData.userProfile.fullName,
 				sourceBank: event.data.authorization.sender_bank || 'null',
 				destinationBank: event.data.authorization.receiver_bank,
-				amount: addingDecimal(event.data.amount),
+				amount: amount / 100,
 				description: event.data.desc || '',
 				reference: `TR${event.data.id}`,
 				payStackReference: event.data.reference,
@@ -59,14 +59,6 @@ const webhookHandler = async (req, res) => {
 				throw new Error(
 					`Please provide all required keys '${[unavailableKeys]}'`
 				);
-			const convertToKobo = () => {
-				const naira = addingDecimal(amount).split('.')[0];
-				const kobo = addingDecimal(amount).split('.')[1];
-				if (kobo === '00') {
-					return naira * 100;
-				}
-				return naira * 100 + Number(kobo);
-			};
 
 			const transactionModelExists = await TransactionModel.findOne({email});
 			const wallet = await WalletModel.findOne({email});
@@ -81,7 +73,7 @@ const webhookHandler = async (req, res) => {
 					transactions = previousTransactions;
 				} else {
 					transactions = [transaction, ...previousTransactions];
-					wallet.balance += convertToKobo();
+					wallet.balance += amount;
 					await wallet.save();
 				}
 				await TransactionModel.findOneAndUpdate(
@@ -93,7 +85,7 @@ const webhookHandler = async (req, res) => {
 					}
 				);
 			} else {
-				wallet.balance += convertToKobo();
+				wallet.balance += amount;
 				await wallet.save();
 				await TransactionModel.create({
 					_id,

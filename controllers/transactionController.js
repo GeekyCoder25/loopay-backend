@@ -4,7 +4,6 @@ const getTransactions = async (req, res) => {
 	try {
 		const {email} = req.user;
 		const transactionModel = await TransactionModel.findOne({email});
-		console.log(transactionModel);
 		if (!transactionModel)
 			return res.status(204).json('No transactions found for this user');
 		const transactions = transactionModel.transactions;

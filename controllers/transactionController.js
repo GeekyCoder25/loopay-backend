@@ -1,5 +1,19 @@
 const TransactionModel = require('../models/transaction');
 
+const getTransactions = async (req, res) => {
+	try {
+		const {email} = req.user;
+		const transactionModel = await TransactionModel.findOne({email});
+		console.log(transactionModel);
+		if (!transactionModel)
+			return res.status(204).json('No transactions found for this user');
+		const transactions = transactionModel.transactions;
+		res.status(200).json({count: transactions.length, transactions});
+	} catch (err) {
+		console.log(err.message);
+		return res.status(400).json(err.message);
+	}
+};
 const postTransaction = async (req, res, transaction, wallet) => {
 	try {
 		const {email} = req.user;
@@ -53,5 +67,6 @@ const postTransaction = async (req, res, transaction, wallet) => {
 };
 
 module.exports = {
+	getTransactions,
 	postTransaction,
 };

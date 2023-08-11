@@ -108,13 +108,13 @@ const intitiateTransferToLoopay = async (req, res) => {
 		};
 		if (senderWallet.balance < convertToKobo())
 			throw new Error('Insufficient funds');
-
 		const transaction = {
 			id,
 			status: 'success',
 			senderAccount: senderWallet.accNo2,
-			senderName: fullName,
+			senderName: `${req.user.firstName} ${req.user.lastName}`,
 			receiverAccount: sendeeWallet.accNo2,
+			receiverName: fullName,
 			sourceBank: 'Loopay',
 			destinationBank: 'Loopay',
 			amount,
@@ -122,6 +122,7 @@ const intitiateTransferToLoopay = async (req, res) => {
 			reference: `TR${id}`,
 			currency: 'NGN',
 			metadata: metadata || null,
+			createdAt: new Date(),
 		};
 		const senderTransactionModelExists = await TransactionModel.findOne({
 			phoneNumber: req.user.phoneNumber,

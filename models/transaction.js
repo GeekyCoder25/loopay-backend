@@ -3,57 +3,62 @@ const {default: isEmail} = require('validator/lib/isEmail');
 const Schema = mongoose.Schema;
 const {isMobilePhone} = require('validator');
 
-const transactionSchema = new Schema(
-	{
-		id: {type: String, required: [true, 'Please provide transaction id']},
-		status: {
-			type: String,
-			required: [true, 'Please provide transaction status'],
-		},
-		transactionType: {
-			type: String,
-			required: [true, 'Please provide transaction type'],
-		},
-		senderAccount: {
-			type: String,
-			required: [true, "Please provide transaction sender's account"],
-		},
-		senderName: {
-			type: String,
-			required: [true, "Please provide transaction sender's name"],
-		},
-		receiverAccount: {
-			type: String,
-			required: [true, "Please provide transaction receiver's account"],
-		},
-		sourceBank: {
-			type: String,
-			required: [true, 'Please provide transaction source bank'],
-		},
-		destinationBank: {
-			type: String,
-			required: [true, 'Please provide transaction destination bank'],
-		},
-		amount: {
-			type: String,
-			required: [true, 'Please provide transaction amount'],
-		},
-		description: {
-			type: String,
-		},
-		reference: {
-			type: String,
-			required: [true, "Please provide transaction's refence"],
-		},
-		payStackReference: String,
-		currency: {
-			type: String,
-			required: [true, "Please provide transaction's currency"],
-		},
-		metadata: Schema.Types.Mixed,
+const transactionSchema = new Schema({
+	id: {type: String, required: [true, 'Please provide transaction id']},
+	status: {
+		type: String,
+		required: [true, 'Please provide transaction status'],
 	},
-	{timestamps: true}
-);
+	transactionType: {
+		type: String,
+		required: [true, 'Please provide transaction type'],
+	},
+	senderAccount: {
+		type: String,
+		required: [true, "Please provide transaction sender's account"],
+	},
+	senderName: {
+		type: String,
+		required: [true, "Please provide transaction sender's name"],
+	},
+	receiverAccount: {
+		type: String,
+		required: [true, "Please provide transaction receiver's account"],
+	},
+	receiverName: {
+		type: String,
+		required: [true, "Please provide transaction receiver's name"],
+	},
+	sourceBank: {
+		type: String,
+		required: [true, 'Please provide transaction source bank'],
+	},
+	destinationBank: {
+		type: String,
+		required: [true, 'Please provide transaction destination bank'],
+	},
+	amount: {
+		type: String,
+		required: [true, 'Please provide transaction amount'],
+	},
+	description: {
+		type: String,
+	},
+	reference: {
+		type: String,
+		required: [true, "Please provide transaction's refence"],
+	},
+	payStackReference: String,
+	currency: {
+		type: String,
+		required: [true, "Please provide transaction's currency"],
+	},
+	metadata: Schema.Types.Mixed,
+	createdAt: {
+		type: String,
+		required: [true, "Please provide transaction's date"],
+	},
+});
 
 const TransactionModel = new Schema(
 	{

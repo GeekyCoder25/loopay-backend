@@ -12,6 +12,7 @@ const webhookHandler = async (req, res) => {
 			const userData = await UserDataModel.findOne({
 				email: event.data.customer.email,
 			});
+			console.log(event);
 			const {_id} = req.body;
 			if (!event.data.amount.toString().includes('.')) {
 				event.data.amount += Number('.00');

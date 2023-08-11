@@ -5,14 +5,13 @@ const WalletModel = require('../models/wallet');
 
 const webhookHandler = async (req, res) => {
 	try {
-		res.status(200);
+		res.send(200);
 		const event = req.body;
 		event.data.transactionType = 'Credit';
 		if (event.event === 'charge.success') {
 			const userData = await UserDataModel.findOne({
 				email: event.data.customer.email,
 			});
-			console.log(event);
 			const {_id} = req.body;
 			if (!event.data.amount.toString().includes('.')) {
 				event.data.amount += Number('.00');
@@ -27,6 +26,17 @@ const webhookHandler = async (req, res) => {
 				narration,
 			} = event.data.authorization;
 
+			const addingDecimal = value => {
+				if (!value.toString().includes('.')) {
+					return value + '.00';
+				} else if (value.toString().split('.')[1].length === 0) {
+					return value + '00';
+				} else if (value.toString().split('.')[1].length === 1) {
+					return value + '0';
+				}
+				return value.toString();
+			};
+
 			const transaction = {
 				id: event.data.id,
 				status: event.data.status,
@@ -37,7 +47,7 @@ const webhookHandler = async (req, res) => {
 				receiverName: userData.userProfile.fullName,
 				sourceBank: sender_bank || 'null',
 				destinationBank: receiver_bank,
-				amount: event.data.amount / 100,
+				amount: addingDecimal(event.data.amount / 100),
 				description: narration || '',
 				reference: `TR${event.data.id}`,
 				payStackReference: event.data.reference,

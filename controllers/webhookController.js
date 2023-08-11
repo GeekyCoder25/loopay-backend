@@ -19,12 +19,12 @@ const webhookHandler = async (req, res) => {
 			const addingDecimal = value => {
 				if (!value.toString().includes('.')) {
 					return value + '.00';
-				} else if (value.split('.')[1].length === 0) {
+				} else if (value.toString().split('.')[1].length === 0) {
 					return value + '00';
-				} else if (value.split('.')[1].length === 1) {
+				} else if (value.toString().split('.')[1].length === 1) {
 					return value + '0';
 				}
-				return value;
+				return value.toString();
 			};
 
 			const transaction = {

@@ -2,11 +2,40 @@ const TransactionModel = require('../models/transaction');
 
 const getTransactions = async (req, res) => {
 	try {
+		const {date} = req.query;
 		const {email} = req.user;
 		const transactionModel = await TransactionModel.findOne({email});
 		if (!transactionModel)
 			return res.status(204).json('No transactions found for this user');
 		const transactions = transactionModel.transactions;
+		if (date && JSON.parse(date)) {
+			const groupTransactionsByDate = inputArray => {
+				const groupedByDate = {};
+
+				inputArray.forEach(transaction => {
+					const dateObject = new Date(transaction.createdAt);
+					const options = {month: 'short'};
+					const date = `${dateObject.getDate()} ${dateObject.toLocaleString(
+						'en-US',
+						options
+					)} ${dateObject.getFullYear()}`;
+					if (!groupedByDate[date]) {
+						groupedByDate[date] = [];
+					}
+					groupedByDate[date].push(transaction);
+				});
+
+				const resultArray = Object.keys(groupedByDate).map(date => {
+					return {
+						date: date,
+						histories: groupedByDate[date],
+					};
+				});
+
+				return resultArray;
+			};
+			return res.status(200).json(groupTransactionsByDate(transactions));
+		}
 		res.status(200).json({count: transactions.length, transactions});
 	} catch (err) {
 		console.log(err.message);

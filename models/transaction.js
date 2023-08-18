@@ -21,6 +21,7 @@ const transactionSchema = new Schema({
 		type: String,
 		required: [true, "Please provide transaction sender's name"],
 	},
+	senderPhoto: String,
 	receiverAccount: {
 		type: String,
 		required: [true, "Please provide transaction receiver's account"],
@@ -29,13 +30,20 @@ const transactionSchema = new Schema({
 		type: String,
 		required: [true, "Please provide transaction receiver's name"],
 	},
+	receiverPhoto: String,
 	sourceBank: {
 		type: String,
 		required: [true, 'Please provide transaction source bank'],
 	},
+	sourceBankSlug: {
+		type: String,
+	},
 	destinationBank: {
 		type: String,
 		required: [true, 'Please provide transaction destination bank'],
+	},
+	destinationBankSlug: {
+		type: String,
 	},
 	amount: {
 		type: String,
@@ -55,7 +63,7 @@ const transactionSchema = new Schema({
 	},
 	metadata: Schema.Types.Mixed,
 	createdAt: {
-		type: String,
+		type: Date,
 		required: [true, "Please provide transaction's date"],
 	},
 });

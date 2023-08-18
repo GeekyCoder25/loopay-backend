@@ -1,13 +1,9 @@
-const axios = require('axios');
 const UserDataModel = require('../models/userData');
-const WalletModel = require('../models/wallet');
 const {
 	excludedFieldsInObject,
 	excludedFieldsInArray,
 } = require('../utils/mongodbExclude');
-const {postTransaction} = require('./transactionController');
 const {handleErrors} = require('../utils/ErrorHandler');
-const {conformsTo} = require('lodash');
 
 const getUserData = async (req, res) => {
 	try {
@@ -19,29 +15,6 @@ const getUserData = async (req, res) => {
 		if (!userData) return res.status(404).json('No user found');
 		const result = Object.assign(userData, {pin: userData.pin ? true : false});
 		res.status(200).json(result);
-		// const SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
-		// const headers = {
-		// 	Authorization: `Bearer ${SECRET_KEY}`,
-		// 	'Content-Type': 'application/json',
-		// };
-
-		// const response = await axios.get(
-		// 	'https://api.paystack.co/transaction?from=2023-08',
-		// 	{headers}
-		// );
-		// const transactions = await response.data.data;
-		// const walletAmount = 0;
-		// transactions.forEach(async transaction => {
-		// 	if (transaction.status === 'success') {
-		// 		const wallet = await WalletModel.findOne({
-		// 			email: transaction.customer.email,
-		// 		});
-		// 		if (wallet && email === transaction.customer.email) {
-		// 			postTransaction(req, res, transaction, wallet);
-		// 		}
-		// 	}
-		// });
-		// console.log('........');
 	} catch (err) {
 		console.log(err.message);
 	}

@@ -5,6 +5,7 @@ const WalletModel = require('../models/wallet');
 
 const webhookHandler = async (req, res) => {
 	try {
+		console.log(req.body);
 		res.send(200);
 		const event = req.body;
 		event.data.transactionType = 'Credit';

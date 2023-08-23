@@ -35,10 +35,12 @@ const {
 	postRecipent,
 	getRecipients,
 } = require('../controllers/recipientController');
+const {getRole} = require('../controllers/roleController');
 
 const router = express.Router();
 
 router.route('/').get(getUserData).post(postUserData).put(putUserData);
+router.get('/role', getRole);
 router.post('/profile', updateProfile);
 router.post('/set-pin', setTransactionPin);
 router.post('/check-pin', checkTransactionPin);

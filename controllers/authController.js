@@ -45,8 +45,16 @@ const registerAccount = async (req, res) => {
 			formData.password = hash;
 		}
 		const result = await User.create(formData);
-		const {_id, email, firstName, middleName, lastName, userName, phoneNumber} =
-			result;
+		const {
+			_id,
+			role,
+			email,
+			firstName,
+			middleName,
+			lastName,
+			userName,
+			phoneNumber,
+		} = result;
 		const userData = {
 			_id,
 			email,
@@ -100,6 +108,7 @@ const registerAccount = async (req, res) => {
 		res.status(201).json({
 			success: 'Account Created Successfully',
 			data: {
+				role,
 				email,
 				firstName,
 				lastName,
@@ -132,6 +141,7 @@ const loginAccount = async (req, res) => {
 			}
 			res.status(200).json({
 				data: {
+					role: result.role,
 					email: result.email,
 					phoneNumber: result.phoneNumber,
 					fullName: result.fullName,

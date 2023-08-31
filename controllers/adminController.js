@@ -27,6 +27,7 @@ const getAllAdminInfo = async (req, res) => {
 
 		//Active Sessions
 		const sessions = await Session.find().select('+ sessions');
+		console.log(sessions);
 		const lastActiveSessions = sessions.map(
 			session => session.sessions[0].lastSeen
 		);
@@ -41,6 +42,7 @@ const getAllAdminInfo = async (req, res) => {
 			recents,
 		});
 	} catch (err) {
+		console.log(err.message);
 		res.status(400).json(err.message);
 	}
 };

@@ -8,12 +8,11 @@ const webhookHandler = async (req, res) => {
 		console.log(req.body);
 		res.send(200);
 		const event = req.body;
-		event.data.transactionType = 'Credit';
 		if (event.event === 'charge.success') {
 			const userData = await UserDataModel.findOne({
 				email: event.data.customer.email,
 			});
-			const {_id} = req.body;
+			const wallet = await WalletModel.findOne({email});
 			if (!event.data.amount.toString().includes('.')) {
 				event.data.amount += Number('.00');
 			}
@@ -41,7 +40,8 @@ const webhookHandler = async (req, res) => {
 			const transaction = {
 				id: event.data.id,
 				status: event.data.status,
-				transactionType: event.data.transactionType,
+				type: 'inter',
+				transactionType: 'credit',
 				senderAccount: sender_bank_account_number,
 				senderName: account_name || sender_name || 'null',
 				receiverAccount: receiver_bank_account_number,
@@ -58,52 +58,19 @@ const webhookHandler = async (req, res) => {
 			};
 			const {id, amount, customer} = event.data;
 			const {email, phone} = customer;
-			const requiredKeys = ['id', 'status', 'reference', 'amount'];
-			let unavailableKeys = [];
-			requiredKeys.forEach(key => {
-				if (!Object.keys(transaction).includes(key)) {
-					unavailableKeys.push(key);
-				}
-			});
-			if (unavailableKeys.length > 0)
-				throw new Error(
-					`Please provide all required keys '${[unavailableKeys]}'`
-				);
 
-			const transactionModelExists = await TransactionModel.findOne({email});
-			const wallet = await WalletModel.findOne({email});
-			if (transactionModelExists) {
-				let transactions;
-				const previousTransactions = transactionModelExists.transactions;
-
-				const transactionExist = previousTransactions.find(
-					transaction => transaction.id == id
-				);
-				if (transactionExist) {
-					transactions = previousTransactions;
-				} else {
-					transactions = [transaction, ...previousTransactions];
-					wallet.balance += amount;
-					await wallet.save();
-				}
-				await TransactionModel.findOneAndUpdate(
-					{email},
-					{transactions},
-					{
-						new: true,
-						runValidators: true,
-					}
-				);
-			} else {
-				wallet.balance += amount;
-				await wallet.save();
-				await TransactionModel.create({
-					_id,
-					email,
-					phoneNumber: phone,
-					transactions: [transaction],
-				});
+			const transactionsExists = await TransactionModel.findOne({id});
+			if (transactionsExists) {
+				return res.status(200).json(transactionsExists);
 			}
+			const transactionResult = await TransactionModel.create({
+				email,
+				phoneNumber: phone,
+				...transaction,
+			});
+			wallet.balance += amount;
+			await wallet.save();
+			return res.status(201).json(transactionResult);
 		}
 		await WebhookModel.create(event);
 	} catch (err) {
@@ -178,6 +145,6 @@ const webhookSample = {
 		requested_amount: 250000,
 		pos_transaction_data: null,
 		source: null,
-		transactionType: 'Credit',
+		transactionType: 'credit',
 	},
 };

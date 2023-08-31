@@ -35,7 +35,6 @@ const getRecipients = async (req, res) => {
 
 const postRecipent = async (req, res) => {
 	try {
-		console.log(req.body);
 		if (requiredKeys(req, res, ['bank', 'accNo'])) return;
 		const {code, currency, slug, type} = req.body.bank;
 		const {email, phoneNumber} = req.user;
@@ -56,7 +55,6 @@ const postRecipent = async (req, res) => {
 		const recipient = await RecipientModel.create({
 			email,
 			phoneNumber,
-			customName: transferRecipient.data.name,
 			type: transferRecipient.data.type,
 			name: transferRecipient.data.details.account_name,
 			accNo: transferRecipient.data.details.account_number,

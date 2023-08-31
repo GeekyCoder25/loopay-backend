@@ -64,6 +64,7 @@ const registerAccount = async (req, res) => {
 				userName,
 				phoneNumber,
 			},
+			tagName: userName,
 		};
 		await UserDataModel.create(userData);
 		await SessionModel.create({_id, email, sessions: [sessionData]});
@@ -95,7 +96,7 @@ const registerAccount = async (req, res) => {
 				tagName: userName,
 				firstName: customer.first_name,
 				lastName: customer.last_name,
-				phoneNumber: customer.phone,
+				phoneNumber,
 				apiData,
 			};
 			await WalletModel.create(paystackData);
@@ -200,7 +201,7 @@ const forgetPassword = async (req, res) => {
 			sendMail(mailOtptions, res, result);
 		}
 	} catch (err) {
-		res.status(400).json({email: err.message});
+		res.status(400).json({error: err.message});
 		console.log(err);
 	}
 };
@@ -219,6 +220,7 @@ const confirmOTP = async (req, res) => {
 			await result.save();
 			res.status(200).json({
 				data: {
+					role: result.role,
 					email: result.email,
 					phoneNumber: result.phoneNumber,
 					fullName: result.fullName,

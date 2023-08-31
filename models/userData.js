@@ -33,18 +33,7 @@ const UserDataSchema = new Schema(
 		},
 		tagName: {type: String, unique: true, sparse: true},
 		pin: String,
-		accNo: Number,
 		accountType: {type: String, enum: ['Personal', 'Business']},
-		currencies: [
-			{
-				currency: String,
-				acronym: String,
-				amount: Number,
-				symbol: String,
-				minimumAmountToAdd: Number,
-				fee: Number,
-			},
-		],
 		verficationStaus: Boolean,
 		notificationLength: Number,
 		photo: String,

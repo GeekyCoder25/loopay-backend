@@ -15,7 +15,6 @@ const RecipientSchema = new Schema(
 			required: [true, 'Please input your phone number'],
 			validate: [isMobilePhone, 'Invalid phone number'],
 		},
-		customName: String,
 		type: {
 			type: String,
 			required: [true, "Please provide bank's type"],

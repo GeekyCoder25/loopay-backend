@@ -44,96 +44,72 @@ const intitiateTransfer = async (req, res) => {
 			recipient,
 		};
 		if (wallet.balance < convertToKobo()) throw new Error('Insufficient funds');
-		axios
-			.post(url, data, config)
-			.then(async response => {
-				if (response.data.status) {
-					wallet.balance -= convertToKobo();
-					await wallet.save();
-					const {
-						bankName,
-						name,
-						photo,
-						senderPhoto,
-						amount,
+		try {
+			const response = await axios.post(url, data, config);
+
+			if (response.data.status) {
+				wallet.balance -= convertToKobo();
+				await wallet.save();
+				const {
+					bankName,
+					name,
+					photo,
+					senderPhoto,
+					amount,
+					id,
+					reason,
+					currency,
+					metadata,
+					slug,
+					accNo,
+				} = req.body;
+				try {
+					const transaction = {
 						id,
-						reason,
+						status: 'pending',
+						type: 'inter',
+						transactionType: 'debit',
+						senderAccount: senderWallet.accNo2,
+						senderName: `${req.user.firstName} ${req.user.lastName}`,
+						senderPhoto: senderPhoto || '',
+						receiverAccount: accNo,
+						receiverName: name,
+						receiverPhoto: photo || '',
+						sourceBank: 'Loopay',
+						destinationBank: bankName,
+						destinationBankSlug: slug,
+						amount,
+						description: reason,
+						reference: `TR${id}`,
+						paystackRefrence: response.data.data.transfer_code,
 						currency,
-						metadata,
-						slug,
-						accNo,
-					} = req.body;
-					try {
-						const transaction = {
-							id,
-							status: 'pending',
-							transactionType: 'Debit',
-							senderAccount: senderWallet.accNo2,
-							senderName: `${req.user.firstName} ${req.user.lastName}`,
-							senderPhoto: senderPhoto || '',
-							receiverAccount: accNo,
-							receiverName: name,
-							receiverPhoto: photo || '',
-							sourceBank: 'Loopay',
-							destinationBank: bankName,
-							destinationBankSlug: slug,
-							amount,
-							description: reason,
-							reference: `TR${id}`,
-							paystackRefrence: response.data.data.transfer_code,
-							currency,
-							metadata: metadata || null,
-							createdAt: new Date(),
-						};
-						const {email, phoneNumber} = req.user;
-						const {_id} = req.user;
-						const transactionModelExists = await TransactionModel.findOne({
+						metadata: metadata || null,
+						createdAt: new Date(),
+					};
+					const {email, phoneNumber} = req.user;
+					const transactionsExists = await TransactionModel.findOne({id});
+					if (!transactionsExists) {
+						await TransactionModel.create({
 							email,
+							phoneNumber,
+							...transaction,
 						});
-						if (transactionModelExists) {
-							let transactions;
-							const previousTransactions = transactionModelExists.transactions;
-							const transactionExist = previousTransactions.find(
-								transaction => transaction.id == id
-							);
-							if (transactionExist) {
-								transactions = previousTransactions;
-							} else {
-								transactions = [transaction, ...previousTransactions];
-							}
-							await TransactionModel.findOneAndUpdate(
-								{email},
-								{transactions},
-								{
-									new: true,
-									runValidators: true,
-								}
-							);
-						} else {
-							await TransactionModel.create({
-								_id,
-								email,
-								phoneNumber,
-								transactions: [transaction],
-							});
-						}
-					} catch (err) {
-						console.log(err.message);
 					}
-					res.status(200).json({
-						...response.data.data,
-						amount: response.data.data.amount / 100,
-					});
-				} else {
-					console.log();
-					throw new Error(response.data.message);
+				} catch (err) {
+					console.log(err.message);
 				}
-				// finalizeTransfer(response.data.data.transfer_code);
-			})
-			.catch(err => {
-				res.status(500).json('Server Error');
-				console.log(err.message);
-			});
+				res.status(200).json({
+					...response.data.data,
+					amount: response.data.data.amougvbnt / 100,
+				});
+			} else {
+				throw new Error(response.data.message);
+			}
+			// finalizeTransfer(response.data.data.transfer_code);
+		} catch (err) {
+			res.status(500).json('Server Error');
+			console.log(err.message);
+		}
 	} catch (err) {
 		console.log(err.message);
 		res.status(400).json(err.message);
@@ -142,7 +118,6 @@ const intitiateTransfer = async (req, res) => {
 
 const intitiateTransferToLoopay = async (req, res) => {
 	try {
-		const {_id} = req.body;
 		const {
 			phoneNumber,
 			tagName,
@@ -159,6 +134,7 @@ const intitiateTransferToLoopay = async (req, res) => {
 			phoneNumber: req.user.phoneNumber,
 		});
 		const sendeeWallet = await WalletModel.findOne({phoneNumber});
+		console.log(sendeeWallet);
 		if (sendeeWallet.tagName !== (tagName || userName))
 			throw new Error('Invalid Account Transfer');
 		const convertToKobo = () => {
@@ -174,6 +150,7 @@ const intitiateTransferToLoopay = async (req, res) => {
 		const transaction = {
 			id,
 			status: 'success',
+			type: 'intra',
 			senderAccount: senderWallet.accNo2,
 			senderName: `${req.user.firstName} ${req.user.lastName}`,
 			senderPhoto: senderPhoto || '',
@@ -189,71 +166,26 @@ const intitiateTransferToLoopay = async (req, res) => {
 			metadata: metadata || null,
 			createdAt: new Date(),
 		};
-		const senderTransactionModelExists = await TransactionModel.findOne({
-			phoneNumber: req.user.phoneNumber,
+		const senderTransactionExists = await TransactionModel.findOne({
+			id,
 		});
-		const sendeeTransactionModelExists = await TransactionModel.findOne({
-			phoneNumber,
+		const sendeeTransactionExists = await TransactionModel.findOne({
+			id,
 		});
-		let senderTransactions;
-		let sendeeTransactions;
-		if (senderTransactionModelExists) {
-			const previousTransactions = senderTransactionModelExists.transactions;
-			const transactionExist = previousTransactions.find(
-				transaction => transaction.id === id
-			);
-			if (transactionExist) {
-				senderTransactions = previousTransactions;
-			} else {
-				senderTransactions = [
-					{...transaction, transactionType: 'Debit'},
-					...previousTransactions,
-				];
-			}
-			await TransactionModel.findOneAndUpdate(
-				{email: senderWallet.email},
-				{transactions: senderTransactions},
-				{
-					new: true,
-					runValidators: true,
-				}
-			);
-		} else {
+		if (!senderTransactionExists) {
 			await TransactionModel.create({
-				_id,
 				email: senderWallet.email,
 				phoneNumber: req.user.phoneNumber,
-				transactions: [{...transaction, transactionType: 'Debit'}],
+				transactionType: 'debit',
+				...transaction,
 			});
 		}
-
-		if (sendeeTransactionModelExists) {
-			const previousTransactions = sendeeTransactionModelExists.transactions;
-			const transactionExist = previousTransactions.find(
-				transaction => transaction.id === id
-			);
-			if (transactionExist) {
-				sendeeTransactions = previousTransactions;
-			} else {
-				sendeeTransactions = [
-					{...transaction, transactionType: 'Credit'},
-					...previousTransactions,
-				];
-			}
-			await TransactionModel.findOneAndUpdate(
-				{email: sendeeWallet.email},
-				{transactions: sendeeTransactions},
-				{
-					new: true,
-					runValidators: true,
-				}
-			);
-		} else {
+		if (!sendeeTransactionExists) {
 			await TransactionModel.create({
-				_id: sendeeWallet._id,
 				email: sendeeWallet.email,
 				phoneNumber: sendeeWallet.phoneNumber,
-				transactions: [{...transaction, transactionType: 'Credit'}],
+				transactionType: 'credit',
+				...transaction,
 			});
 		}
 

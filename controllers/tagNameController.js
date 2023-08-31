@@ -1,6 +1,7 @@
 const UserModel = require('../models/user');
 const UserDataModel = require('../models/userData');
 const WalletModel = require('../models/wallet');
+const {handleErrors} = require('../utils/ErrorHandler');
 
 const getTagName = async (req, res) => {
 	const {senderTagName} = req.params;
@@ -55,7 +56,7 @@ const createTagName = async (req, res) => {
 		await wallet.save();
 		res.status(200).json('tagName updated successfully');
 	} catch (err) {
-		return res.status(400).json(err.message);
+		handleErrors(err, res);
 	}
 };
 
@@ -78,22 +79,18 @@ const getPhone = async (req, res) => {
 			'email',
 			'userProfile.fullName',
 			'userProfile.phoneNumber',
+			'userProfile.userName',
 			'photoURL',
 			'tagName',
 		]);
 		if (!result) throw new Error('No user found with this phone number');
 		if (senderPhoneNo === result.userProfile.phoneNumber)
 			throw new Error('No user found with this phone number');
-		let userName;
-		if (!result.tagName)
-			userName = await UserModel.findOne({phoneNumber: sendeePhoneNo}).select(
-				'userName'
-			);
+
 		const response = {
 			email: result.email,
 			fullName: result.userProfile.fullName,
-			tagName: result.tagName || result.userName,
-			userName: userName.userName,
+			tagName: result.tagName,
 			phoneNumber: result.userProfile.phoneNumber,
 			accNo: result.userProfile.phoneNumber.slice(4),
 			photo: result.photoURL || '',

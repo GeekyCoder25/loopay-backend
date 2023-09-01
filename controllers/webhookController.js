@@ -12,7 +12,6 @@ const webhookHandler = async (req, res) => {
 			const userData = await UserDataModel.findOne({
 				email: event.data.customer.email,
 			});
-			const wallet = await WalletModel.findOne({email});
 			if (!event.data.amount.toString().includes('.')) {
 				event.data.amount += Number('.00');
 			}
@@ -68,6 +67,8 @@ const webhookHandler = async (req, res) => {
 				phoneNumber: phone,
 				...transaction,
 			});
+
+			const wallet = await WalletModel.findOne({email});
 			wallet.balance += amount;
 			await wallet.save();
 			return res.status(201).json(transactionResult);

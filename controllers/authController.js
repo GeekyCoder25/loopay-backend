@@ -151,7 +151,7 @@ const loginAccount = async (req, res) => {
 			});
 		}
 	} catch (err) {
-		console.log(err);
+		console.log(err.message);
 		res.status(401).json({error: err.message});
 	}
 };

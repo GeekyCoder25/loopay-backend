@@ -33,7 +33,7 @@ const protect = async (req, res, next) => {
 					session => session.deviceID !== req.sessionID
 				);
 				if (sessionToUpdate.length === 1) {
-					let session = {...sessionToUpdate[0], lastSeen: Date.now()};
+					let session = {...sessionToUpdate[0], lastSeen: new Date()};
 					let sessions = [session, ...sessionsNotToUpdate];
 					await SessionModel.findOneAndUpdate(
 						{email: req.user.email},

@@ -63,5 +63,3 @@ app.get('/api', (req, res) => {
 	console.log('Lopay Backend');
 	res.send({app: 'Loopay'});
 });
-
-console.log(new Date().toDateString());

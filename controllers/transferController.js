@@ -1,5 +1,8 @@
 const axios = require('axios');
-const WalletModel = require('../models/wallet');
+const NairaWallet = require('../models/wallet');
+const DollarWallet = require('../models/walletDollar');
+const EuroWallet = require('../models/walletEuro');
+const PoundWallet = require('../models/walletPound');
 const TransactionModel = require('../models/transaction');
 const {requiredKeys} = require('../utils/requiredKeys');
 
@@ -25,7 +28,7 @@ const intitiateTransfer = async (req, res) => {
 			])
 		)
 			return;
-		const wallet = await WalletModel.findOne({phoneNumber});
+		const wallet = await NairaWallet.findOne({phoneNumber});
 		const senderWallet = wallet;
 		if (!wallet) throw new Error('wallet not found');
 
@@ -69,7 +72,7 @@ const intitiateTransfer = async (req, res) => {
 						status: 'pending',
 						type: 'inter',
 						transactionType: 'debit',
-						senderAccount: senderWallet.accNo2,
+						senderAccount: senderWallet.loopayAccNo,
 						senderName: `${req.user.firstName} ${req.user.lastName}`,
 						senderPhoto: senderPhoto || '',
 						receiverAccount: accNo,
@@ -105,7 +108,6 @@ const intitiateTransfer = async (req, res) => {
 			} else {
 				throw new Error(response.data.message);
 			}
-			// finalizeTransfer(response.data.data.transfer_code);
 		} catch (err) {
 			res.status(500).json('Server Error');
 			console.log(err.message);
@@ -126,35 +128,48 @@ const intitiateTransferToLoopay = async (req, res) => {
 			photo,
 			senderPhoto,
 			amount,
+			currency,
 			id,
 			description,
 			metadata,
 		} = req.body;
-		const senderWallet = await WalletModel.findOne({
+
+		const selectWallet = currency => {
+			switch (currency) {
+				case 'naira':
+					return NairaWallet;
+				case 'dollar':
+					return DollarWallet;
+				case 'euro':
+					return EuroWallet;
+				case 'pound':
+					return PoundWallet;
+			}
+		};
+		const currencyWallet = selectWallet(currency);
+
+		const senderWallet = await currencyWallet.findOne({
 			phoneNumber: req.user.phoneNumber,
 		});
-		const sendeeWallet = await WalletModel.findOne({phoneNumber});
-		console.log(sendeeWallet);
+		const sendeeWallet = await currencyWallet.findOne({phoneNumber});
+		if (phoneNumber === req.user.phoneNumber)
+			throw new Error("You can't send to yourself");
+		if (!sendeeWallet) throw new Error('User not found');
 		if (sendeeWallet.tagName !== (tagName || userName))
 			throw new Error('Invalid Account Transfer');
-		const convertToKobo = () => {
-			const naira = amount.split('.')[0];
-			const kobo = amount.split('.')[1];
-			if (kobo === '00') {
-				return naira * 100;
-			}
-			return naira * 100 + Number(kobo);
-		};
-		if (senderWallet.balance < convertToKobo())
+
+		const amountInUnits = () => amount * 100;
+
+		if (senderWallet.balance < amountInUnits())
 			throw new Error('Insufficient funds');
 		const transaction = {
 			id,
 			status: 'success',
 			type: 'intra',
-			senderAccount: senderWallet.accNo2,
+			senderAccount: senderWallet.loopayAccNo,
 			senderName: `${req.user.firstName} ${req.user.lastName}`,
 			senderPhoto: senderPhoto || '',
-			receiverAccount: sendeeWallet.accNo2,
+			receiverAccount: sendeeWallet.loopayAccNo,
 			receiverName: fullName,
 			receiverPhoto: photo || '',
 			sourceBank: 'Loopay',
@@ -162,7 +177,7 @@ const intitiateTransferToLoopay = async (req, res) => {
 			amount,
 			description,
 			reference: `TR${id}`,
-			currency: 'NGN',
+			currency,
 			metadata: metadata || null,
 			createdAt: new Date(),
 		};
@@ -189,8 +204,8 @@ const intitiateTransferToLoopay = async (req, res) => {
 			});
 		}
 
-		senderWallet.balance -= convertToKobo();
-		sendeeWallet.balance += convertToKobo();
+		senderWallet.balance -= amountInUnits();
+		sendeeWallet.balance += amountInUnits();
 		await senderWallet.save();
 		await sendeeWallet.save();
 		res.status(200).json({

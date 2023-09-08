@@ -39,6 +39,7 @@ const UserDataSchema = new Schema(
 		photo: String,
 		photoURL: String,
 		referralCode: String,
+		blockedUsers: [String],
 	},
 	{timestamps: true}
 );

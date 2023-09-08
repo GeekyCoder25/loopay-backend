@@ -1,20 +1,41 @@
-const Wallet = require('../models/wallet');
+const NairaWallet = require('../models/wallet');
 const {handleErrors} = require('../utils/ErrorHandler');
 const {createVirtualAccount} = require('../middleware/createVirtualAccount');
 const {excludedFieldsInObject} = require('../utils/mongodbExclude');
+const DollarWallet = require('../models/walletDollar');
+const EuroWallet = require('../models/walletEuro');
+const PoundWallet = require('../models/walletPound');
 
 const getWallet = async (req, res) => {
 	try {
 		const {email} = req.user;
-		const wallet = await Wallet.findOne({email}, excludedFieldsInObject);
-		if (!wallet) throw new Error('No wallet found');
-		const convertToNaira = amountInKobo => {
-			const naira = Math.floor(amountInKobo / 100);
-			const kobo = amountInKobo % 100;
-			return `${naira}.${kobo.toString().padStart(2, '0')}`;
-		};
-		wallet.balance = convertToNaira(wallet.balance);
-		res.status(200).json(wallet);
+		const walletNaira = await NairaWallet.findOne(
+			{email},
+			excludedFieldsInObject
+		);
+		const walletDollar = await DollarWallet.findOne(
+			{email},
+			excludedFieldsInObject
+		);
+		const walletEuro = await EuroWallet.findOne(
+			{email},
+			excludedFieldsInObject
+		);
+		const walletPound = await PoundWallet.findOne(
+			{email},
+			excludedFieldsInObject
+		);
+
+		if (!walletNaira) throw new Error('No wallet found');
+
+		const convertToNaira = amountInKobo => amountInKobo / 100;
+
+		walletNaira.balance = convertToNaira(walletNaira.balance);
+		walletDollar.balance = convertToNaira(walletDollar.balance);
+		walletEuro.balance = convertToNaira(walletEuro.balance);
+		walletPound.balance = convertToNaira(walletPound.balance);
+
+		res.status(200).json({walletNaira, walletDollar, walletEuro, walletPound});
 	} catch (err) {
 		res.status(400).json(err.message);
 	}
@@ -33,7 +54,10 @@ const postWallet = async (req, res) => {
 			preferred_bank: process.env.PREFERRED_BANK,
 			country: 'NG',
 		};
-		const walletExists = await Wallet.findOne({phoneNumber}, {__v: 0, _id: 0});
+		const walletExists = await NairaWallet.findOne(
+			{phoneNumber},
+			{__v: 0, _id: 0}
+		);
 		if (walletExists)
 			return res
 				.status(200)
@@ -46,16 +70,16 @@ const postWallet = async (req, res) => {
 		const paystackData = {
 			walletID: Number(id),
 			email: customer.email,
+			loopayAccNo: phoneNumber.slice(4),
 			accNo: account_number,
-			accNo2: phoneNumber.slice(4),
 			bank: bank.name,
 			tagName: userName,
 			firstName: customer.first_name,
 			lastName: customer.last_name,
 			phoneNumber: customer.phone,
-			apiData: paystack,
+			currency: 'naira',
 		};
-		await Wallet.create(paystackData);
+		await NairaWallet.create(paystackData);
 		res.status(201).json({
 			message: 'Wallet created sucessfully',
 			paystackData,

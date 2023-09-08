@@ -19,7 +19,7 @@ const protect = async (req, res, next) => {
 			req.user = await User.findById(decoded.id).select('-password');
 			req.sessionID = req.headers.authorization.split(' ')[1].split('...')[1];
 			if (!req.user) throw new Error();
-			req.body._id = decoded.id;
+			if (!req.body._id) req.body._id = decoded.id;
 			const checkSessionsExist = await SessionModel.findOne({
 				email: req.user.email,
 			});

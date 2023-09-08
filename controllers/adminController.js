@@ -4,7 +4,10 @@ const Session = require('../models/session');
 const UserData = require('../models/userData');
 const Recent = require('../models/recent');
 const Recipient = require('../models/recipient');
-const Wallet = require('../models/wallet');
+const NairaWallet = require('../models/wallet');
+const DollarWallet = require('../models/walletDollar');
+const EuroWallet = require('../models/walletEuro');
+const PoundWallet = require('../models/walletPound');
 const axios = require('axios');
 
 const getAllAdminInfo = async (req, res) => {
@@ -14,27 +17,46 @@ const getAllAdminInfo = async (req, res) => {
 		const transactions = await Transaction.find()
 			.select(['-__v'])
 			.sort('-createdAt');
-		let wallets = await Wallet.find();
+		let wallets = await NairaWallet.find();
 		let recents = await Recent.find({email: {$ne: req.user.email}})
 			.select('-__v')
 			.sort('-updatedAt');
-		let nairaBalanceModel = await Wallet.find().select('+ balance');
+		let nairaBalanceModel = await NairaWallet.find().select('+ balance');
+		let dollarBalanceModel = await DollarWallet.find().select('+ balance');
+		let euroBalanceModel = await EuroWallet.find().select('+ balance');
+		let poundBalanceModel = await PoundWallet.find().select('+ balance');
+
 		if (!nairaBalanceModel.length) nairaBalanceModel = [0];
+		if (!dollarBalanceModel.length) dollarBalanceModel = [0];
+		if (!euroBalanceModel.length) euroBalanceModel = [0];
+		if (!poundBalanceModel.length) poundBalanceModel = [0];
+
 		const nairaBalance =
 			nairaBalanceModel
 				.map(balance => balance.balance)
 				.reduce((a, b) => a + b) / 100;
+		const dollarBalance =
+			dollarBalanceModel
+				.map(balance => balance.balance)
+				.reduce((a, b) => a + b) / 100;
+		const euroBalance =
+			euroBalanceModel.map(balance => balance.balance).reduce((a, b) => a + b) /
+			100;
+		const poundBalance =
+			poundBalanceModel
+				.map(balance => balance.balance)
+				.reduce((a, b) => a + b) / 100;
 
 		//Active Sessions
-		const sessions = await Session.find().select('+ sessions');
-		const lastActiveSessions = sessions.map(
-			session => session.sessions[0]?.lastSeen
-		);
+		const lastActiveSessions = await Session.find().select('-__v');
 
 		res.status(200).json({
 			users,
 			wallets,
 			nairaBalance,
+			dollarBalance,
+			euroBalance,
+			poundBalance,
 			transactions,
 			lastActiveSessions,
 			userDatas,
@@ -57,7 +79,7 @@ const getAllUsers = async (req, res) => {
 };
 
 const getAllNairaBalance = async (req, res) => {
-	const allBalance = await Wallet.find().select('+ balance');
+	const allBalance = await NairaWallet.find().select('+ balance');
 	if (!allBalance) return res.status(200).json({balance: 0});
 	const balance =
 		allBalance.map(balance => balance.balance).reduce((a, b) => a + b) / 100;
@@ -103,7 +125,7 @@ const transferToLoopayUser = async (req, res) => {
 		let WalletModel;
 		switch (currency) {
 			case 'Naira':
-				WalletModel = Wallet;
+				WalletModel = NairaWallet;
 		}
 
 		const senderWallet = await WalletModel.findOne({
@@ -130,7 +152,7 @@ const transferToLoopayUser = async (req, res) => {
 			phoneNumber,
 			fullName: sendeeData.userProfile.fullName,
 			tagName: tagName || userName,
-			accNo: sendeeWallet.accNo2,
+			accNo: sendeeWallet.loopayAccNo,
 			photo: sendeeData.photoURL,
 			adminUser: req.user.email,
 		};
@@ -142,7 +164,7 @@ const transferToLoopayUser = async (req, res) => {
 		const data = await Recent.findOneAndUpdate({email}, recent, {upsert: true});
 		res.status(200).json({
 			message: 'Transfer Successful',
-			data,
+			data: data || recent,
 		});
 	} catch (err) {
 		console.log(err.message);

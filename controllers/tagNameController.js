@@ -1,44 +1,51 @@
-const UserModel = require('../models/user');
 const UserDataModel = require('../models/userData');
 const WalletModel = require('../models/wallet');
 const {handleErrors} = require('../utils/ErrorHandler');
 
 const getTagName = async (req, res) => {
-	const {senderTagName} = req.params;
-	let {tagName} = req.body;
+	try {
+		const {senderTagName} = req.params;
+		let {tagName, type} = req.body;
 
-	if (!senderTagName)
-		return res.status(400).json("Please provide sender's tagName");
-	if (!tagName)
-		return res.status(400).json("Please provide receiver's tagName");
-
-	if (tagName.includes('#')) {
-		const syntaxCheck = tagName.split('#');
-		if (syntaxCheck.length > 2 || syntaxCheck[0]) {
-			return res.status(400).json('Please provide a valid tagName');
+		if (!senderTagName) throw new Error("Please provide sender's tagName");
+		if (!tagName) throw new Error("Please provide receiver's tagName");
+		if (tagName.includes('#')) {
+			const syntaxCheck = tagName.split('#');
+			if (syntaxCheck.length > 2 || syntaxCheck[0]) {
+				throw new Error('Please provide a valid tagName');
+			}
+			tagName = syntaxCheck[1];
 		}
-		tagName = syntaxCheck[1];
+		tagName = tagName.toLowerCase();
+		const result = await UserDataModel.findOne({tagName}).select([
+			'email',
+			'userProfile.fullName',
+			'userProfile.phoneNumber',
+			'photoURL',
+			'tagName',
+			'blockedUsers',
+		]);
+		if (!result) throw new Error('No user found with this tag name');
+		if (type === 'requestFund') {
+			const blockedUsers = result.blockedUsers;
+			if (blockedUsers.includes(req.user.email)) {
+				throw new Error('No user found with this tag names');
+			}
+		}
+		if (senderTagName === result.tagName)
+			throw new Error('No user found with this tag name');
+		const response = {
+			email: result.email,
+			fullName: result.userProfile.fullName,
+			tagName: result.tagName,
+			phoneNumber: result.userProfile.phoneNumber,
+			accNo: result.userProfile.phoneNumber.slice(4),
+			photo: result.photoURL || '',
+		};
+		return res.status(200).json(response);
+	} catch (err) {
+		res.status(400).json(err.message);
 	}
-
-	const result = await UserDataModel.findOne({tagName}).select([
-		'email',
-		'userProfile.fullName',
-		'userProfile.phoneNumber',
-		'photoURL',
-		'tagName',
-	]);
-	if (!result) return res.status(400).json('No user found with this tag name');
-	if (senderTagName === result.tagName)
-		return res.status(400).json('No user found with this tag name');
-	const response = {
-		email: result.email,
-		fullName: result.userProfile.fullName,
-		tagName: result.tagName,
-		phoneNumber: result.userProfile.phoneNumber,
-		accNo: result.userProfile.phoneNumber.slice(4),
-		photo: result.photoURL || '',
-	};
-	return res.status(200).json(response);
 };
 
 const createTagName = async (req, res) => {

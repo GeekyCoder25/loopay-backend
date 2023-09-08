@@ -1,15 +1,28 @@
+const SwapModel = require('../models/swapTransaction');
 const TransactionModel = require('../models/transaction');
 
 const getTransactions = async (req, res) => {
 	try {
-		const {date} = req.query;
+		const {date, swap} = req.query;
 		const {email} = req.user;
 		const transactionModel = await TransactionModel.find({email}).sort(
 			'-createdAt'
 		);
 		if (!transactionModel)
 			return res.status(204).json('No transactions found for this user');
-		const transactions = transactionModel;
+		let transactions = transactionModel;
+		if (swap) {
+			const swapTransactions = await SwapModel.find({email});
+			const combinedTransactions = transactions.concat(swapTransactions);
+			// console.log(combinedTransactions);
+
+			transactions = combinedTransactions.sort((a, b) => {
+				const dateA = new Date(a.createdAt);
+				const dateB = new Date(b.createdAt);
+				return dateB - dateA;
+			});
+		}
+
 		if (date && JSON.parse(date)) {
 			const groupTransactionsByDate = inputArray => {
 				const groupedByDate = {};

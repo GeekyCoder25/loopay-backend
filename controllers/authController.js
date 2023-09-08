@@ -9,6 +9,9 @@ const {isStrongPassword} = require('validator');
 const {sendMail} = require('../utils/sendEmail');
 const {createVirtualAccount} = require('../middleware/createVirtualAccount');
 const {handleErrors} = require('../utils/ErrorHandler');
+const DollarWallet = require('../models/walletDollar');
+const EuroWallet = require('../models/walletEuro');
+const PoundWallet = require('../models/walletPound');
 
 // const handleErrors = err => {
 // 	let errors = {};
@@ -20,7 +23,7 @@ const {handleErrors} = require('../utils/ErrorHandler');
 
 const passowrdSecurityOptions = {
 	minLength: 6,
-	minLowercase: 1,
+	minLowercase: 0,
 	minUppercase: 0,
 	minNumbers: 1,
 	minSymbols: 0,
@@ -37,7 +40,8 @@ const registerAccount = async (req, res) => {
 		const {password} = formData;
 		if (!isStrongPassword(password, passowrdSecurityOptions)) {
 			return res.status(400).json({
-				password: 'Please input a stronger password',
+				password:
+					'Please input a stronger password\n (at least 6 alpha-numeric characters)',
 			});
 		} else if (password) {
 			const salt = await bcrypt.genSalt(10);
@@ -84,26 +88,34 @@ const registerAccount = async (req, res) => {
 				await SessionModel.findByIdAndRemove(_id);
 				return res.status(500).json('Server Error');
 			}
-			const {id, customer, account_number, bank} = paystack.data;
+			const {id, account_number, bank} = paystack.data;
 			delete paystack.data.assignment;
 			const apiData = paystack.data;
+			const allWalletData = {
+				_id,
+				tagName: userName,
+				phoneNumber,
+				loopayAccNo: phoneNumber.slice(4),
+				firstName,
+				lastName,
+				email,
+			};
 			const paystackData = {
 				walletID: Number(id),
-				email: customer.email,
 				accNo: account_number,
-				accNo2: phoneNumber.slice(4),
 				bank: bank.name,
-				tagName: userName,
-				firstName: customer.first_name,
-				lastName: customer.last_name,
-				phoneNumber,
 				apiData,
 			};
-			await WalletModel.create(paystackData);
+			await WalletModel.create({...allWalletData, ...paystackData});
+			await DollarWallet.create({...allWalletData});
+			await EuroWallet.create({...allWalletData});
+			await PoundWallet.create({...allWalletData});
 		} catch (err) {
 			await User.findByIdAndRemove(_id);
 			await UserDataModel.findByIdAndRemove(_id);
 			await SessionModel.findByIdAndRemove(_id);
+			await WalletModel.findByIdAndRemove(_id);
+			await DollarWallet.findByIdAndRemove(_id);
 			throw new Error(err.message);
 		}
 		res.status(201).json({
@@ -236,6 +248,7 @@ const confirmOTP = async (req, res) => {
 
 const checkPassword = async (req, res) => {
 	try {
+		console.log(req.body);
 		const {password} = req.body;
 		if (!password) throw new Error('Please provide your account password');
 		const result = await User.findOne({email: req.user.email});

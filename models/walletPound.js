@@ -3,11 +3,11 @@ const {default: isEmail} = require('validator/lib/isEmail');
 const Schema = mongoose.Schema;
 const {isMobilePhone} = require('validator');
 
-const Wallet = new Schema({
+const PoundWallet = new Schema({
 	walletID: {
 		type: String,
-		required: [true, 'please provide your customer wallet Id'],
-		unique: true,
+		// required: [true, 'please provide your customer wallet Id'],
+		// unique: true,
 	},
 	currency: String,
 	email: {
@@ -24,12 +24,12 @@ const Wallet = new Schema({
 	},
 	accNo: {
 		type: String,
-		required: [true, 'please provide your account number'],
-		unique: true,
+		// required: [true, 'please provide your account number'],
+		// unique: true,
 	},
 	bank: {
 		type: String,
-		required: [true, 'please provide your bank name'],
+		// required: [true, 'please provide your bank name'],
 	},
 	tagName: {
 		type: String,
@@ -57,11 +57,11 @@ const Wallet = new Schema({
 	},
 });
 
-Wallet.pre('save', async function (next) {
-	this.currency = 'naira';
+PoundWallet.pre('save', async function (next) {
+	this.currency = 'pound';
 	if (!this.balance) this.balance = 0;
 	if (!this.tagName) this.tagName = this.userName || this.phoneNumber;
 	next();
 });
 
-module.exports = mongoose.model('wallet', Wallet);
+module.exports = mongoose.model('wallet-pound', PoundWallet);

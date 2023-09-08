@@ -36,6 +36,12 @@ const {
 	getRecipients,
 } = require('../controllers/recipientController');
 const {getRole} = require('../controllers/roleController');
+const {swapCurrency} = require('../controllers/swapController');
+const {
+	postFundRequest,
+	getFundRequest,
+	confirmRequest,
+} = require('../controllers/requestController');
 
 const router = express.Router();
 
@@ -58,5 +64,9 @@ router.route('/transferrecipient').get(getTransactions);
 router.route('/banks').get(listBanks);
 router.route('/savedbanks').get(getRecipients).post(postRecipent);
 router.route('/airtime').post(postRecipent);
+router.route('/swap').post(swapCurrency);
+router.route('/request').get(getFundRequest).post(postFundRequest);
+router.route('/request-confirm').post(confirmRequest);
+router.route('/splash').get(getFundRequest);
 
 module.exports = router;

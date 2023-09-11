@@ -205,7 +205,11 @@ const finalizeWithdrawal = async (req, res) => {
 const blockTransaction = async (req, res) => {
 	try {
 		const {_id} = req.body;
-		const transaction = await Transaction.findByIdAndRemove({_id});
+		const transaction = await Transaction.findByIdAndUpdate(
+			{_id},
+			{status: 'blocked'}
+		);
+
 		res.status(200).json({transaction});
 	} catch (err) {
 		console.log(err.message);

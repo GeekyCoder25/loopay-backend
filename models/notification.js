@@ -44,5 +44,15 @@ const NotificationSchema = new Schema(
 	},
 	{timestamps: true}
 );
+NotificationSchema.pre('save', function () {
+	if (this.message.includes('naira'))
+		this.message = this.message.replace('naira', '₦');
+	if (this.message.includes('dollar'))
+		this.message = this.message.replace('dollar', '$');
+	if (this.message.includes('euro'))
+		this.message = this.message.replace('euro', '€');
+	if (this.message.includes('pound'))
+		this.message = this.message.replace('pound', '£');
+});
 
 module.exports = mongoose.model('notitfication', NotificationSchema);

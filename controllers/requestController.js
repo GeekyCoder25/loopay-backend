@@ -23,18 +23,17 @@ const getFundRequest = async (req, res) => {
 
 const postFundRequest = async (req, res) => {
 	try {
-		const {email} = req.user;
+		const {email, phoneNumber} = req.user;
 		const {amount, currency, description, fee, id, tagName} = req.body;
 		const wallet = await NairaWallet.findOne({email});
 		const userData = await UserData.findOne({email});
-		const requesteeWallet = await NairaWallet.findOne({tagName});
 		const requesteeUserData = await UserData.findOne({tagName});
 
 		const request = {
 			requesterAccount: wallet.tagName,
 			requesterName: userData.userProfile.fullName,
 			requesterPhoto: userData.photoURL,
-			requesteeAccount: requesteeWallet.tagName,
+			requesteeAccount: tagName,
 			requesteeName: requesteeUserData.userProfile.fullName,
 			requesteePhoto: requesteeUserData.photoURL,
 			currency,
@@ -49,13 +48,14 @@ const postFundRequest = async (req, res) => {
 		const notification = {
 			id,
 			email: requesteeUserData.email,
-			phoneNumber: requesteeWallet.phoneNumber,
+			phoneNumber,
 			type: 'request',
 			header: 'Fund request',
 			message: `${userData.userProfile.fullName} has requested ${
 				currency + amount
 			} from you`,
 			status: 'unread',
+			photo: userData.photoURL,
 		};
 
 		await Notification.create(notification);

@@ -60,9 +60,9 @@ const webhookHandler = async (req, res) => {
 
 			const transactionsExists = await TransactionModel.findOne({id});
 			if (transactionsExists) {
-				return res.status(200).json(transactionsExists);
+				return;
 			}
-			const transactionResult = await TransactionModel.create({
+			await TransactionModel.create({
 				email,
 				phoneNumber: phone,
 				...transaction,
@@ -71,7 +71,6 @@ const webhookHandler = async (req, res) => {
 			const wallet = await WalletModel.findOne({email});
 			wallet.balance += amount;
 			await wallet.save();
-			return res.status(201).json(transactionResult);
 		}
 		await WebhookModel.create(event);
 	} catch (err) {

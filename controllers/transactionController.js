@@ -14,8 +14,6 @@ const getTransactions = async (req, res) => {
 		if (swap) {
 			const swapTransactions = await SwapModel.find({email});
 			const combinedTransactions = transactions.concat(swapTransactions);
-			// console.log(combinedTransactions);
-
 			transactions = combinedTransactions.sort((a, b) => {
 				const dateA = new Date(a.createdAt);
 				const dateB = new Date(b.createdAt);

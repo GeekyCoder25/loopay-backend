@@ -24,8 +24,6 @@ const getRecipients = async (req, res) => {
 	try {
 		const {email} = req.user;
 		const recipient = await RecipientModel.find({email});
-		if (!recipient) return res.status(204).json('No recipient found');
-
 		res.status(200).json(recipient);
 	} catch (err) {
 		res.status(400).json(err.message);
@@ -33,7 +31,7 @@ const getRecipients = async (req, res) => {
 	}
 };
 
-const postRecipent = async (req, res) => {
+const postRecipient = async (req, res) => {
 	try {
 		if (requiredKeys(req, res, ['bank', 'accNo'])) return;
 		const {code, currency, slug, type} = req.body.bank;
@@ -49,6 +47,7 @@ const postRecipent = async (req, res) => {
 
 		if (!transferRecipient.status) throw new Error(transferRecipient.message);
 		const checkRecipientExists = await RecipientModel.findOne({
+			email,
 			recipientCode: transferRecipient.data.recipient_code,
 		});
 		if (checkRecipientExists) return res.status(200).json(checkRecipientExists);
@@ -74,5 +73,5 @@ const postRecipent = async (req, res) => {
 
 module.exports = {
 	getRecipients,
-	postRecipent,
+	postRecipient,
 };

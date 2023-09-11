@@ -13,14 +13,6 @@ const DollarWallet = require('../models/walletDollar');
 const EuroWallet = require('../models/walletEuro');
 const PoundWallet = require('../models/walletPound');
 
-// const handleErrors = err => {
-// 	let errors = {};
-// 	Object.values(err.errors).forEach(({properties}) => {
-// 		errors[properties.path] = properties.message;
-// 	});
-// 	return errors;
-// };
-
 const passowrdSecurityOptions = {
 	minLength: 6,
 	minLowercase: 0,
@@ -248,7 +240,6 @@ const confirmOTP = async (req, res) => {
 
 const checkPassword = async (req, res) => {
 	try {
-		console.log(req.body);
 		const {password} = req.body;
 		if (!password) throw new Error('Please provide your account password');
 		const result = await User.findOne({email: req.user.email});

@@ -4,6 +4,8 @@ const NairaWallet = require('../models/wallet');
 const DollarWallet = require('../models/walletDollar');
 const EuroWallet = require('../models/walletEuro');
 const PoundWallet = require('../models/walletPound');
+const TransactionModel = require('../models/transaction');
+const Notification = require('../models/notification');
 
 const getFundRequest = async (req, res) => {
 	try {
@@ -22,7 +24,7 @@ const getFundRequest = async (req, res) => {
 const postFundRequest = async (req, res) => {
 	try {
 		const {email} = req.user;
-		const {amount, currency, fee, id, tagName} = req.body;
+		const {amount, currency, description, fee, id, tagName} = req.body;
 		const wallet = await NairaWallet.findOne({email});
 		const userData = await UserData.findOne({email});
 		const requesteeWallet = await NairaWallet.findOne({tagName});
@@ -38,11 +40,25 @@ const postFundRequest = async (req, res) => {
 			currency,
 			amount,
 			fee,
-			description: '',
+			description,
 			reference: `TRF${id}`,
 		};
 
 		await RequestModel.create(request);
+
+		const notification = {
+			id,
+			email: requesteeUserData.email,
+			phoneNumber: requesteeWallet.phoneNumber,
+			type: 'request',
+			header: 'Fund request',
+			message: `${userData.userProfile.fullName} has requested ${
+				currency + amount
+			} from you`,
+			status: 'unread',
+		};
+
+		await Notification.create(notification);
 		res.status(200).json('Request sent');
 	} catch (err) {
 		res.status(400).json(err.message);
@@ -50,9 +66,10 @@ const postFundRequest = async (req, res) => {
 };
 
 const confirmRequest = async (req, res) => {
-	const {_id, currency, status, requesterAccount, requesteeAccount} = req.body;
+	const {_id, currency, id, status, requesterAccount, requesteeAccount} =
+		req.body;
 	let {amount} = req.body;
-	const {email} = req.user;
+	const {email, phoneNumber} = req.user;
 
 	amount *= 100;
 
@@ -76,25 +93,62 @@ const confirmRequest = async (req, res) => {
 		const requesterWallet = await WalletModel.findOne({
 			tagName: requesterAccount,
 		});
+		const userData = await UserData.findOne({email});
+		const requesterUserData = await UserData.findOne({
+			email: requesterWallet.email,
+		});
+
 		if (status === 'accept') {
 			if (amount > wallet.balance)
 				throw new Error(`Insufficient ${currency} balance`);
+
+			const transaction = {
+				id,
+				status: 'success',
+				type: 'intra',
+				senderAccount: wallet.loopayAccNo,
+				senderName: `${req.user.firstName} ${req.user.lastName}`,
+				senderPhoto: userData.photoURL || '',
+				receiverAccount: requesterWallet.loopayAccNo,
+				receiverName: requesterUserData.userProfile.fullName,
+				receiverPhoto: requesterUserData.photoURL || '',
+				sourceBank: 'Loopay',
+				destinationBank: 'Loopay',
+				amount: amount / 100,
+				description: request.description,
+				reference: `TR${id}`,
+				currency,
+				createdAt: new Date(),
+			};
+			await TransactionModel.create({
+				email,
+				phoneNumber,
+				transactionType: 'debit',
+				...transaction,
+			});
+			await TransactionModel.create({
+				email: requesterWallet.email,
+				phoneNumber: requesterWallet.phoneNumber,
+				transactionType: 'credit',
+				...transaction,
+			});
+
 			wallet.balance -= amount;
 			requesterWallet.balance += amount;
 			await wallet.save();
 			await requesterWallet.save();
-			// await request.deleteOne();
+			await request.deleteOne();
+
 			res.status(200).json('Request accepted successfully');
 		} else if (status === 'decline') {
-			// await request.deleteOne();
+			await request.deleteOne();
 			res.status(200).json('Request declined');
 		} else if (status === 'block') {
-			// await request.deleteOne();
-			const userData = await UserData.updateOne(
+			await request.deleteOne();
+			await UserData.updateOne(
 				{email},
 				{$push: {blockedUsers: {$each: [requesterWallet.email], $position: 0}}}
 			);
-			console.log(userData);
 			res.status(200).json('Request block');
 		}
 	} catch (err) {

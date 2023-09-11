@@ -3,7 +3,6 @@ const Transaction = require('../models/transaction');
 const Session = require('../models/session');
 const UserData = require('../models/userData');
 const Recent = require('../models/recent');
-const Recipient = require('../models/recipient');
 const NairaWallet = require('../models/wallet');
 const DollarWallet = require('../models/walletDollar');
 const EuroWallet = require('../models/walletEuro');
@@ -106,17 +105,7 @@ const getUser = async (req, res) => {
 
 const transferToLoopayUser = async (req, res) => {
 	try {
-		const {
-			email,
-			phoneNumber,
-			tagName,
-			userName,
-			amount,
-			currency,
-			id,
-			description,
-			metadata,
-		} = req.body;
+		const {email, phoneNumber, tagName, userName, amount, currency} = req.body;
 
 		if (email === req.user.email) {
 			throw new Error("can't tranfer to sender's account");

@@ -29,7 +29,7 @@ const getTagName = async (req, res) => {
 		if (type === 'requestFund') {
 			const blockedUsers = result.blockedUsers;
 			if (blockedUsers.includes(req.user.email)) {
-				throw new Error('No user found with this tag names');
+				throw new Error("You're blocked");
 			}
 		}
 		if (senderTagName === result.tagName)

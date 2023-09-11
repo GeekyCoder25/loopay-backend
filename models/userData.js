@@ -35,7 +35,6 @@ const UserDataSchema = new Schema(
 		pin: String,
 		accountType: {type: String, enum: ['Personal', 'Business']},
 		verficationStaus: Boolean,
-		notificationLength: Number,
 		photo: String,
 		photoURL: String,
 		referralCode: String,

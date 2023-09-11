@@ -83,4 +83,12 @@ const TransactionModel = new Schema(
 	{timestamps: true}
 );
 
+TransactionModel.pre('save', function (next) {
+	if (this.currency === 'NGN') this.currency = 'naira';
+	if (this.currency === 'USD') this.currency = 'dollar';
+	if (this.currency === 'EUR') this.currency = 'euro';
+	if (this.currency === 'GBP') this.currency = 'pound';
+	next();
+});
+
 module.exports = mongoose.model('transaction', TransactionModel);

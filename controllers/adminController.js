@@ -30,21 +30,41 @@ const getAllAdminInfo = async (req, res) => {
 		if (!euroBalanceModel.length) euroBalanceModel = [0];
 		if (!poundBalanceModel.length) poundBalanceModel = [0];
 
+		const getPendingTransactionsAmount = currency => {
+			const pendingTransactions = transactions
+				.filter(
+					transaction =>
+						transaction.currency === currency &&
+						transaction.status === 'pending'
+				)
+				.map(transaction => Number(transaction.amount));
+			return pendingTransactions.length
+				? pendingTransactions?.reduce((a, b) => a + b)
+				: 0;
+		};
+
 		const nairaBalance =
 			nairaBalanceModel
 				.map(balance => balance.balance)
-				.reduce((a, b) => a + b) / 100;
+				.reduce((a, b) => a + b) /
+				100 +
+			getPendingTransactionsAmount('naira');
 		const dollarBalance =
 			dollarBalanceModel
 				.map(balance => balance.balance)
-				.reduce((a, b) => a + b) / 100;
+				.reduce((a, b) => a + b) /
+				100 +
+			getPendingTransactionsAmount('dollar');
 		const euroBalance =
 			euroBalanceModel.map(balance => balance.balance).reduce((a, b) => a + b) /
-			100;
+				100 +
+			getPendingTransactionsAmount('euro');
 		const poundBalance =
 			poundBalanceModel
 				.map(balance => balance.balance)
-				.reduce((a, b) => a + b) / 100;
+				.reduce((a, b) => a + b) /
+				100 +
+			getPendingTransactionsAmount('pound');
 
 		//Active Sessions
 		const lastActiveSessions = await Session.find().select('-__v');
@@ -182,6 +202,17 @@ const finalizeWithdrawal = async (req, res) => {
 	}
 };
 
+const blockTransaction = async (req, res) => {
+	try {
+		const {_id} = req.body;
+		const transaction = await Transaction.findByIdAndRemove({_id});
+		res.status(200).json({transaction});
+	} catch (err) {
+		console.log(err.message);
+		res.status(400).json(err.message);
+	}
+};
+
 module.exports = {
 	getAllAdminInfo,
 	getUser,
@@ -189,4 +220,5 @@ module.exports = {
 	getAllNairaBalance,
 	transferToLoopayUser,
 	finalizeWithdrawal,
+	blockTransaction,
 };

@@ -7,6 +7,7 @@ const {
 	transferToLoopayUser,
 	getUser,
 	finalizeWithdrawal,
+	blockTransaction,
 } = require('../controllers/adminController');
 
 const router = express.Router();
@@ -19,5 +20,6 @@ router.get('/naira-balance', getAllNairaBalance);
 router.get('/user/:id', getUser);
 router.post('/loopay/transfer', transferToLoopayUser);
 router.post('/finalize', finalizeWithdrawal);
+router.post('/block-transaction', blockTransaction);
 
 module.exports = router;

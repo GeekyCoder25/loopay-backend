@@ -5,6 +5,7 @@ const WalletModel = require('../models/wallet');
 
 const webhookHandler = async (req, res) => {
 	try {
+		res.send(200);
 		const event = req.body;
 		if (event.event === 'charge.success') {
 			const userData = await UserDataModel.findOne({
@@ -69,7 +70,6 @@ const webhookHandler = async (req, res) => {
 			}
 		}
 		await WebhookModel.create(event);
-		res.send(200);
 		console.log(req.body);
 	} catch (err) {
 		console.log(err.message);

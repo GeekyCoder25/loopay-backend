@@ -8,6 +8,7 @@ const DollarWallet = require('../models/walletDollar');
 const EuroWallet = require('../models/walletEuro');
 const PoundWallet = require('../models/walletPound');
 const axios = require('axios');
+const Notification = require('../models/notification');
 
 const getAllAdminInfo = async (req, res) => {
 	try {
@@ -69,6 +70,9 @@ const getAllAdminInfo = async (req, res) => {
 		//Active Sessions
 		const lastActiveSessions = await Session.find().select('-__v');
 
+		const notifications = await Notification.find()
+			.select('-__v')
+			.sort('-createdAt');
 		res.status(200).json({
 			users,
 			wallets,
@@ -80,6 +84,7 @@ const getAllAdminInfo = async (req, res) => {
 			lastActiveSessions,
 			userDatas,
 			recents,
+			notifications,
 		});
 	} catch (err) {
 		console.log(err.message);

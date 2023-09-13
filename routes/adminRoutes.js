@@ -9,6 +9,7 @@ const {
 	finalizeWithdrawal,
 	blockTransaction,
 } = require('../controllers/adminController');
+const {updateNotifications} = require('../controllers/notificationController');
 
 const router = express.Router();
 
@@ -21,5 +22,6 @@ router.get('/user/:id', getUser);
 router.post('/loopay/transfer', transferToLoopayUser);
 router.post('/finalize', finalizeWithdrawal);
 router.post('/block-transaction', blockTransaction);
+router.put('/notifications', updateNotifications);
 
 module.exports = router;

@@ -10,7 +10,6 @@ const NotificationSchema = new Schema(
 			required: [true, 'Please input notifiaction ID'],
 			unique: true,
 		},
-		// currency: String,
 		email: {
 			type: String,
 			required: [true, 'Please input your email address'],
@@ -33,11 +32,21 @@ const NotificationSchema = new Schema(
 			type: String,
 			required: [true, 'Please provide notification message'],
 		},
+		adminMessage: {
+			type: String,
+			required: [true, 'Please provide admin notification message'],
+		},
 		status: {
 			type: String,
 			required: [true, 'Please provide notification status'],
 			enum: ['read', 'unread'],
 		},
+		adminStatus: {
+			type: String,
+			required: [true, 'Please provide notification status'],
+			enum: ['read', 'unread'],
+		},
+		photo: String,
 		metadata: {
 			type: Schema.Types.Mixed,
 		},
@@ -53,6 +62,8 @@ NotificationSchema.pre('save', function () {
 		this.message = this.message.replace('euro', '€');
 	if (this.message.includes('pound'))
 		this.message = this.message.replace('pound', '£');
+
+	this.adminStatus = 'unread';
 });
 
 module.exports = mongoose.model('notitfication', NotificationSchema);

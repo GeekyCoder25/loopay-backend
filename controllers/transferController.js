@@ -4,7 +4,9 @@ const DollarWallet = require('../models/walletDollar');
 const EuroWallet = require('../models/walletEuro');
 const PoundWallet = require('../models/walletPound');
 const TransactionModel = require('../models/transaction');
+const Notification = require('../models/notification');
 const {requiredKeys} = require('../utils/requiredKeys');
+const {addingDecimal} = require('../utils/addingDecimal');
 
 const intitiateTransfer = async (req, res) => {
 	try {
@@ -97,6 +99,26 @@ const intitiateTransfer = async (req, res) => {
 							phoneNumber,
 							...transaction,
 						});
+
+						const notification = {
+							id,
+							phoneNumber,
+							type: 'transaction',
+							header: 'Debit transaction',
+							message: `${req.user.firstName} ${
+								req.user.lastName
+							} has sent you ${
+								currency + addingDecimal(Number(amount).toLocaleString())
+							}`,
+							adminMessage: `${req.user.firstName} ${req.user.lastName} sent ${
+								currency + addingDecimal(Number(amount).toLocaleString())
+							} to an external bank account ${name}`,
+							status: 'unread',
+							photo: senderPhoto,
+							metadata: {...transaction, transactionType: 'credit'},
+						};
+
+						await Notification.create(notification);
 					}
 				} catch (err) {
 					console.log(err.message);
@@ -158,9 +180,9 @@ const intitiateTransferToLoopay = async (req, res) => {
 		if (sendeeWallet.tagName !== (tagName || userName))
 			throw new Error('Invalid Account Transfer');
 
-		const amountInUnits = () => amount * 100;
+		const amountInUnits = amount * 100;
 
-		if (senderWallet.balance < amountInUnits())
+		if (senderWallet.balance < amountInUnits)
 			throw new Error('Insufficient funds');
 		const transaction = {
 			id,
@@ -202,10 +224,29 @@ const intitiateTransferToLoopay = async (req, res) => {
 				transactionType: 'credit',
 				...transaction,
 			});
+
+			const notification = {
+				id,
+				email: sendeeWallet.email,
+				phoneNumber,
+				type: 'transaction',
+				header: 'Credit transaction',
+				message: `${req.user.firstName} ${req.user.lastName} has sent you ${
+					currency + addingDecimal(Number(amount).toLocaleString())
+				}`,
+				adminMessage: `${req.user.firstName} ${req.user.lastName} sent ${
+					currency + addingDecimal(Number(amount).toLocaleString())
+				} to ${fullName}`,
+				status: 'unread',
+				photo: senderPhoto,
+				metadata: {...transaction, transactionType: 'credit'},
+			};
+
+			await Notification.create(notification);
 		}
 
-		senderWallet.balance -= amountInUnits();
-		sendeeWallet.balance += amountInUnits();
+		senderWallet.balance -= amountInUnits;
+		sendeeWallet.balance += amountInUnits;
 		await senderWallet.save();
 		await sendeeWallet.save();
 		res.status(200).json({

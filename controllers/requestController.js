@@ -6,6 +6,7 @@ const EuroWallet = require('../models/walletEuro');
 const PoundWallet = require('../models/walletPound');
 const TransactionModel = require('../models/transaction');
 const Notification = require('../models/notification');
+const {addingDecimal} = require('../utils/addingDecimal');
 
 const getFundRequest = async (req, res) => {
 	try {
@@ -52,8 +53,11 @@ const postFundRequest = async (req, res) => {
 			type: 'request',
 			header: 'Fund request',
 			message: `${userData.userProfile.fullName} has requested ${
-				currency + amount
+				currency + addingDecimal(amount.toLocaleString())
 			} from you`,
+			adminMessage: `${userData.userProfile.fullName} requested ${
+				currency + addingDecimal(amount).toLocaleString()
+			} from ${requesteeUserData.userProfile.fullName}`,
 			status: 'unread',
 			photo: userData.photoURL,
 		};
@@ -66,12 +70,20 @@ const postFundRequest = async (req, res) => {
 };
 
 const confirmRequest = async (req, res) => {
-	const {_id, currency, id, status, requesterAccount, requesteeAccount} =
-		req.body;
-	let {amount} = req.body;
+	const {
+		_id,
+		amount,
+		currency,
+		id,
+		fee,
+		status,
+		requesterAccount,
+		requesteeAccount,
+	} = req.body;
 	const {email, phoneNumber} = req.user;
 
-	amount *= 100;
+	const amountInUnits = amount * 100;
+	const toReceive = amount - fee;
 
 	try {
 		const selectWallet = currency => {
@@ -98,28 +110,37 @@ const confirmRequest = async (req, res) => {
 			email: requesterWallet.email,
 		});
 
+		const notification = {
+			id,
+			email: requesterWallet.email,
+			phoneNumber: requesterWallet.phoneNumber,
+			type: 'request_confirm',
+			status: 'unread',
+			photo: userData.photoURL,
+		};
+
+		const transaction = {
+			id,
+			status: 'success',
+			type: 'intra',
+			senderAccount: wallet.loopayAccNo,
+			senderName: `${req.user.firstName} ${req.user.lastName}`,
+			senderPhoto: userData.photoURL || '',
+			receiverAccount: requesterWallet.loopayAccNo,
+			receiverName: requesterUserData.userProfile.fullName,
+			receiverPhoto: requesterUserData.photoURL || '',
+			sourceBank: 'Loopay',
+			destinationBank: 'Loopay',
+			amount: amount,
+			description: request.description,
+			reference: `TR${id}`,
+			currency,
+			createdAt: new Date(),
+		};
 		if (status === 'accept') {
 			if (amount > wallet.balance)
 				throw new Error(`Insufficient ${currency} balance`);
 
-			const transaction = {
-				id,
-				status: 'success',
-				type: 'intra',
-				senderAccount: wallet.loopayAccNo,
-				senderName: `${req.user.firstName} ${req.user.lastName}`,
-				senderPhoto: userData.photoURL || '',
-				receiverAccount: requesterWallet.loopayAccNo,
-				receiverName: requesterUserData.userProfile.fullName,
-				receiverPhoto: requesterUserData.photoURL || '',
-				sourceBank: 'Loopay',
-				destinationBank: 'Loopay',
-				amount: amount / 100,
-				description: request.description,
-				reference: `TR${id}`,
-				currency,
-				createdAt: new Date(),
-			};
 			await TransactionModel.create({
 				email,
 				phoneNumber,
@@ -131,19 +152,47 @@ const confirmRequest = async (req, res) => {
 				phoneNumber: requesterWallet.phoneNumber,
 				transactionType: 'credit',
 				...transaction,
+				amount: toReceive,
 			});
-
-			wallet.balance -= amount;
-			requesterWallet.balance += amount;
+			await Notification.create({
+				...notification,
+				header: 'Request Approval',
+				message: `${
+					userData.userProfile.fullName
+				} has approved your request and sent you ${
+					currency + addingDecimal(amount.toLocaleString())
+				}`,
+				adminMessage: `${userData.userProfile.fullName} has approved ${
+					requesterUserData.userProfile.fullName
+				} fund request and sent ${
+					currency + addingDecimal(amount.toLocaleString())
+				}`,
+			});
+			wallet.balance -= amountInUnits;
+			requesterWallet.balance += toReceive * 100;
 			await wallet.save();
 			await requesterWallet.save();
 			await request.deleteOne();
 
 			res.status(200).json('Request accepted successfully');
 		} else if (status === 'decline') {
+			await Notification.create({
+				...notification,
+				header: 'Request Denied',
+				message: `${userData.userProfile.fullName} has denied your request of ${
+					currency + addingDecimal(amount.toLocaleString())
+				}`,
+			});
 			await request.deleteOne();
 			res.status(200).json('Request declined');
 		} else if (status === 'block') {
+			await Notification.create({
+				...notification,
+				header: 'Request Denied',
+				message: `${userData.userProfile.fullName} has denied your request of ${
+					currency + addingDecimal(amount.toLocaleString())
+				}`,
+			});
 			await request.deleteOne();
 			await UserData.updateOne(
 				{email},

@@ -29,7 +29,7 @@ const SessionSchema = new Schema(
 					unique: true,
 				},
 				firstSignIn: {
-					type: String,
+					type: Date,
 					required: [true, 'Please provide first sign in'],
 				},
 				lastSeen: {

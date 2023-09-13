@@ -69,7 +69,6 @@ const webhookHandler = async (req, res) => {
 			}
 		}
 		await WebhookModel.create(event);
-		console.log(req.body);
 		res.send(200);
 	} catch (err) {
 		console.log(err.message);

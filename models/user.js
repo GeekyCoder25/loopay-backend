@@ -14,6 +14,10 @@ const UserSchema = new Schema(
 			type: String,
 			enum: ['user', 'admin'],
 		},
+		status: {
+			type: String,
+			enum: ['active', 'blocked'],
+		},
 		firstName: {
 			type: String,
 			required: [true, 'Please input Your first name'],
@@ -44,6 +48,7 @@ const UserSchema = new Schema(
 			minlength: [6, 'Your password must be at least 6 characters'],
 		},
 		otpCode: String,
+		blockedAt: Date,
 	},
 	{timestamps: true}
 );

@@ -23,9 +23,9 @@ const getFundRequest = async (req, res) => {
 };
 
 const postFundRequest = async (req, res) => {
+	const {amount, currency, description, fee, id, tagName} = req.body;
 	try {
 		const {email, phoneNumber} = req.user;
-		const {amount, currency, description, fee, id, tagName} = req.body;
 		const wallet = await NairaWallet.findOne({email});
 		const userData = await UserData.findOne({email});
 		const requesteeUserData = await UserData.findOne({tagName});
@@ -56,7 +56,7 @@ const postFundRequest = async (req, res) => {
 				currency + addingDecimal(amount.toLocaleString())
 			} from you`,
 			adminMessage: `${userData.userProfile.fullName} requested ${
-				currency + addingDecimal(amount).toLocaleString()
+				currency + addingDecimal(amount.toLocaleString())
 			} from ${requesteeUserData.userProfile.fullName}`,
 			status: 'unread',
 			photo: userData.photoURL,
@@ -137,8 +137,9 @@ const confirmRequest = async (req, res) => {
 			currency,
 			createdAt: new Date(),
 		};
+
 		if (status === 'accept') {
-			if (amount > wallet.balance)
+			if (amountInUnits > wallet.balance)
 				throw new Error(`Insufficient ${currency} balance`);
 
 			await TransactionModel.create({

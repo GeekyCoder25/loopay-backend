@@ -38,6 +38,7 @@ const RequestModel = new Schema(
 		},
 		reference: {
 			type: String,
+			unique: true,
 			required: [true, "Please provide transaction's refrence"],
 		},
 	},

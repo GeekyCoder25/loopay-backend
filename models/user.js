@@ -55,6 +55,7 @@ const UserSchema = new Schema(
 
 UserSchema.pre('save', function (next) {
 	if (!this.role) this.role = 'user';
+	this.status = 'active';
 	this.phoneNumber = handlephoneNumber(this.phoneNumber);
 	if (this.userName.endsWith(' ')) {
 		this.userName = this.userName.slice(0, -1);

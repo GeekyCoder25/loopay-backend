@@ -43,7 +43,6 @@ const NotificationSchema = new Schema(
 		},
 		adminStatus: {
 			type: String,
-			required: [true, 'Please provide notification status'],
 			enum: ['read', 'unread'],
 		},
 		photo: String,
@@ -54,14 +53,19 @@ const NotificationSchema = new Schema(
 	{timestamps: true}
 );
 NotificationSchema.pre('save', function () {
-	if (this.message.includes('naira'))
-		this.message = this.message.replace('naira', '₦');
-	if (this.message.includes('dollar'))
-		this.message = this.message.replace('dollar', '$');
-	if (this.message.includes('euro'))
-		this.message = this.message.replace('euro', '€');
-	if (this.message.includes('pound'))
-		this.message = this.message.replace('pound', '£');
+	const changeSymbol = (currencyName, currencySymbol) => {
+		if (this.message.includes(currencyName))
+			this.message = this.message.replace(currencyName, currencySymbol);
+		if (this.adminMessage.includes(currencyName))
+			this.adminMessage = this.adminMessage.replace(
+				currencyName,
+				currencySymbol
+			);
+	};
+	changeSymbol('naira', '₦');
+	changeSymbol('dollar', '$');
+	changeSymbol('euro', '€');
+	changeSymbol('pound', '£');
 
 	this.adminStatus = 'unread';
 });

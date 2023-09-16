@@ -71,9 +71,10 @@ const TransactionModel = new Schema(
 		},
 		reference: {
 			type: String,
-			required: [true, "Please provide transaction's refrence"],
+			required: [true, "Please provide transaction's reference"],
 		},
 		paystackReference: String,
+		transferCode: String,
 		currency: {
 			type: String,
 			required: [true, "Please provide transaction's currency"],

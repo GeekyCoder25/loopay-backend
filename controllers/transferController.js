@@ -8,7 +8,7 @@ const Notification = require('../models/notification');
 const {requiredKeys} = require('../utils/requiredKeys');
 const {addingDecimal} = require('../utils/addingDecimal');
 
-const intitiateTransfer = async (req, res) => {
+const initiateTransfer = async (req, res) => {
 	try {
 		const url = 'https://api.paystack.co/transfer';
 		const SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
@@ -86,7 +86,7 @@ const intitiateTransfer = async (req, res) => {
 						amount,
 						description: reason,
 						reference: response.data.data.reference,
-						paystackReference: response.data.data.transfer_code,
+						transferCode: response.data.data.transfer_code,
 						currency,
 						metadata: metadata || null,
 						createdAt: new Date(),
@@ -141,7 +141,7 @@ const intitiateTransfer = async (req, res) => {
 	}
 };
 
-const intitiateTransferToLoopay = async (req, res) => {
+const initiateTransferToLoopay = async (req, res) => {
 	try {
 		const {
 			phoneNumber,
@@ -274,6 +274,6 @@ const intitiateTransferToLoopay = async (req, res) => {
 // };
 
 module.exports = {
-	intitiateTransfer,
-	intitiateTransferToLoopay,
+	initiateTransfer,
+	initiateTransferToLoopay,
 };

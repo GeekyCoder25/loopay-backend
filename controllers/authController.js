@@ -13,7 +13,7 @@ const DollarWallet = require('../models/walletDollar');
 const EuroWallet = require('../models/walletEuro');
 const PoundWallet = require('../models/walletPound');
 
-const passowrdSecurityOptions = {
+const passwordSecurityOptions = {
 	minLength: 6,
 	minLowercase: 0,
 	minUppercase: 0,
@@ -30,7 +30,7 @@ const registerAccount = async (req, res) => {
 				'Please provide formData for registering and sessionData for Devices and Sessions'
 			);
 		const {password} = formData;
-		if (!isStrongPassword(password, passowrdSecurityOptions)) {
+		if (!isStrongPassword(password, passwordSecurityOptions)) {
 			return res.status(400).json({
 				password:
 					'Please input a stronger password\n (at least 6 alpha-numeric characters)',
@@ -195,14 +195,14 @@ const forgetPassword = async (req, res) => {
 			</p>
 		</div>`;
 
-			const mailOtptions = {
+			const mailOptions = {
 				from: process.env.EMAIL,
 				to: req.body.email,
 				subject: 'Loopay One-Time Password (OTP) for Account Verification',
 				html: message,
 			};
 
-			sendMail(mailOtptions, res, result);
+			sendMail(mailOptions, res, result);
 		}
 	} catch (err) {
 		res.status(400).json({error: err.message});
@@ -246,7 +246,7 @@ const checkPassword = async (req, res) => {
 		const compare =
 			result && (await bcrypt.compare(req.body.password, result.password));
 		if (!compare) {
-			return res.status(401).json({error: 'Incorect Password'});
+			return res.status(401).json({error: 'Incorrect Password'});
 		}
 		res.status(200).json(true);
 	} catch (err) {
@@ -264,7 +264,7 @@ const changePassword = async (req, res) => {
 			result && (await bcrypt.compare(req.body.password, result.password));
 		if (compare)
 			throw new Error('Please use a password different from your current one');
-		else if (!isStrongPassword(password, passowrdSecurityOptions)) {
+		else if (!isStrongPassword(password, passwordSecurityOptions)) {
 			throw new Error('Please input a stronger password');
 		} else if (password) {
 			const salt = await bcrypt.genSalt(10);

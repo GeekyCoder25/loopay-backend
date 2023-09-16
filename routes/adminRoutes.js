@@ -10,6 +10,7 @@ const {
 	blockTransaction,
 } = require('../controllers/adminController');
 const {updateNotifications} = require('../controllers/notificationController');
+const {getRate, updateRate} = require('../controllers/currencyController');
 
 const router = express.Router();
 
@@ -23,5 +24,6 @@ router.post('/loopay/transfer', transferToLoopayUser);
 router.post('/finalize', finalizeWithdrawal);
 router.post('/block-transaction', blockTransaction);
 router.put('/notifications', updateNotifications);
+router.route('/rate').get(getRate).put(updateRate);
 
 module.exports = router;

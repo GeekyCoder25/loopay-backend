@@ -43,29 +43,47 @@ const getAllAdminInfo = async (req, res) => {
 				? pendingTransactions?.reduce((a, b) => a + b)
 				: 0;
 		};
+		const getBlockedTransactionsAmount = currency => {
+			const pendingTransactions = transactions
+				.filter(
+					transaction =>
+						transaction.currency === currency &&
+						transaction.status === 'blocked'
+				)
+				.map(transaction => Number(transaction.amount));
+			return pendingTransactions.length
+				? pendingTransactions?.reduce((a, b) => a + b)
+				: 0;
+		};
 
 		const nairaBalance =
 			nairaBalanceModel
 				.map(balance => balance.balance)
 				.reduce((a, b) => a + b) /
 				100 +
-			getPendingTransactionsAmount('naira');
+			getPendingTransactionsAmount('naira') +
+			getBlockedTransactionsAmount('naira');
 		const dollarBalance =
 			dollarBalanceModel
 				.map(balance => balance.balance)
 				.reduce((a, b) => a + b) /
 				100 +
-			getPendingTransactionsAmount('dollar');
+			getPendingTransactionsAmount('dollar') +
+			getBlockedTransactionsAmount('dollar');
+
 		const euroBalance =
 			euroBalanceModel.map(balance => balance.balance).reduce((a, b) => a + b) /
 				100 +
-			getPendingTransactionsAmount('euro');
+			getPendingTransactionsAmount('euro') +
+			getBlockedTransactionsAmount('euro');
+
 		const poundBalance =
 			poundBalanceModel
 				.map(balance => balance.balance)
 				.reduce((a, b) => a + b) /
 				100 +
-			getPendingTransactionsAmount('pound');
+			getPendingTransactionsAmount('pound') +
+			getBlockedTransactionsAmount('pound');
 
 		//Active Sessions
 		const lastActiveSessions = await Session.find().select('-__v');
@@ -195,12 +213,16 @@ const finalizeWithdrawal = async (req, res) => {
 			'Content-Type': 'application/json',
 		},
 	};
-
-	const data = req.body;
-
+	const {transfer_code, otp} = req.body;
+	const data = {transfer_code, otp};
 	try {
+		console.log(data);
 		const response = await axios.post(url, data, config);
 		res.status(200).json(response.data);
+		await Transaction.updateOne(
+			{paystackReference: transfer_code},
+			{status: 'success'}
+		);
 	} catch (err) {
 		console.log(err.message);
 		res.status(400).json(err.message);

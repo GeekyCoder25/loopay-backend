@@ -85,15 +85,15 @@ const intitiateTransfer = async (req, res) => {
 						destinationBankSlug: slug,
 						amount,
 						description: reason,
-						reference: `TR${id}`,
-						paystackRefrence: response.data.data.transfer_code,
+						reference: response.data.data.reference,
+						paystackReference: response.data.data.transfer_code,
 						currency,
 						metadata: metadata || null,
 						createdAt: new Date(),
 					};
 					const {email, phoneNumber} = req.user;
-					const transactionsExists = await TransactionModel.findOne({id});
-					if (!transactionsExists) {
+					const transactionExists = await TransactionModel.findOne({id});
+					if (!transactionExists) {
 						await TransactionModel.create({
 							email,
 							phoneNumber,
@@ -101,13 +101,14 @@ const intitiateTransfer = async (req, res) => {
 						});
 
 						const notification = {
+							email: 'admin@loopay.com',
 							id,
 							phoneNumber,
 							type: 'transaction',
 							header: 'Debit transaction',
 							message: `${req.user.firstName} ${
 								req.user.lastName
-							} has sent you ${
+							} has withdrawn ${
 								currency + addingDecimal(Number(amount).toLocaleString())
 							}`,
 							adminMessage: `${req.user.firstName} ${req.user.lastName} sent ${
@@ -125,7 +126,7 @@ const intitiateTransfer = async (req, res) => {
 				}
 				res.status(200).json({
 					...response.data.data,
-					amount: response.data.data.amougvbnt / 100,
+					amount: response.data.data.amount / 100,
 				});
 			} else {
 				throw new Error(response.data.message);

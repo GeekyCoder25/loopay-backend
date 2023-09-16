@@ -2,6 +2,7 @@ const WebhookModel = require('../models/webhook');
 const TransactionModel = require('../models/transaction');
 const UserDataModel = require('../models/userData');
 const WalletModel = require('../models/wallet');
+const {addingDecimal} = require('../utils/addingDecimal');
 
 const webhookHandler = async (req, res) => {
 	try {
@@ -23,17 +24,6 @@ const webhookHandler = async (req, res) => {
 				narration,
 			} = event.data.authorization;
 
-			const addingDecimal = value => {
-				if (!value.toString().includes('.')) {
-					return value + '.00';
-				} else if (value.toString().split('.')[1].length === 0) {
-					return value + '00';
-				} else if (value.toString().split('.')[1].length === 1) {
-					return value + '0';
-				}
-				return value.toString();
-			};
-
 			const transaction = {
 				id: event.data.id,
 				status: event.data.status,
@@ -48,7 +38,7 @@ const webhookHandler = async (req, res) => {
 				amount: addingDecimal(event.data.amount / 100),
 				description: narration || '',
 				reference: `TR${event.data.id}`,
-				payStackReference: event.data.reference,
+				paystackReference: event.data.reference,
 				currency: 'NGN',
 				metadata: event.data.metadata || null,
 				createdAt: event.data.paidAt,

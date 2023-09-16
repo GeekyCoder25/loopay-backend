@@ -47,6 +47,7 @@ const {
 	getNotifications,
 	updateNotification,
 } = require('../controllers/notificationController');
+const {getRate} = require('../controllers/currencyController');
 
 const router = express.Router();
 
@@ -76,6 +77,7 @@ router.route('/debit-card/:currency').get(getCards).post(postCard);
 router.route('/debit-card').post(postCard);
 router.route('/notification').get(getNotifications);
 router.route('/notification/:id').put(updateNotification);
+router.route('/rate').get(getRate);
 router.route('/splash').get(getFundRequest);
 
 module.exports = router;

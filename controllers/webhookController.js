@@ -3,17 +3,16 @@ const TransactionModel = require('../models/transaction');
 const UserDataModel = require('../models/userData');
 const WalletModel = require('../models/wallet');
 const {addingDecimal} = require('../utils/addingDecimal');
+const Notification = require('../models/notification');
 
 const webhookHandler = async (req, res) => {
 	try {
 		const event = req.body;
+		console.log(event);
 		if (event.event === 'charge.success') {
 			const userData = await UserDataModel.findOne({
 				email: event.data.customer.email,
 			});
-			if (!event.data.amount.toString().includes('.')) {
-				event.data.amount += Number('.00');
-			}
 			const {
 				sender_bank_account_number,
 				account_name,
@@ -30,16 +29,16 @@ const webhookHandler = async (req, res) => {
 				type: 'inter',
 				transactionType: 'credit',
 				senderAccount: sender_bank_account_number,
-				senderName: account_name || sender_name || 'null',
+				senderName: account_name || sender_name || 'An external user',
 				receiverAccount: receiver_bank_account_number,
 				receiverName: userData.userProfile.fullName,
-				sourceBank: sender_bank || 'null',
+				sourceBank: sender_bank || 'external bank',
 				destinationBank: receiver_bank,
-				amount: addingDecimal(event.data.amount / 100),
+				amount: addingDecimal(`${event.data.amount / 100}`),
 				description: narration || '',
 				reference: `TR${event.data.id}`,
 				paystackReference: event.data.reference,
-				currency: 'NGN',
+				currency: event.data.currency,
 				metadata: event.data.metadata || null,
 				createdAt: event.data.paidAt,
 			};
@@ -47,13 +46,37 @@ const webhookHandler = async (req, res) => {
 			const {email, phone} = customer;
 
 			const transactionsExists = await TransactionModel.findOne({id});
+			const wallet = await WalletModel.findOne({email});
+
 			if (!transactionsExists) {
 				await TransactionModel.create({
 					email,
 					phoneNumber: phone,
 					...transaction,
 				});
-				const wallet = await WalletModel.findOne({email});
+
+				const notification = {
+					id,
+					email: wallet.email,
+					phoneNumber: wallet.phoneNumber,
+					type: 'transaction',
+					header: 'Credit transaction',
+					message: `${
+						account_name || sender_name || 'An external user'
+					} has sent you ${
+						event.data.currency + addingDecimal((amount / 100).toLocaleString())
+					}`,
+					adminMessage: `${
+						account_name || sender_name || 'An external user'
+					} sent ${
+						event.data.currency + addingDecimal((amount / 100).toLocaleString())
+					} to ${userData.userProfile.fullName}`,
+					status: 'unread',
+					photo: '',
+					metadata: {...transaction, transactionType: 'credit'},
+				};
+
+				await Notification.create(notification);
 				wallet.balance += amount;
 				await wallet.save();
 			}

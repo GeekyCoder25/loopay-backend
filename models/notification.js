@@ -53,19 +53,27 @@ const NotificationSchema = new Schema(
 	{timestamps: true}
 );
 NotificationSchema.pre('save', function () {
-	const changeSymbol = (currencyName, currencySymbol) => {
-		if (this.message.includes(currencyName))
+	const changeSymbol = (currencyName, currencyAcronym, currencySymbol) => {
+		if (this.message.includes(currencyName)) {
 			this.message = this.message.replace(currencyName, currencySymbol);
-		if (this.adminMessage.includes(currencyName))
+		} else if (this.message.includes(currencyAcronym))
+			this.message = this.message.replace(currencyAcronym, currencySymbol);
+		if (this.adminMessage.includes(currencyName)) {
 			this.adminMessage = this.adminMessage.replace(
 				currencyName,
 				currencySymbol
 			);
+		} else if (this.adminMessage.includes(currencyAcronym)) {
+			this.adminMessage = this.adminMessage.replace(
+				currencyAcronym,
+				currencySymbol
+			);
+		}
 	};
-	changeSymbol('naira', '₦');
-	changeSymbol('dollar', '$');
-	changeSymbol('euro', '€');
-	changeSymbol('pound', '£');
+	changeSymbol('naira', 'NGN', '₦');
+	changeSymbol('dollar', 'USD', '$');
+	changeSymbol('euro', 'EUR', '€');
+	changeSymbol('pound', 'GBP', '£');
 
 	this.adminStatus = 'unread';
 });

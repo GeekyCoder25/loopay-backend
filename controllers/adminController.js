@@ -224,8 +224,7 @@ const finalizeWithdrawal = async (req, res) => {
 			{status: 'success'}
 		);
 	} catch (err) {
-		console.log(err.message);
-		res.status(400).json(err.message);
+		res.status(400).json(err.response.data.message);
 	}
 };
 
@@ -236,7 +235,6 @@ const blockTransaction = async (req, res) => {
 			{_id},
 			{status: 'blocked'}
 		);
-
 		res.status(200).json({transaction});
 	} catch (err) {
 		console.log(err.message);

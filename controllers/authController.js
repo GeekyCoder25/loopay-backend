@@ -15,9 +15,10 @@ const PoundWallet = require('../models/walletPound');
 
 const passwordSecurityOptions = {
 	minLength: 6,
+	maxLength: 6,
 	minLowercase: 0,
 	minUppercase: 0,
-	minNumbers: 1,
+	minNumbers: 0,
 	minSymbols: 0,
 };
 
@@ -32,8 +33,7 @@ const registerAccount = async (req, res) => {
 		const {password} = formData;
 		if (!isStrongPassword(password, passwordSecurityOptions)) {
 			return res.status(400).json({
-				password:
-					'Please input a stronger password\n (at least 6 alpha-numeric characters)',
+				password: 'Please input a stronger password\n at least 6 digits',
 			});
 		} else if (password) {
 			const salt = await bcrypt.genSalt(10);

@@ -70,18 +70,10 @@ const postFundRequest = async (req, res) => {
 };
 
 const confirmRequest = async (req, res) => {
-	const {
-		_id,
-		amount,
-		currency,
-		id,
-		fee,
-		status,
-		requesterAccount,
-		requesteeAccount,
-	} = req.body;
+	const {_id, currency, id, fee, status, requesterAccount, requesteeAccount} =
+		req.body;
 	const {email, phoneNumber} = req.user;
-
+	const amount = Number(req.body.amount);
 	const amountInUnits = amount * 100;
 	const toReceive = amount - fee;
 
@@ -131,7 +123,7 @@ const confirmRequest = async (req, res) => {
 			receiverPhoto: requesterUserData.photoURL || '',
 			sourceBank: 'Loopay',
 			destinationBank: 'Loopay',
-			amount: amount,
+			amount,
 			description: request.description,
 			reference: `TR${id}`,
 			currency,
@@ -153,7 +145,6 @@ const confirmRequest = async (req, res) => {
 				phoneNumber: requesterWallet.phoneNumber,
 				transactionType: 'credit',
 				...transaction,
-				amount: toReceive,
 			});
 			await Notification.create({
 				...notification,
@@ -183,6 +174,9 @@ const confirmRequest = async (req, res) => {
 				message: `${userData.userProfile.fullName} has denied your request of ${
 					currency + addingDecimal(amount.toLocaleString())
 				}`,
+				adminMessage: `${userData.userProfile.fullName} has denied ${
+					requesterUserData.userProfile.fullName
+				} request for ${currency + addingDecimal(amount.toLocaleString())}`,
 			});
 			await request.deleteOne();
 			res.status(200).json('Request declined');
@@ -193,13 +187,18 @@ const confirmRequest = async (req, res) => {
 				message: `${userData.userProfile.fullName} has denied your request of ${
 					currency + addingDecimal(amount.toLocaleString())
 				}`,
+				adminMessage: `${
+					userData.userProfile.fullName
+				} has denied and blocked ${
+					requesterUserData.userProfile.fullName
+				} request for ${currency + addingDecimal(amount.toLocaleString())}`,
 			});
 			await request.deleteOne();
 			await UserData.updateOne(
 				{email},
 				{$push: {blockedUsers: {$each: [requesterWallet.email], $position: 0}}}
 			);
-			res.status(200).json('Request block');
+			res.status(200).json('User blocked');
 		}
 	} catch (err) {
 		res.status(400).json(err.message);

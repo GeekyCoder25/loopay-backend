@@ -6,7 +6,6 @@ const {
 	confirmOTP,
 	checkPassword,
 	changePassword,
-	// allusers,
 } = require('../controllers/authController');
 const {protect} = require('../middleware/authMiddleware');
 

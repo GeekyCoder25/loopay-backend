@@ -206,7 +206,7 @@ const forgetPassword = async (req, res) => {
 		}
 	} catch (err) {
 		res.status(400).json({error: err.message});
-		console.log(err);
+		console.log(err.message);
 	}
 };
 

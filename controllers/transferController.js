@@ -69,6 +69,7 @@ const initiateTransfer = async (req, res) => {
 					accNo,
 				} = req.body;
 				try {
+					const {email, phoneNumber} = req.user;
 					const transaction = {
 						id,
 						status: 'pending',
@@ -91,7 +92,23 @@ const initiateTransfer = async (req, res) => {
 						metadata: metadata || null,
 						createdAt: new Date(),
 					};
-					const {email, phoneNumber} = req.user;
+					const notification = {
+						email,
+						id,
+						phoneNumber,
+						type: 'transfer',
+						header: 'Debit transaction',
+						message: `You sent ${
+							currency + addingDecimal(Number(amount).toLocaleString())
+						} to ${name}`,
+						adminMessage: `${req.user.firstName} ${req.user.lastName} sent ${
+							currency + addingDecimal(Number(amount).toLocaleString())
+						} to an external bank account ${name}`,
+						status: 'unread',
+						photo: senderPhoto,
+						metadata: {...transaction, transactionType: 'credit'},
+					};
+
 					const transactionExists = await TransactionModel.findOne({id});
 					if (!transactionExists) {
 						await TransactionModel.create({
@@ -99,25 +116,6 @@ const initiateTransfer = async (req, res) => {
 							phoneNumber,
 							...transaction,
 						});
-
-						const notification = {
-							email: 'admin@loopay.com',
-							id,
-							phoneNumber,
-							type: 'transaction',
-							header: 'Debit transaction',
-							message: `${req.user.firstName} ${
-								req.user.lastName
-							} has withdrawn ${
-								currency + addingDecimal(Number(amount).toLocaleString())
-							}`,
-							adminMessage: `${req.user.firstName} ${req.user.lastName} sent ${
-								currency + addingDecimal(Number(amount).toLocaleString())
-							} to an external bank account ${name}`,
-							status: 'unread',
-							photo: senderPhoto,
-							metadata: {...transaction, transactionType: 'credit'},
-						};
 
 						await Notification.create(notification);
 					}
@@ -230,7 +228,7 @@ const initiateTransferToLoopay = async (req, res) => {
 				id,
 				email: sendeeWallet.email,
 				phoneNumber,
-				type: 'transaction',
+				type: 'transfer',
 				header: 'Credit transaction',
 				message: `${req.user.firstName} ${req.user.lastName} has sent you ${
 					currency + addingDecimal(Number(amount).toLocaleString())

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const {isEmail, isMobilePhone} = require('validator');
-const {handlephoneNumber} = require('../utils/checkPhoneNumber');
+const {handlePhoneNumber} = require('../utils/checkPhoneNumber');
 const UserSchema = new Schema(
 	{
 		email: {
@@ -56,7 +56,7 @@ const UserSchema = new Schema(
 UserSchema.pre('save', function (next) {
 	if (!this.role) this.role = 'user';
 	this.status = 'active';
-	this.phoneNumber = handlephoneNumber(this.phoneNumber);
+	this.phoneNumber = handlePhoneNumber(this.phoneNumber);
 	if (this.userName.endsWith(' ')) {
 		this.userName = this.userName.slice(0, -1);
 	}

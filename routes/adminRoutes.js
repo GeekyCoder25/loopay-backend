@@ -11,6 +11,7 @@ const {
 } = require('../controllers/adminController');
 const {updateNotifications} = require('../controllers/notificationController');
 const {getRate, updateRate} = require('../controllers/currencyController');
+const {getFees, updateFees} = require('../controllers/feesController');
 
 const router = express.Router();
 
@@ -25,5 +26,6 @@ router.post('/finalize', finalizeWithdrawal);
 router.post('/block-transaction', blockTransaction);
 router.put('/notifications', updateNotifications);
 router.route('/rate').get(getRate).put(updateRate);
+router.route('/fees').get(getFees).put(updateFees);
 
 module.exports = router;

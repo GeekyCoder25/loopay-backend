@@ -36,14 +36,14 @@ const postRecipient = async (req, res) => {
 		if (requiredKeys(req, res, ['bank', 'accNo'])) return;
 		const {code, currency, slug, type} = req.body.bank;
 		const {email, phoneNumber} = req.user;
-		const transferRecipentData = {
+		const transferRecipientData = {
 			type,
 			name: req.body.fullName,
 			account_number: req.body.accNo,
 			bank_code: code,
 			currency,
 		};
-		const transferRecipient = await createRecipient(transferRecipentData);
+		const transferRecipient = await createRecipient(transferRecipientData);
 
 		if (!transferRecipient.status) throw new Error(transferRecipient.message);
 		const checkRecipientExists = await RecipientModel.findOne({

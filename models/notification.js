@@ -7,7 +7,7 @@ const NotificationSchema = new Schema(
 	{
 		id: {
 			type: String,
-			required: [true, 'Please input notifiaction ID'],
+			required: [true, 'Please input notification ID'],
 			unique: true,
 		},
 		email: {
@@ -78,4 +78,4 @@ NotificationSchema.pre('save', function () {
 	this.adminStatus = 'unread';
 });
 
-module.exports = mongoose.model('notitfication', NotificationSchema);
+module.exports = mongoose.model('notification', NotificationSchema);

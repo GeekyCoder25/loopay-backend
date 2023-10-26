@@ -34,10 +34,11 @@ const UserDataSchema = new Schema(
 		tagName: {type: String, unique: true, sparse: true},
 		pin: String,
 		accountType: {type: String, enum: ['Personal', 'Business']},
-		verficationStaus: Boolean,
+		verificationStatus: Boolean,
 		photo: String,
 		photoURL: String,
 		referralCode: String,
+		sessionTime: Date,
 		blockedUsers: [String],
 	},
 	{timestamps: true}

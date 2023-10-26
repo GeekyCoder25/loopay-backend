@@ -48,6 +48,8 @@ const {
 	updateNotification,
 } = require('../controllers/notificationController');
 const {getRate} = require('../controllers/currencyController');
+const {buyAirtime, buyData} = require('../controllers/airtimeController');
+const {getFees} = require('../controllers/feesController');
 
 const router = express.Router();
 
@@ -69,7 +71,8 @@ router.route('/transaction').get(getTransactions);
 router.route('/transferrecipient').get(getTransactions);
 router.route('/banks').get(listBanks);
 router.route('/savedbanks').get(getRecipients).post(postRecipient);
-router.route('/airtime').post(postRecipient);
+router.route('/airtime').post(buyAirtime);
+router.route('/data').post(buyData);
 router.route('/swap').post(swapCurrency);
 router.route('/request').get(getFundRequest).post(postFundRequest);
 router.route('/request-confirm').post(confirmRequest);
@@ -79,5 +82,6 @@ router.route('/notification').get(getNotifications);
 router.route('/notification/:id').put(updateNotification);
 router.route('/rate').get(getRate);
 router.route('/splash').get(getFundRequest);
+router.route('/fees').get(getFees);
 
 module.exports = router;

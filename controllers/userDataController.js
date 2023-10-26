@@ -13,7 +13,10 @@ const getUserData = async (req, res) => {
 			excludedFieldsInObject
 		);
 		if (!userData) return res.status(404).json('No user found');
-		const result = Object.assign(userData, {pin: userData.pin ? true : false});
+		const result = Object.assign(userData, {
+			sessionTime: req.sessionTime,
+			pin: userData.pin ? true : false,
+		});
 		res.status(200).json(result);
 	} catch (err) {
 		console.log(err.message);

@@ -1,3 +1,4 @@
+const AirtimeTransaction = require('../models/airtimeTransaction');
 const SwapModel = require('../models/swapTransaction');
 const TransactionModel = require('../models/transaction');
 
@@ -8,18 +9,26 @@ const getTransactions = async (req, res) => {
 		const transactionModel = await TransactionModel.find({email}).sort(
 			'-createdAt'
 		);
-		if (!transactionModel)
+		const airtimeTransactionModel = await AirtimeTransaction.find({email}).sort(
+			'-createdAt'
+		);
+		const swapTransactions = await SwapModel.find({email});
+		if (!transactionModel && !airtimeTransactionModel)
 			return res.status(204).json('No transactions found for this user');
 		let transactions = transactionModel;
-		if (swap) {
-			const swapTransactions = await SwapModel.find({email});
-			const combinedTransactions = transactions.concat(swapTransactions);
-			transactions = combinedTransactions.sort((a, b) => {
-				const dateA = new Date(a.createdAt);
-				const dateB = new Date(b.createdAt);
-				return dateB - dateA;
-			});
+
+		if (airtimeTransactionModel) {
+			transactions = transactions.concat(airtimeTransactionModel);
 		}
+
+		if (swap) {
+			transactions = transactions.concat(swapTransactions);
+		}
+		transactions.sort((a, b) => {
+			const dateA = new Date(a.createdAt);
+			const dateB = new Date(b.createdAt);
+			return dateB - dateA;
+		});
 
 		if (date && JSON.parse(date)) {
 			const groupTransactionsByDate = inputArray => {

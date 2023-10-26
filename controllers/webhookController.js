@@ -59,7 +59,7 @@ const webhookHandler = async (req, res) => {
 					id,
 					email: wallet.email,
 					phoneNumber: wallet.phoneNumber,
-					type: 'transaction',
+					type: 'transfer',
 					header: 'Credit transaction',
 					message: `${
 						account_name || sender_name || 'An external user'

@@ -1,13 +1,13 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const SessionModel = require('../models/session');
-const {handlephoneNumber} = require('../utils/checkPhoneNumber');
+const {handlePhoneNumber} = require('../utils/checkPhoneNumber');
 
 const protect = async (req, res, next) => {
 	let token;
 
 	if (req.body.phoneNumber)
-		req.body.phoneNumber = handlephoneNumber(req.body.phoneNumber);
+		req.body.phoneNumber = handlePhoneNumber(req.body.phoneNumber);
 	if (
 		req.headers.authorization &&
 		req.headers.authorization.startsWith('Bearer')
@@ -33,7 +33,9 @@ const protect = async (req, res, next) => {
 					session => session.deviceID !== req.sessionID
 				);
 				if (sessionToUpdate.length === 1) {
-					let session = {...sessionToUpdate[0], lastSeen: new Date()};
+					const lastSeen = new Date();
+					let session = {...sessionToUpdate[0], lastSeen};
+					req.sessionTime = lastSeen;
 					let sessions = [session, ...sessionsNotToUpdate];
 					await SessionModel.findOneAndUpdate(
 						{email: req.user.email},

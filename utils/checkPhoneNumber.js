@@ -1,4 +1,4 @@
-const handlephoneNumber = phoneNumber => {
+const handlePhoneNumber = phoneNumber => {
 	if (phoneNumber.startsWith('0')) {
 		const tempNumber = phoneNumber.replace('0', '+234');
 		phoneNumber = tempNumber;
@@ -17,5 +17,5 @@ const handlephoneNumber = phoneNumber => {
 };
 
 module.exports = {
-	handlephoneNumber,
+	handlePhoneNumber,
 };

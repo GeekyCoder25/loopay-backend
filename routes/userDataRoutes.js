@@ -50,6 +50,7 @@ const {
 const {getRate} = require('../controllers/currencyController');
 const {buyAirtime, buyData} = require('../controllers/airtimeController');
 const {getFees} = require('../controllers/feesController');
+const {getStatements} = require('../controllers/statementController');
 
 const router = express.Router();
 
@@ -83,5 +84,6 @@ router.route('/notification/:id').put(updateNotification);
 router.route('/rate').get(getRate);
 router.route('/splash').get(getFundRequest);
 router.route('/fees').get(getFees);
+router.route('/statement').get(getStatements);
 
 module.exports = router;

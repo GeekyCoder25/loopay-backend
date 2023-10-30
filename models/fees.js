@@ -7,6 +7,15 @@ const CurrencyRateModel = new Schema(
 			type: String,
 			required: [true, 'Please provide fee name'],
 		},
+		currency: {
+			type: String,
+			required: [true, 'Please provide currency'],
+			enum: ['naira', 'dollar', 'euro', 'pound'],
+		},
+		group: {
+			type: String,
+			required: [true, 'Please provide fee group'],
+		},
 		amount: {
 			type: Number,
 			required: [true, 'Please provide fee amount'],

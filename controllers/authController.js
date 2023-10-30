@@ -191,7 +191,7 @@ const forgetPassword = async (req, res) => {
 			</p>
 			<p>
 				Best regards,<br />
-				Loopay Support Team
+				Loopay Support Team	
 			</p>
 		</div>`;
 

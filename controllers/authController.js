@@ -153,7 +153,7 @@ const registerAccount = async (req, res) => {
 		};
 		setTimeout(async () => {
 			const user = await User.findOne({email});
-			console.log(user);
+			console.log(user.email);
 			if (user.emailOtpCode) {
 				console.log('user');
 				await User.findByIdAndRemove(_id);

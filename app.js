@@ -12,6 +12,7 @@ const cloudinary = require('cloudinary').v2;
 const {protect, authorize} = require('./middleware/authMiddleware');
 const {uploadPhoto} = require('./controllers/uploadPhoto');
 const {webhookHandler} = require('./controllers/webhookController');
+const {removeUnverifiedUsers} = require('./middleware/networkMiddleware');
 require('colors');
 dotEnv.config();
 // eslint-disable-next-line no-undef
@@ -55,7 +56,7 @@ app.use('/api/user', protect, userDataRoutes);
 app.use('/api/admin', protect, adminRoutes);
 app.use('/api/webhook', webhookHandler);
 
-app.get('/api/network', (req, res) => {
+app.get('/api/network', removeUnverifiedUsers, (req, res) => {
 	console.log('network request');
 	res.send({network: true});
 });

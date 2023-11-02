@@ -6,7 +6,7 @@ const getBeneficiaries = async (req, res) => {
 		const {email} = req.user;
 
 		const result = await BeneficiaryModel.findOne({email});
-		if (!result) return res.status(204).json('No saved beneficaries');
+		if (!result) return res.status(204).json('No saved beneficiaries');
 		let beneficiaries = result.beneficiaries;
 		const beneficiariesAfterPhotoCheck = [];
 		await Promise.all(
@@ -79,7 +79,7 @@ const postBeneficiary = async (req, res) => {
 			await BeneficiaryModel.create({email, beneficiaries: [req.body]});
 		}
 		return res.status(200).json({
-			message: 'Beneficary added successfully',
+			message: 'Beneficiary added successfully',
 			beneficiary: req.body,
 		});
 	} catch (err) {

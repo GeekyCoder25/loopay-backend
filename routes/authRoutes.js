@@ -9,12 +9,13 @@ const {
 	verifyEmail,
 } = require('../controllers/authController');
 const {protect} = require('../middleware/authMiddleware');
+const {removeUnverifiedUsers} = require('../middleware/networkMiddleware');
 
 // const User = require('../models/users');
 const router = express.Router();
 
 router.route('/register').post(registerAccount).put(verifyEmail);
-router.post('/login', loginAccount);
+router.post('/login', removeUnverifiedUsers, loginAccount);
 router.post('/forget-password', forgetPassword);
 router.post('/confirm-otp/:otp', confirmOTP);
 router.post('/check-password', protect, checkPassword);

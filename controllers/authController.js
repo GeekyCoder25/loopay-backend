@@ -2,6 +2,9 @@ const User = require('../models/user');
 const UserDataModel = require('../models/userData');
 const SessionModel = require('../models/session');
 const WalletModel = require('../models/wallet');
+const DollarWallet = require('../models/walletDollar');
+const EuroWallet = require('../models/walletEuro');
+const PoundWallet = require('../models/walletPound');
 const _ = require('lodash');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -9,9 +12,6 @@ const {isStrongPassword} = require('validator');
 const {sendMail} = require('../utils/sendEmail');
 const {createVirtualAccount} = require('../middleware/createVirtualAccount');
 const {handleErrors} = require('../utils/ErrorHandler');
-const DollarWallet = require('../models/walletDollar');
-const EuroWallet = require('../models/walletEuro');
-const PoundWallet = require('../models/walletPound');
 
 const passwordSecurityOptions = {
 	minLength: 6,
@@ -24,14 +24,14 @@ const passwordSecurityOptions = {
 
 const registerAccount = async (req, res) => {
 	try {
-		// await User.findOneAndRemove({email: 'toyibe233@gmail.com'});
-		// await UserDataModel.findOneAndRemove({email: 'toyibe233@gmail.com'});
-		// await SessionModel.findOneAndRemove({email: 'toyibe233@gmail.com'});
-		// await WalletModel.findOneAndRemove({email: 'toyibe233@gmail.com'});
-		// await DollarWallet.findOneAndRemove({email: 'toyibe233@gmail.com'});
-		// await EuroWallet.findOneAndRemove({email: 'toyibe233@gmail.com'});
-		// await PoundWallet.findOneAndRemove({email: 'toyibe233@gmail.com'});
-		// return res.status(400).json('error');
+		// await User.findOneAndRemove({email: 'toyibe25@gmail.com'});
+		// await UserDataModel.findOneAndRemove({email: 'toyibe25@gmail.com'});
+		// await SessionModel.findOneAndRemove({email: 'toyibe25@gmail.com'});
+		// await WalletModel.findOneAndRemove({email: 'toyibe25@gmail.com'});
+		// await DollarWallet.findOneAndRemove({email: 'toyibe25@gmail.com'});
+		// await EuroWallet.findOneAndRemove({email: 'toyibe25@gmail.com'});
+		// await PoundWallet.findOneAndRemove({email: 'toyibe25@gmail.com'});
+		// return res.status(400).json({error: ''});
 		const {formData, sessionData} = req.body;
 
 		if (!formData || !sessionData)
@@ -43,6 +43,20 @@ const registerAccount = async (req, res) => {
 		let otpCode = '';
 		for (let i = 0; i < 4; i++) {
 			otpCode += _.random(9);
+		}
+		const fiveMinutesAgo = new Date();
+		fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
+
+		const user = await User.findOne({
+			email: req.body.formData.email,
+			createdAt: {$gt: fiveMinutesAgo},
+			emailOtpCode: {$exists: true},
+		});
+
+		if (user) {
+			const sessionData = await SessionModel.findOne({email: user.email});
+			const result = Object.assign(user, sessionData);
+			return res.status(200).json(result);
 		}
 
 		if (!isStrongPassword(password, passwordSecurityOptions)) {
@@ -151,20 +165,7 @@ const registerAccount = async (req, res) => {
 			subject: 'Email Verification',
 			html,
 		};
-		setTimeout(async () => {
-			const user = await User.findOne({email});
-			console.log(user.email);
-			if (user.emailOtpCode) {
-				console.log('user');
-				await User.findByIdAndRemove(_id);
-				await UserDataModel.findByIdAndRemove(_id);
-				await SessionModel.findByIdAndRemove(_id);
-				await WalletModel.findByIdAndRemove(_id);
-				await DollarWallet.findByIdAndRemove(_id);
-				await EuroWallet.findByIdAndRemove(_id);
-				await PoundWallet.findByIdAndRemove(_id);
-			}
-		}, 30000);
+
 		sendMail(mailOptions, res, result);
 	} catch (err) {
 		console.log(err.message);

@@ -15,7 +15,6 @@ const createRecipient = async recipientData => {
 		const response = await axios.post(url, recipientData, config);
 		return response.data;
 	} catch (error) {
-		console.error(error.response.data);
 		return error.response.data;
 	}
 };

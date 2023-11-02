@@ -24,6 +24,13 @@ const passwordSecurityOptions = {
 
 const registerAccount = async (req, res) => {
 	try {
+		// await User.findOneAndRemove({email: 'john@gmail.com'});
+		// await UserDataModel.findOneAndRemove({email: 'john@gmail.com'});
+		// await SessionModel.findOneAndRemove({email: 'john@gmail.com'});
+		// await WalletModel.findOneAndRemove({email: 'john@gmail.com'});
+		// await DollarWallet.findOneAndRemove({email: 'john@gmail.com'});
+		// await EuroWallet.findOneAndRemove({email: 'john@gmail.com'});
+		// return await PoundWallet.findOneAndRemove({email: 'john@gmail.com'});
 		const {formData, sessionData} = req.body;
 
 		if (!formData || !sessionData)
@@ -78,7 +85,7 @@ const registerAccount = async (req, res) => {
 				await User.findByIdAndRemove(_id);
 				await UserDataModel.findByIdAndRemove(_id);
 				await SessionModel.findByIdAndRemove(_id);
-				return res.status(500).json('Server Error');
+				return res.status(500).json(paystack);
 			}
 			const {id, account_number, bank} = paystack.data;
 			delete paystack.data.assignment;
@@ -166,9 +173,9 @@ const verifyEmail = async (req, res) => {
 	try {
 		const {email, otp} = req.body;
 		const result = await User.findOne({email});
-		const decoded = jwt.verify(result.otpCode, process.env.JWT_SECRET);
+		const decoded = jwt.verify(result.emailOtpCode, process.env.JWT_SECRET);
 		if (decoded.id !== otp) throw new Error('Invalid OTP Code');
-		result.otpCode = undefined;
+		result.emailOtpCode = undefined;
 		await result.save();
 		const {_id, role, firstName, lastName, userName, phoneNumber} = result;
 		res.status(201).json({

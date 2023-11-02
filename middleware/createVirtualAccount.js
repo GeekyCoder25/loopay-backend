@@ -13,7 +13,7 @@ const createVirtualAccount = async data => {
 			const response = await axios.post(url, id, {headers});
 			return response.data;
 		} catch (error) {
-			console.error('Error:', error.message);
+			console.error('Error:');
 		}
 	};
 	const url = 'https://api.paystack.co/customer';
@@ -25,7 +25,7 @@ const createVirtualAccount = async data => {
 		const response = await axios.post(url, data, {headers});
 		return await createDVA({customer: response.data.data.id});
 	} catch (error) {
-		return error.message;
+		return error.response.data.message;
 	}
 };
 module.exports = {

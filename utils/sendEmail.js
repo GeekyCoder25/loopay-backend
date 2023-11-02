@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 
-const sendMail = (mailOtptions, res, result) => {
+const sendMail = (mailOptions, res, result) => {
 	const transport = () => {
 		if (process.env.NODE_ENV === 'production') {
 			return {
@@ -19,7 +19,7 @@ const sendMail = (mailOtptions, res, result) => {
 
 	const transporter = nodemailer.createTransport(transport());
 
-	transporter.sendMail(mailOtptions, (err, info) => {
+	transporter.sendMail(mailOptions, (err, info) => {
 		if (err) {
 			console.log(err.message);
 			return res.status(500).json({error: 'Server Error'});

@@ -6,13 +6,14 @@ const {
 	confirmOTP,
 	checkPassword,
 	changePassword,
+	verifyEmail,
 } = require('../controllers/authController');
 const {protect} = require('../middleware/authMiddleware');
 
 // const User = require('../models/users');
 const router = express.Router();
 
-router.post('/register', registerAccount);
+router.route('/register').post(registerAccount).put(verifyEmail);
 router.post('/login', loginAccount);
 router.post('/forget-password', forgetPassword);
 router.post('/confirm-otp/:otp', confirmOTP);

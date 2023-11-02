@@ -6,8 +6,8 @@ const {handlePhoneNumber} = require('../utils/checkPhoneNumber');
 const protect = async (req, res, next) => {
 	let token;
 
-	if (req.body.phoneNumber)
-		req.body.phoneNumber = handlePhoneNumber(req.body.phoneNumber);
+	// if (req.body.phoneNumber)
+	// 	req.body.phoneNumber = handlePhoneNumber(req.body.phoneNumber);
 	if (
 		req.headers.authorization &&
 		req.headers.authorization.startsWith('Bearer')

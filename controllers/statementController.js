@@ -5,6 +5,8 @@ const getStatements = async (req, res) => {
 	try {
 		const {start, end, format, currency} = req.query;
 		const {email} = req.user;
+		if (!start || !end)
+			throw new Error('Please provide the start and end dates query');
 		const startDate = new Date(start);
 		const endDate = new Date(end);
 		const query = {

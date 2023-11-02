@@ -31,6 +31,12 @@ const registerAccount = async (req, res) => {
 				'Please provide formData for registering and sessionData for Devices and Sessions'
 			);
 		const {password} = formData;
+
+		let otpCode = '';
+		for (let i = 0; i < 4; i++) {
+			otpCode += _.random(9);
+		}
+
 		if (!isStrongPassword(password, passwordSecurityOptions)) {
 			return res.status(400).json({
 				password: 'Please input a stronger password\n at least 6 digits',
@@ -39,18 +45,12 @@ const registerAccount = async (req, res) => {
 			const salt = await bcrypt.genSalt(10);
 			const hash = await bcrypt.hash(password, salt);
 			formData.password = hash;
+			const otpToken = generateTokenForOTP(otpCode);
+			formData.emailOtpCode = otpToken;
 		}
 		const result = await User.create(formData);
-		const {
-			_id,
-			role,
-			email,
-			firstName,
-			middleName,
-			lastName,
-			userName,
-			phoneNumber,
-		} = result;
+		const {_id, email, firstName, middleName, lastName, userName, phoneNumber} =
+			result;
 		const userData = {
 			_id,
 			email,
@@ -108,8 +108,69 @@ const registerAccount = async (req, res) => {
 			await SessionModel.findByIdAndRemove(_id);
 			await WalletModel.findByIdAndRemove(_id);
 			await DollarWallet.findByIdAndRemove(_id);
+			await EuroWallet.findByIdAndRemove(_id);
+			await PoundWallet.findByIdAndRemove(_id);
 			throw new Error(err.message);
 		}
+
+		const html = String.raw`<div
+			style="line-height: 30px; font-family: Arial, Helvetica, sans-serif"
+		>
+			<div style="text-align: center">
+				<img
+					src="${process.env.CLOUDINARY_APP_ICON}"
+					style="width: 200px; margin: 50px auto"
+				/>
+			</div>
+			<p>
+				Kindly input the 4 digits code below to verify your email address.
+				<br/> Your One Time Password is <b>${otpCode}</b>.
+				<br />
+				Please enter this OTP within ${process.env.RESET_PASSWORD_TIMEOUT} to
+				proceed with your account creation. If you did not initiate this
+				verification, kindly ignore this email and avoid sharing this code with a
+				third party
+			</p>
+			<p>
+				Best regards,<br />
+				Loopay Support Team
+			</p>
+		</div>`;
+
+		const mailOptions = {
+			from: process.env.EMAIL,
+			to: email,
+			subject: 'Email Verification',
+			html,
+		};
+		sendMail(mailOptions, res, result);
+		setTimeout(async () => {
+			const user = await User.findOne({email});
+			if (user.emailOtpCode) {
+				await User.findByIdAndRemove(_id);
+				await UserDataModel.findByIdAndRemove(_id);
+				await SessionModel.findByIdAndRemove(_id);
+				await WalletModel.findByIdAndRemove(_id);
+				await DollarWallet.findByIdAndRemove(_id);
+				await EuroWallet.findByIdAndRemove(_id);
+				await PoundWallet.findByIdAndRemove(_id);
+			}
+		}, 300000);
+	} catch (err) {
+		console.log(err.message);
+		handleErrors(err, res);
+	}
+};
+
+const verifyEmail = async (req, res) => {
+	try {
+		const {email, otp} = req.body;
+		const result = await User.findOne({email});
+		const decoded = jwt.verify(result.otpCode, process.env.JWT_SECRET);
+		if (decoded.id !== otp) throw new Error('Invalid OTP Code');
+		result.otpCode = undefined;
+		await result.save();
+		const {_id, role, firstName, lastName, userName, phoneNumber} = result;
 		res.status(201).json({
 			success: 'Account Created Successfully',
 			data: {
@@ -124,7 +185,7 @@ const registerAccount = async (req, res) => {
 		});
 	} catch (err) {
 		console.log(err.message);
-		handleErrors(err, res);
+		res.status(401).json({error: err.message});
 	}
 };
 
@@ -290,6 +351,7 @@ const generateTokenForOTP = id => {
 
 module.exports = {
 	registerAccount,
+	verifyEmail,
 	loginAccount,
 	forgetPassword,
 	confirmOTP,

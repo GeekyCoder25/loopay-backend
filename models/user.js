@@ -48,6 +48,7 @@ const UserSchema = new Schema(
 			minlength: [6, 'Your password must be at least 6 characters'],
 		},
 		otpCode: String,
+		emailOtpCode: String,
 		blockedAt: Date,
 	},
 	{timestamps: true}

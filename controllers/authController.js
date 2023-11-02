@@ -24,13 +24,14 @@ const passwordSecurityOptions = {
 
 const registerAccount = async (req, res) => {
 	try {
-		// await User.findOneAndRemove({email: 'john@gmail.com'});
-		// await UserDataModel.findOneAndRemove({email: 'john@gmail.com'});
-		// await SessionModel.findOneAndRemove({email: 'john@gmail.com'});
-		// await WalletModel.findOneAndRemove({email: 'john@gmail.com'});
-		// await DollarWallet.findOneAndRemove({email: 'john@gmail.com'});
-		// await EuroWallet.findOneAndRemove({email: 'john@gmail.com'});
-		// return await PoundWallet.findOneAndRemove({email: 'john@gmail.com'});
+		// await User.findOneAndRemove({email: 'toyibe233@gmail.com'});
+		// await UserDataModel.findOneAndRemove({email: 'toyibe233@gmail.com'});
+		// await SessionModel.findOneAndRemove({email: 'toyibe233@gmail.com'});
+		// await WalletModel.findOneAndRemove({email: 'toyibe233@gmail.com'});
+		// await DollarWallet.findOneAndRemove({email: 'toyibe233@gmail.com'});
+		// await EuroWallet.findOneAndRemove({email: 'toyibe233@gmail.com'});
+		// await PoundWallet.findOneAndRemove({email: 'toyibe233@gmail.com'});
+		// return res.status(400).json('error');
 		const {formData, sessionData} = req.body;
 
 		if (!formData || !sessionData)
@@ -150,10 +151,11 @@ const registerAccount = async (req, res) => {
 			subject: 'Email Verification',
 			html,
 		};
-		sendMail(mailOptions, res, result);
 		setTimeout(async () => {
 			const user = await User.findOne({email});
+			console.log(user);
 			if (user.emailOtpCode) {
+				console.log('user');
 				await User.findByIdAndRemove(_id);
 				await UserDataModel.findByIdAndRemove(_id);
 				await SessionModel.findByIdAndRemove(_id);
@@ -162,7 +164,8 @@ const registerAccount = async (req, res) => {
 				await EuroWallet.findByIdAndRemove(_id);
 				await PoundWallet.findByIdAndRemove(_id);
 			}
-		}, 300000);
+		}, 30000);
+		sendMail(mailOptions, res, result);
 	} catch (err) {
 		console.log(err.message);
 		handleErrors(err, res);

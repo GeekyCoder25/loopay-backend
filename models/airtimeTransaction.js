@@ -24,6 +24,10 @@ const AirtimeTransactionSchema = new Schema(
 			type: String,
 			required: [true, 'Please provide transaction status'],
 		},
+		debitAccount: {
+			type: String,
+			required: [true, 'Please provide debit account'],
+		},
 		transactionType: {
 			type: String,
 			required: [true, 'Please provide transaction type'],

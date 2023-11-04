@@ -35,12 +35,7 @@ const initiateTransfer = async (req, res) => {
 		if (!wallet) throw new Error('wallet not found');
 
 		const convertToKobo = () => {
-			const naira = amount.split('.')[0];
-			const kobo = amount.split('.')[1];
-			if (kobo === '00') {
-				return naira * 100;
-			}
-			return naira * 100 + Number(kobo);
+			amount * 100;
 		};
 		const data = {
 			source: 'balance',
@@ -68,60 +63,57 @@ const initiateTransfer = async (req, res) => {
 					slug,
 					accNo,
 				} = req.body;
-				try {
-					const {email, phoneNumber} = req.user;
-					const transaction = {
-						id,
-						status: 'pending',
-						type: 'inter',
-						transactionType: 'debit',
-						senderAccount: senderWallet.loopayAccNo,
-						senderName: `${req.user.firstName} ${req.user.lastName}`,
-						senderPhoto: senderPhoto || '',
-						receiverAccount: accNo,
-						receiverName: name,
-						receiverPhoto: photo || '',
-						sourceBank: 'Loopay',
-						destinationBank: bankName,
-						destinationBankSlug: slug,
-						amount,
-						description: reason,
-						reference: response.data.data.reference,
-						transferCode: response.data.data.transfer_code,
-						currency,
-						metadata: metadata || null,
-						createdAt: new Date(),
-					};
-					const notification = {
+				const {email, phoneNumber} = req.user;
+				const transaction = {
+					id,
+					status: 'pending',
+					type: 'inter',
+					transactionType: 'debit',
+					senderAccount: senderWallet.loopayAccNo,
+					senderName: `${req.user.firstName} ${req.user.lastName}`,
+					senderPhoto: senderPhoto || '',
+					receiverAccount: accNo,
+					receiverName: name,
+					receiverPhoto: photo || '',
+					sourceBank: 'Loopay',
+					destinationBank: bankName,
+					destinationBankSlug: slug,
+					amount,
+					description: reason,
+					reference: response.data.data.reference,
+					transferCode: response.data.data.transfer_code,
+					currency,
+					metadata: metadata || null,
+					createdAt: new Date(),
+				};
+				const notification = {
+					email,
+					id,
+					phoneNumber,
+					type: 'transfer',
+					header: 'Debit transaction',
+					message: `You sent ${
+						currency + addingDecimal(Number(amount).toLocaleString())
+					} to ${name}`,
+					adminMessage: `${req.user.firstName} ${req.user.lastName} sent ${
+						currency + addingDecimal(Number(amount).toLocaleString())
+					} to an external bank account ${name}`,
+					status: 'unread',
+					photo: senderPhoto,
+					metadata: {...transaction, transactionType: 'credit'},
+				};
+
+				const transactionExists = await TransactionModel.findOne({id});
+				if (!transactionExists) {
+					await TransactionModel.create({
 						email,
-						id,
 						phoneNumber,
-						type: 'transfer',
-						header: 'Debit transaction',
-						message: `You sent ${
-							currency + addingDecimal(Number(amount).toLocaleString())
-						} to ${name}`,
-						adminMessage: `${req.user.firstName} ${req.user.lastName} sent ${
-							currency + addingDecimal(Number(amount).toLocaleString())
-						} to an external bank account ${name}`,
-						status: 'unread',
-						photo: senderPhoto,
-						metadata: {...transaction, transactionType: 'credit'},
-					};
+						...transaction,
+					});
 
-					const transactionExists = await TransactionModel.findOne({id});
-					if (!transactionExists) {
-						await TransactionModel.create({
-							email,
-							phoneNumber,
-							...transaction,
-						});
-
-						await Notification.create(notification);
-					}
-				} catch (err) {
-					console.log(err.message);
+					await Notification.create(notification);
 				}
+
 				res.status(200).json({
 					...response.data.data,
 					amount: response.data.data.amount / 100,
@@ -131,7 +123,7 @@ const initiateTransfer = async (req, res) => {
 			}
 		} catch (err) {
 			res.status(500).json('Server Error');
-			console.log(err.message);
+			console.log(err.response.data.message);
 		}
 	} catch (err) {
 		console.log(err.message);

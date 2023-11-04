@@ -1,6 +1,6 @@
 const NairaWallet = require('../models/wallet');
 const {handleErrors} = require('../utils/ErrorHandler');
-const {createVirtualAccount} = require('../middleware/createVirtualAccount');
+const {createVirtualAccount} = require('../services/createVirtualAccount');
 const {excludedFieldsInObject} = require('../utils/mongodbExclude');
 const DollarWallet = require('../models/walletDollar');
 const EuroWallet = require('../models/walletEuro');

@@ -10,7 +10,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const {isStrongPassword} = require('validator');
 const {sendMail} = require('../utils/sendEmail');
-const {createVirtualAccount} = require('../middleware/createVirtualAccount');
+const {createVirtualAccount} = require('../services/createVirtualAccount');
 const {handleErrors} = require('../utils/ErrorHandler');
 
 const passwordSecurityOptions = {

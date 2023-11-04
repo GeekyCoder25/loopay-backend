@@ -233,7 +233,7 @@ const blockTransaction = async (req, res) => {
 		const {_id} = req.body;
 		const transaction = await Transaction.findByIdAndUpdate(
 			{_id},
-			{status: 'blocked'}
+			{status: 'declined'}
 		);
 		res.status(200).json({transaction});
 	} catch (err) {

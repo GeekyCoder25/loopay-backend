@@ -233,7 +233,8 @@ const blockTransaction = async (req, res) => {
 		const {_id} = req.body;
 		const transaction = await Transaction.findByIdAndUpdate(
 			{_id},
-			{status: 'declined'}
+			{status: 'declined'},
+			{new: true, runValidators: true}
 		);
 		res.status(200).json({transaction});
 	} catch (err) {

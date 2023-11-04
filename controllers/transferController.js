@@ -34,9 +34,8 @@ const initiateTransfer = async (req, res) => {
 		const senderWallet = wallet;
 		if (!wallet) throw new Error('wallet not found');
 
-		const convertToKobo = () => {
-			amount * 100;
-		};
+		const convertToKobo = () => amount * 100;
+
 		const data = {
 			source: 'balance',
 			reason,

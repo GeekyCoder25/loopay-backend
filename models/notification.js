@@ -76,6 +76,9 @@ NotificationSchema.pre('save', function () {
 	changeSymbol('pound', 'GBP', '£');
 
 	this.adminStatus = 'unread';
+	if (!this.metadata.createdAt) {
+		this.metadata.createdAt = this.createdAt;
+	}
 });
 
 module.exports = mongoose.model('notification', NotificationSchema);

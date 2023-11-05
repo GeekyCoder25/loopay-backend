@@ -19,9 +19,9 @@ const getNetwork = async (req, res) => {
 		const response = await axios.get(url, config);
 		res.status(200).json(response.data);
 	} catch (err) {
-		const error = err.response.data;
+		const error = err.message;
 		console.log(error);
-		res.status(400).json(error);
+		res.status(400).json('Server error');
 	}
 };
 const buyAirtime = async (req, res) => {

@@ -21,13 +21,14 @@ const airtimeAPIToken = async (req, res, next) => {
 				},
 			};
 			const response = await axios.post(url, data, config);
+			console.log(response.data.expires_in);
 			return {token: response.data.access_token, scope: response.data.scope};
 		} catch (err) {
 			const error = err.response;
 			console.log(error);
 		}
 	};
-
+	getToken();
 	if (!token) {
 		const newToken = await getToken();
 		const createToken = await AirtimeApiTokenModel.create({
@@ -39,15 +40,21 @@ const airtimeAPIToken = async (req, res, next) => {
 		const previousTime = new Date(token.updatedAt);
 		const currentTime = new Date();
 		const twentyFourHoursAgo = new Date(currentTime);
-		twentyFourHoursAgo.setHours(currentTime.getHours() - 24);
+		twentyFourHoursAgo.setHours(currentTime.getHours() - 23);
+		console.log(
+			twentyFourHoursAgo.toLocaleString(),
+			previousTime.toLocaleString()
+		);
 		if (twentyFourHoursAgo > previousTime) {
 			const newToken = await getToken();
-			const updateToken = await AirtimeApiTokenModel.updateOne(
-				{},
-				{token: newToken.token, scope: newToken.scope},
-				{new: true, runValidators: true}
-			);
-			req.airtimeAPIToken = updateToken.token;
+			if (newToken.token !== token.token) {
+				const updateToken = await AirtimeApiTokenModel.findOneAndUpdate(
+					{},
+					{token: newToken.token, scope: newToken.scope},
+					{new: true, runValidators: true}
+				);
+				req.airtimeAPIToken = updateToken.token;
+			}
 		} else {
 			req.airtimeAPIToken = token.token;
 		}

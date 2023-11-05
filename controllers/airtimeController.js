@@ -7,7 +7,6 @@ const {default: axios} = require('axios');
 const getNetwork = async (req, res) => {
 	try {
 		const {phone, country} = req.query;
-		// const url = 'https://topups-sandbox.reloadly.com/accounts/balance';
 		const url = `${process.env.RELOADLY_URL}/operators/auto-detect/phone/${phone}/countries/${country}?&suggestedAmounts=true`;
 		const token = req.airtimeAPIToken;
 		const config = {

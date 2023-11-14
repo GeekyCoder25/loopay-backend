@@ -56,7 +56,7 @@ app.use('/api/user', protect, userDataRoutes);
 app.use('/api/admin', protect, adminRoutes);
 app.use('/api/webhook', webhookHandler);
 
-app.get('/api/network', removeUnverifiedUsers, (req, res) => {
+app.get('/api/network', (req, res) => {
 	console.log('network request');
 	res.send({network: true});
 });

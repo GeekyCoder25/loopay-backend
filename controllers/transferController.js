@@ -1,5 +1,5 @@
 const axios = require('axios');
-const NairaWallet = require('../models/wallet');
+const LocalWallet = require('../models/wallet');
 const DollarWallet = require('../models/walletDollar');
 const EuroWallet = require('../models/walletEuro');
 const PoundWallet = require('../models/walletPound');
@@ -30,7 +30,7 @@ const initiateTransfer = async (req, res) => {
 			])
 		)
 			return;
-		const wallet = await NairaWallet.findOne({phoneNumber});
+		const wallet = await LocalWallet.findOne({phoneNumber});
 		const senderWallet = wallet;
 		if (!wallet) throw new Error('wallet not found');
 
@@ -149,13 +149,15 @@ const initiateTransferToLoopay = async (req, res) => {
 		const selectWallet = currency => {
 			switch (currency) {
 				case 'naira':
-					return NairaWallet;
+					return LocalWallet;
 				case 'dollar':
 					return DollarWallet;
 				case 'euro':
 					return EuroWallet;
 				case 'pound':
 					return PoundWallet;
+				default:
+					return LocalWallet;
 			}
 		};
 		const currencyWallet = selectWallet(currency);

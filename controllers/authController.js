@@ -1,7 +1,7 @@
 const User = require('../models/user');
 const UserDataModel = require('../models/userData');
 const SessionModel = require('../models/session');
-const WalletModel = require('../models/wallet');
+const LocalWallet = require('../models/wallet');
 const DollarWallet = require('../models/walletDollar');
 const EuroWallet = require('../models/walletEuro');
 const PoundWallet = require('../models/walletPound');
@@ -27,7 +27,7 @@ const registerAccount = async (req, res) => {
 		// await User.findOneAndRemove({email: 'toyibe25@gmail.com'});
 		// await UserDataModel.findOneAndRemove({email: 'toyibe25@gmail.com'});
 		// await SessionModel.findOneAndRemove({email: 'toyibe25@gmail.com'});
-		// await WalletModel.findOneAndRemove({email: 'toyibe25@gmail.com'});
+		// await LocalWallet.findOneAndRemove({email: 'toyibe25@gmail.com'});
 		// await DollarWallet.findOneAndRemove({email: 'toyibe25@gmail.com'});
 		// await EuroWallet.findOneAndRemove({email: 'toyibe25@gmail.com'});
 		// await PoundWallet.findOneAndRemove({email: 'toyibe25@gmail.com'});
@@ -120,7 +120,7 @@ const registerAccount = async (req, res) => {
 				bank: bank.name,
 				apiData,
 			};
-			await WalletModel.create({...allWalletData, ...paystackData});
+			await LocalWallet.create({...allWalletData, ...paystackData});
 			await DollarWallet.create({...allWalletData});
 			await EuroWallet.create({...allWalletData});
 			await PoundWallet.create({...allWalletData});
@@ -128,7 +128,7 @@ const registerAccount = async (req, res) => {
 			await User.findByIdAndRemove(_id);
 			await UserDataModel.findByIdAndRemove(_id);
 			await SessionModel.findByIdAndRemove(_id);
-			await WalletModel.findByIdAndRemove(_id);
+			await LocalWallet.findByIdAndRemove(_id);
 			await DollarWallet.findByIdAndRemove(_id);
 			await EuroWallet.findByIdAndRemove(_id);
 			await PoundWallet.findByIdAndRemove(_id);

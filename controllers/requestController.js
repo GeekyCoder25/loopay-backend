@@ -1,6 +1,6 @@
 const RequestModel = require('../models/request');
 const UserData = require('../models/userData');
-const NairaWallet = require('../models/wallet');
+const LocalWallet = require('../models/wallet');
 const DollarWallet = require('../models/walletDollar');
 const EuroWallet = require('../models/walletEuro');
 const PoundWallet = require('../models/walletPound');
@@ -11,7 +11,7 @@ const {addingDecimal} = require('../utils/addingDecimal');
 const getFundRequest = async (req, res) => {
 	try {
 		const {email} = req.user;
-		const wallet = await NairaWallet.findOne({email});
+		const wallet = await LocalWallet.findOne({email});
 		const requests = await RequestModel.find({
 			requesteeAccount: wallet.tagName,
 		}).sort('-createdAt');
@@ -26,7 +26,7 @@ const postFundRequest = async (req, res) => {
 	const {amount, currency, description, fee, id, tagName} = req.body;
 	try {
 		const {email, phoneNumber} = req.user;
-		const wallet = await NairaWallet.findOne({email});
+		const wallet = await LocalWallet.findOne({email});
 		const userData = await UserData.findOne({email});
 		const requesteeUserData = await UserData.findOne({tagName});
 
@@ -81,7 +81,7 @@ const confirmRequest = async (req, res) => {
 		const selectWallet = currency => {
 			switch (currency) {
 				case 'naira':
-					return NairaWallet;
+					return LocalWallet;
 				case 'dollar':
 					return DollarWallet;
 				case 'euro':
@@ -92,9 +92,9 @@ const confirmRequest = async (req, res) => {
 		};
 
 		const request = await RequestModel.findById(_id);
-		const WalletModel = selectWallet(currency);
-		const wallet = await WalletModel.findOne({tagName: requesteeAccount});
-		const requesterWallet = await WalletModel.findOne({
+		const LocalWallet = selectWallet(currency);
+		const wallet = await LocalWallet.findOne({tagName: requesteeAccount});
+		const requesterWallet = await LocalWallet.findOne({
 			tagName: requesterAccount,
 		});
 		const userData = await UserData.findOne({email});

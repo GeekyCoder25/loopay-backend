@@ -41,10 +41,6 @@ const airtimeAPIToken = async (req, res, next) => {
 		const currentTime = new Date();
 		const twentyFourHoursAgo = new Date(currentTime);
 		twentyFourHoursAgo.setHours(currentTime.getHours() - 23);
-		console.log(
-			twentyFourHoursAgo.toLocaleString(),
-			previousTime.toLocaleString()
-		);
 		if (twentyFourHoursAgo > previousTime) {
 			const newToken = await getToken();
 			if (newToken.token !== token.token) {

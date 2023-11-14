@@ -1,4 +1,4 @@
-const NairaWallet = require('../models/wallet');
+const LocalWallet = require('../models/wallet');
 const Notification = require('../models/notification');
 const {addingDecimal} = require('../utils/addingDecimal');
 const AirtimeTransaction = require('../models/airtimeTransaction');
@@ -52,7 +52,7 @@ const buyAirtime = async (req, res) => {
 		const apiData = await connectWithAPI();
 		if (apiData.status === 'SUCCESSFUL') {
 			const {email, phoneNumber} = req.user;
-			const wallet = await NairaWallet.findOne({phoneNumber});
+			const wallet = await LocalWallet.findOne({phoneNumber});
 			wallet.balance -= amount * 100;
 			await wallet.save();
 			const transaction = {
@@ -111,7 +111,7 @@ const buyData = async (req, res) => {
 	try {
 		const {email, phoneNumber} = req.user;
 		const {currency, id, network, metadata, phoneNo, plan} = req.body;
-		const wallet = await NairaWallet.findOne({phoneNumber});
+		const wallet = await LocalWallet.findOne({phoneNumber});
 		const amount = 200;
 		wallet.balance -= amount * 100;
 		await wallet.save();

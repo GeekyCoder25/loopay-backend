@@ -1,7 +1,7 @@
 const WebhookModel = require('../models/webhook');
 const TransactionModel = require('../models/transaction');
 const UserDataModel = require('../models/userData');
-const WalletModel = require('../models/wallet');
+const LocalWallet = require('../models/wallet');
 const {addingDecimal} = require('../utils/addingDecimal');
 const Notification = require('../models/notification');
 
@@ -46,7 +46,7 @@ const webhookHandler = async (req, res) => {
 			const {email, phone} = customer;
 
 			const transactionsExists = await TransactionModel.findOne({id});
-			const wallet = await WalletModel.findOne({email});
+			const wallet = await LocalWallet.findOne({email});
 
 			if (!transactionsExists) {
 				await TransactionModel.create({

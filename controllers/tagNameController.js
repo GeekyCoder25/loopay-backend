@@ -1,5 +1,5 @@
 const UserDataModel = require('../models/userData');
-const WalletModel = require('../models/wallet');
+const LocalWallet = require('../models/wallet');
 const {handleErrors} = require('../utils/ErrorHandler');
 
 const getTagName = async (req, res) => {
@@ -56,7 +56,7 @@ const createTagName = async (req, res) => {
 			throw new Error('Invalid tagName');
 
 		const userData = await UserDataModel.findOne({email});
-		const wallet = await WalletModel.findOne({email});
+		const wallet = await LocalWallet.findOne({email});
 		userData.tagName = tagName;
 		wallet.tagName = tagName;
 		await userData.save();

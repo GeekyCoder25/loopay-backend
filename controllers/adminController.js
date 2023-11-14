@@ -3,7 +3,7 @@ const Transaction = require('../models/transaction');
 const Session = require('../models/session');
 const UserData = require('../models/userData');
 const Recent = require('../models/recent');
-const NairaWallet = require('../models/wallet');
+const LocalWallet = require('../models/wallet');
 const DollarWallet = require('../models/walletDollar');
 const EuroWallet = require('../models/walletEuro');
 const PoundWallet = require('../models/walletPound');
@@ -17,11 +17,11 @@ const getAllAdminInfo = async (req, res) => {
 		const transactions = await Transaction.find()
 			.select(['-__v'])
 			.sort('-createdAt');
-		let wallets = await NairaWallet.find();
+		let wallets = await LocalWallet.find();
 		let recents = await Recent.find({email: {$ne: req.user.email}})
 			.select('-__v')
 			.sort('-updatedAt');
-		let nairaBalanceModel = await NairaWallet.find().select('+ balance');
+		let nairaBalanceModel = await LocalWallet.find().select('+ balance');
 		let dollarBalanceModel = await DollarWallet.find().select('+ balance');
 		let euroBalanceModel = await EuroWallet.find().select('+ balance');
 		let poundBalanceModel = await PoundWallet.find().select('+ balance');
@@ -121,7 +121,7 @@ const getAllUsers = async (req, res) => {
 };
 
 const getAllNairaBalance = async (req, res) => {
-	const allBalance = await NairaWallet.find().select('+ balance');
+	const allBalance = await LocalWallet.find().select('+ balance');
 	if (!allBalance) return res.status(200).json({balance: 0});
 	const balance =
 		allBalance.map(balance => balance.balance).reduce((a, b) => a + b) / 100;
@@ -151,19 +151,29 @@ const transferToLoopayUser = async (req, res) => {
 		const {email, phoneNumber, tagName, userName, amount, currency} = req.body;
 
 		if (email === req.user.email) {
-			throw new Error("can't tranfer to sender's account");
+			throw new Error("can't transfer to sender's account");
 		}
 
-		let WalletModel;
-		switch (currency) {
-			case 'Naira':
-				WalletModel = NairaWallet;
-		}
+		const selectWallet = currency => {
+			switch (currency) {
+				case 'naira':
+					return LocalWallet;
+				case 'dollar':
+					return DollarWallet;
+				case 'euro':
+					return EuroWallet;
+				case 'pound':
+					return PoundWallet;
+				default:
+					return LocalWallet;
+			}
+		};
+		const currencyWallet = selectWallet(currency);
 
-		const senderWallet = await WalletModel.findOne({
+		const senderWallet = await currencyWallet.findOne({
 			phoneNumber: req.user.phoneNumber,
 		});
-		const sendeeWallet = await WalletModel.findOne({phoneNumber});
+		const sendeeWallet = await currencyWallet.findOne({phoneNumber});
 		const sendeeData = await UserData.findOne({email});
 		if (sendeeWallet.tagName !== (tagName || userName))
 			throw new Error('Invalid Account Transfer');

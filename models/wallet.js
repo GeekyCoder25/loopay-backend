@@ -52,6 +52,7 @@ const Wallet = new Schema({
 		required: [true, 'please provide your phone number'],
 		validate: [isMobilePhone, 'Invalid phone number'],
 	},
+	isLocal: Boolean,
 	apiData: {
 		type: Schema.Types.Mixed,
 	},
@@ -59,9 +60,10 @@ const Wallet = new Schema({
 
 Wallet.pre('save', async function (next) {
 	this.currency = 'naira';
+	this.isLocal = true;
 	if (!this.balance) this.balance = 0;
 	if (!this.tagName) this.tagName = this.userName || this.phoneNumber;
 	next();
 });
 
-module.exports = mongoose.model('wallet', Wallet);
+module.exports = mongoose.model('local-wallet', Wallet);

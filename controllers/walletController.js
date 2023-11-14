@@ -1,4 +1,4 @@
-const NairaWallet = require('../models/wallet');
+const LocalWallet = require('../models/wallet');
 const {handleErrors} = require('../utils/ErrorHandler');
 const {createVirtualAccount} = require('../services/createVirtualAccount');
 const {excludedFieldsInObject} = require('../utils/mongodbExclude');
@@ -9,7 +9,7 @@ const PoundWallet = require('../models/walletPound');
 const getWallet = async (req, res) => {
 	try {
 		const {email} = req.user;
-		const walletNaira = await NairaWallet.findOne(
+		const walletLocal = await LocalWallet.findOne(
 			{email},
 			excludedFieldsInObject
 		);
@@ -26,16 +26,16 @@ const getWallet = async (req, res) => {
 			excludedFieldsInObject
 		);
 
-		if (!walletNaira) throw new Error('No wallet found');
+		if (!walletLocal) throw new Error('No wallet found');
 
 		const convertToNaira = amountInKobo => amountInKobo / 100;
 
-		walletNaira.balance = convertToNaira(walletNaira.balance);
+		walletLocal.balance = convertToNaira(walletLocal.balance);
 		walletDollar.balance = convertToNaira(walletDollar.balance);
 		walletEuro.balance = convertToNaira(walletEuro.balance);
 		walletPound.balance = convertToNaira(walletPound.balance);
 
-		res.status(200).json({walletNaira, walletDollar, walletEuro, walletPound});
+		res.status(200).json({walletLocal, walletDollar, walletEuro, walletPound});
 	} catch (err) {
 		res.status(400).json(err.message);
 	}
@@ -54,7 +54,7 @@ const postWallet = async (req, res) => {
 			preferred_bank: process.env.PREFERRED_BANK,
 			country: 'NG',
 		};
-		const walletExists = await NairaWallet.findOne(
+		const walletExists = await LocalWallet.findOne(
 			{phoneNumber},
 			{__v: 0, _id: 0}
 		);
@@ -79,7 +79,7 @@ const postWallet = async (req, res) => {
 			phoneNumber: customer.phone,
 			currency: 'naira',
 		};
-		await NairaWallet.create(paystackData);
+		await LocalWallet.create(paystackData);
 		res.status(201).json({
 			message: 'Wallet created sucessfully',
 			paystackData,

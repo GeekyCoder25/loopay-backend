@@ -92,9 +92,9 @@ const confirmRequest = async (req, res) => {
 		};
 
 		const request = await RequestModel.findById(_id);
-		const LocalWallet = selectWallet(currency);
-		const wallet = await LocalWallet.findOne({tagName: requesteeAccount});
-		const requesterWallet = await LocalWallet.findOne({
+		const selectedWallet = selectWallet(currency);
+		const wallet = await selectedWallet.findOne({tagName: requesteeAccount});
+		const requesterWallet = await selectedWallet.findOne({
 			tagName: requesterAccount,
 		});
 		const userData = await UserData.findOne({email});
@@ -201,6 +201,7 @@ const confirmRequest = async (req, res) => {
 			res.status(200).json('User blocked');
 		}
 	} catch (err) {
+		console.log(err.message);
 		res.status(400).json(err.message);
 	}
 };

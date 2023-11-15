@@ -76,7 +76,7 @@ NotificationSchema.pre('save', function () {
 	changeSymbol('pound', 'GBP', '£');
 
 	this.adminStatus = 'unread';
-	if (!this.metadata.createdAt) {
+	if (this.metadata && !this.metadata.createdAt) {
 		this.metadata.createdAt = this.createdAt;
 	}
 });

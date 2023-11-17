@@ -52,10 +52,13 @@ const {
 	buyAirtime,
 	buyData,
 	getNetwork,
+	getDataPlans,
 } = require('../controllers/airtimeController');
 const {getFees} = require('../controllers/feesController');
 const {getStatements} = require('../controllers/statementController');
 const airtimeAPIToken = require('../middleware/airtimeMiddleWare');
+const billAPIToken = require('../middleware/billMiddleware');
+const {payABill, getBills} = require('../controllers/billController');
 
 const router = express.Router();
 
@@ -79,7 +82,9 @@ router.route('/banks').get(listBanks);
 router.route('/savedbanks').get(getRecipients).post(postRecipient);
 router.route('/get-network').get(airtimeAPIToken, getNetwork);
 router.route('/airtime').post(airtimeAPIToken, buyAirtime);
-router.route('/data').post(buyData);
+router.route('/get-data-plans').get(airtimeAPIToken, getDataPlans);
+router.route('/data').post(airtimeAPIToken, buyData);
+router.route('/bill').get(billAPIToken, getBills).post(billAPIToken, payABill);
 router.route('/swap').post(swapCurrency);
 router.route('/request').get(getFundRequest).post(postFundRequest);
 router.route('/request-confirm').post(confirmRequest);

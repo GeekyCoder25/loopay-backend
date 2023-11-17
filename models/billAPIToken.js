@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const AirtimeApiTokenModel = new Schema(
+const BillApiTokenModel = new Schema(
 	{
 		token: {
 			type: String,
@@ -15,4 +15,4 @@ const AirtimeApiTokenModel = new Schema(
 	{timestamps: true}
 );
 
-module.exports = mongoose.model('bill-api-token', AirtimeApiTokenModel);
+module.exports = mongoose.model('bill-api-token', BillApiTokenModel);

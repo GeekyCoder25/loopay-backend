@@ -107,57 +107,127 @@ const buyAirtime = async (req, res) => {
 	}
 };
 
+const getDataPlans = async (req, res) => {
+	try {
+		const {provider, country} = req.query;
+		const url = `${process.env.RELOADLY_URL}/operators/countries/${country}?&includeData=true`;
+		const token = req.airtimeAPIToken;
+		const config = {
+			headers: {
+				Accept: 'application/com.reloadly.topups-v1+json',
+				Authorization: `Bearer ${token}`,
+			},
+		};
+		const response = await axios.get(url, config);
+
+		let data = response.data
+			.filter(
+				index =>
+					index.name.toLowerCase().startsWith(provider) &&
+					Object.entries(index.fixedAmountsDescriptions).length
+			)
+			.map(index => {
+				return Object.entries(index.fixedAmountsDescriptions).map(plan => {
+					const [key, value] = plan;
+					return {
+						operatorId: index.operatorId,
+						amount: key,
+						value,
+					};
+				});
+			})[0];
+
+		res.status(200).json(data);
+	} catch (err) {
+		console.log(err.message);
+		res.status(400).json(err.response.data?.message);
+	}
+};
+
 const buyData = async (req, res) => {
 	try {
 		const {email, phoneNumber} = req.user;
-		const {currency, id, network, metadata, phoneNo, plan} = req.body;
-		const wallet = await LocalWallet.findOne({phoneNumber});
-		const amount = 200;
-		wallet.balance -= amount * 100;
-		await wallet.save();
-		const transaction = {
-			email,
-			phoneNumber,
-			id,
-			status: 'success',
-			debitAccount: wallet.loopayAccNo,
-			transactionType: 'data',
-			networkProvider: network,
-			phoneNo,
-			amount,
-			// reference: response.data.data.reference,w3 r4
-			reference: id,
-			currency,
-			dataPlan: plan,
-			metadata: metadata || null,
-		};
-		const notification = {
-			email,
-			id,
-			phoneNumber,
-			type: 'data',
-			header: 'Data Purchase',
-			message: `Your purchase of ${plan}-NGN${addingDecimal(
-				Number(amount).toLocaleString()
-			)} to ${phoneNo} was successful`,
-			adminMessage: `${req.user.firstName} ${
-				req.user.lastName
-			} purchased ${network} data plan of ${plan}-NGN${addingDecimal(
-				Number(amount).toLocaleString()
-			)} to ${phoneNo}`,
-			status: 'unread',
-			photo: network,
-			metadata: {...transaction, network},
+		console.log(req.body);
+		const {amount, currency, id, network, metadata, phoneNo, plan, operatorId} =
+			req.body;
+
+		const connectWithAPI = async () => {
+			const token = req.airtimeAPIToken;
+
+			const url = `${process.env.RELOADLY_URL}/topups`;
+			const body = JSON.stringify({
+				operatorId,
+				amount,
+				useLocalAmount: true,
+				customIdentifier: `${phoneNo}, ${currency}${amount}, ${
+					plan.value
+				}, ${Date.now()}`,
+				recipientPhone: {countryCode: 'NG', number: phoneNo},
+			});
+			const headers = {
+				'Content-Type': 'application/json',
+				Accept: 'application/com.reloadly.topups-v1+json',
+				Authorization: `Bearer ${token}`,
+			};
+			const response = await fetch(url, {
+				method: 'POST',
+				headers,
+				body,
+			});
+			return response.json();
 		};
 
-		const transactionExists = await AirtimeTransaction.findOne({id});
-		if (!transactionExists) {
-			await AirtimeTransaction.create(transaction);
-			await Notification.create(notification);
+		const apiData = await connectWithAPI();
+		console.log(apiData);
+		if (apiData.status === 'SUCCESSFUL') {
+			const wallet = await LocalWallet.findOne({phoneNumber});
+			const amount = 200;
+			wallet.balance -= amount * 100;
+			await wallet.save();
+			const transaction = {
+				email,
+				phoneNumber,
+				id,
+				status: 'success',
+				debitAccount: wallet.loopayAccNo,
+				transactionType: 'data',
+				networkProvider: network,
+				phoneNo,
+				amount,
+				// reference: response.data.data.reference,w3 r4
+				reference: id,
+				currency,
+				dataPlan: plan,
+				metadata: metadata || null,
+			};
+			const notification = {
+				email,
+				id,
+				phoneNumber,
+				type: 'data',
+				header: 'Data Purchase',
+				message: `Your purchase of ${plan}-NGN${addingDecimal(
+					Number(amount).toLocaleString()
+				)} to ${phoneNo} was successful`,
+				adminMessage: `${req.user.firstName} ${
+					req.user.lastName
+				} purchased ${network} data plan of ${plan}-NGN${addingDecimal(
+					Number(amount).toLocaleString()
+				)} to ${phoneNo}`,
+				status: 'unread',
+				photo: network,
+				metadata: {...transaction, network},
+			};
+
+			const transactionExists = await AirtimeTransaction.findOne({id});
+			if (!transactionExists) {
+				await AirtimeTransaction.create(transaction);
+				await Notification.create(notification);
+			}
+			res
+				.status(200)
+				.json({status: 'success', message: 'Airtime purchase successful'});
 		}
-		res
-			.status(200)
-			.json({status: 'success', message: 'Airtime purchase successful'});
 	} catch (err) {
 		console.log(err.message);
 		res.status(400).json(err.message);
@@ -167,5 +237,6 @@ const buyData = async (req, res) => {
 module.exports = {
 	getNetwork,
 	buyAirtime,
+	getDataPlans,
 	buyData,
 };

@@ -47,7 +47,7 @@ const AirtimeTransactionSchema = new Schema(
 			type: String,
 			required: [true, 'Please provide transaction amount'],
 		},
-		dataPlan: String,
+		dataPlan: Schema.Types.Mixed,
 		reference: {
 			type: String,
 			required: [true, "Please provide transaction's reference"],

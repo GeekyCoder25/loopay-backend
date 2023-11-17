@@ -1,8 +1,8 @@
 const {default: axios} = require('axios');
-const AirtimeApiTokenModel = require('../models/airtimeAPIToken');
+const BillTokenModel = require('../models/airtimeAPIToken');
 
-const airtimeAPIToken = async (req, res, next) => {
-	const token = await AirtimeApiTokenModel.findOne({});
+const billAPIToken = async (req, res, next) => {
+	const token = await BillTokenModel.findOne({});
 
 	const getToken = async () => {
 		try {
@@ -11,7 +11,7 @@ const airtimeAPIToken = async (req, res, next) => {
 				client_id: process.env.RELOADLY_CLIENT_ID,
 				client_secret: process.env.RELOADLY_CLIENT_SECRET,
 				grant_type: 'client_credentials',
-				audience: 'https://topups-sandbox.reloadly.com',
+				audience: 'https://utilities-sandbox.reloadly.com',
 			});
 			const config = {
 				method: 'POST',
@@ -27,35 +27,33 @@ const airtimeAPIToken = async (req, res, next) => {
 			console.log(error);
 		}
 	};
-
 	if (!token) {
 		const newToken = await getToken();
-		const createToken = await AirtimeApiTokenModel.create({
+		const createToken = await BillTokenModel.create({
 			token: newToken.token,
 			scope: newToken.scope,
 		});
-		req.airtimeAPIToken = createToken.token;
+		req.billAPIToken = createToken.token;
 	} else {
 		// const previousTime = new Date(token.updatedAt);
 		const currentTime = new Date();
 		const twentyFourHoursAgo = new Date(currentTime);
-		twentyFourHoursAgo.setHours(currentTime.getHours() - 23);
+		twentyFourHoursAgo.setHours(currentTime.getHours() - 12);
 		// if (twentyFourHoursAgo > previousTime) {
 		const newToken = await getToken();
-		// console.log(newToken);
 		if (newToken && newToken.token !== token.token) {
-			const updateToken = await AirtimeApiTokenModel.findOneAndUpdate(
+			const updateToken = await BillTokenModel.findOneAndUpdate(
 				{},
 				{token: newToken.token, scope: newToken.scope},
 				{new: true, runValidators: true}
 			);
-			req.airtimeAPIToken = updateToken.token;
+			req.billAPIToken = updateToken.token;
 			// }
 		} else {
-			req.airtimeAPIToken = token.token;
+			req.billAPIToken = token.token;
 		}
 	}
 	next();
 };
 
-module.exports = airtimeAPIToken;
+module.exports = billAPIToken;

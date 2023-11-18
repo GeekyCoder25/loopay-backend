@@ -1,10 +1,11 @@
 const {default: axios} = require('axios');
-
+const LocalWallet = require('../models/wallet');
+const Notification = require('../models/notification');
+const BillTransaction = require('../models/billTransaction');
 const getBills = async (req, res) => {
 	try {
 		const query = Object.keys(req.query);
 		const countryCode = 'NG';
-		console.log(query[0]);
 		const billType = () => {
 			switch (query[0]) {
 				case 'electricity':
@@ -32,14 +33,27 @@ const getBills = async (req, res) => {
 		const response = await axios.get(url, config);
 		return res.status(200).json(response.data.content);
 	} catch (err) {
-		console.log(err.response.data.message);
-		res.status(400).json(err.response.data.message);
+		console.log(err.response?.data?.message || err.message);
+		res.status(400).json('Server Error');
 	}
 };
 const payABill = async (req, res) => {
 	try {
-		const {provider, subscriberAccountNumber, amount, amountId, metadata} =
-			req.body;
+		const query = Object.keys(req.query)[0];
+		const {email, phoneNumber} = req.user;
+		const {
+			amount,
+			amountId,
+			provider,
+			metadata,
+			referenceId,
+			subscriberAccountNumber,
+		} = req.body;
+		const wallet = await LocalWallet.findOne({phoneNumber});
+		if (wallet.balance < amount * 100) {
+			return res.status(400).json('Insufficient balance');
+		}
+
 		const url = `${process.env.RELOADLY_BILL_URL}/pay`;
 		const token = req.billAPIToken;
 		const config = {
@@ -49,7 +63,6 @@ const payABill = async (req, res) => {
 				Authorization: `Bearer ${token}`,
 			},
 		};
-		const referenceId = req.user.email + subscriberAccountNumber + new Date();
 
 		const body = JSON.stringify({
 			subscriberAccountNumber,
@@ -61,10 +74,48 @@ const payABill = async (req, res) => {
 			additionalInfo: metadata,
 		});
 		const response = await axios.post(url, body, config);
-		return res.status(200).json(response.data);
+		if (response.data.status === 'PROCESSING') {
+			wallet.balance -= amount * 100;
+			await wallet.save();
+			const id = referenceId;
+			const transaction = {
+				email,
+				phoneNumber,
+				id,
+				status: 'pending',
+				debitAccount: wallet.loopayAccNo,
+				transactionType: 'bill',
+				type: query,
+				name: provider.name,
+				amount,
+				reference: id,
+				currency: wallet.currency,
+				metadata: response.data,
+			};
+			const notification = {
+				email,
+				id,
+				phoneNumber,
+				type: 'bill',
+				header: `${query} purchase`,
+				message: `Your purchase of ${provider.name} to ${subscriberAccountNumber} was successful`,
+				adminMessage: `${req.user.firstName} ${req.user.lastName} purchased ${provider.name} to ${subscriberAccountNumber}`,
+				status: 'unread',
+				metadata: {...transaction, apiResponse: response.data},
+			};
+
+			const transactionExists = await BillTransaction.findOne({id});
+			if (!transactionExists) {
+				await BillTransaction.create(transaction);
+				await Notification.create(notification);
+			}
+			return res.status(200).json(response.data);
+		}
+		throw new Error('Server error');
 	} catch (err) {
-		console.log(err.response.data);
-		res.status(400).json(err.response.data.message);
+		const error = err.response?.data?.message || err.message;
+		console.log(error);
+		res.status(400).json(error);
 	}
 };
 

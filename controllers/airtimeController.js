@@ -49,10 +49,13 @@ const buyAirtime = async (req, res) => {
 			});
 			return response.json();
 		};
+		const {email, phoneNumber} = req.user;
+		const wallet = await LocalWallet.findOne({phoneNumber});
+		if (wallet.balance < amount * 100) {
+			return res.status(400).json('Insufficient balance');
+		}
 		const apiData = await connectWithAPI();
 		if (apiData.status === 'SUCCESSFUL') {
-			const {email, phoneNumber} = req.user;
-			const wallet = await LocalWallet.findOne({phoneNumber});
 			wallet.balance -= amount * 100;
 			await wallet.save();
 			const transaction = {
@@ -99,7 +102,7 @@ const buyAirtime = async (req, res) => {
 				reference: apiData.transactionId,
 			});
 		} else {
-			throw new Error('Server Error');
+			throw new Error('Server error');
 		}
 	} catch (err) {
 		console.log(err.message);
@@ -139,7 +142,7 @@ const getDataPlans = async (req, res) => {
 
 		res.status(200).json(data);
 	} catch (err) {
-		console.log(err.message);
+		console.log(err.response.data?.message);
 		res.status(400).json(err.response.data?.message);
 	}
 };
@@ -147,7 +150,6 @@ const getDataPlans = async (req, res) => {
 const buyData = async (req, res) => {
 	try {
 		const {email, phoneNumber} = req.user;
-		console.log(req.body);
 		const {amount, currency, id, network, metadata, phoneNo, plan, operatorId} =
 			req.body;
 
@@ -177,11 +179,12 @@ const buyData = async (req, res) => {
 			return response.json();
 		};
 
+		const wallet = await LocalWallet.findOne({phoneNumber});
+		if (wallet.balance < amount * 100) {
+			return res.status(400).json('Insufficient balance');
+		}
 		const apiData = await connectWithAPI();
-		console.log(apiData);
 		if (apiData.status === 'SUCCESSFUL') {
-			const wallet = await LocalWallet.findOne({phoneNumber});
-			const amount = 200;
 			wallet.balance -= amount * 100;
 			await wallet.save();
 			const transaction = {
@@ -206,14 +209,8 @@ const buyData = async (req, res) => {
 				phoneNumber,
 				type: 'data',
 				header: 'Data Purchase',
-				message: `Your purchase of ${plan}-NGN${addingDecimal(
-					Number(amount).toLocaleString()
-				)} to ${phoneNo} was successful`,
-				adminMessage: `${req.user.firstName} ${
-					req.user.lastName
-				} purchased ${network} data plan of ${plan}-NGN${addingDecimal(
-					Number(amount).toLocaleString()
-				)} to ${phoneNo}`,
+				message: `Your purchase of ${plan.value} to ${phoneNo} was successful`,
+				adminMessage: `${req.user.firstName} ${req.user.lastName} purchased ${network} data plan of ${plan.value} to ${phoneNo}`,
 				status: 'unread',
 				photo: network,
 				metadata: {...transaction, network},
@@ -226,7 +223,7 @@ const buyData = async (req, res) => {
 			}
 			res
 				.status(200)
-				.json({status: 'success', message: 'Airtime purchase successful'});
+				.json({status: 'success', message: 'Data purchase successful'});
 		}
 	} catch (err) {
 		console.log(err.message);

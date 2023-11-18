@@ -1,5 +1,7 @@
 const User = require('../models/user');
 const Transaction = require('../models/transaction');
+const AirtimeTransactionModel = require('../models/airtimeTransaction');
+const SwapModel = require('../models/swapTransaction');
 const Session = require('../models/session');
 const UserData = require('../models/userData');
 const Recent = require('../models/recent');
@@ -14,9 +16,25 @@ const getAllAdminInfo = async (req, res) => {
 	try {
 		const users = await User.find().select(['-password', '-__v']);
 		const userDatas = await UserData.find().select(['-__v']);
-		const transactions = await Transaction.find()
+		let transactions = await Transaction.find()
 			.select(['-__v'])
 			.sort('-createdAt');
+		const airtimeTransactionModel = await AirtimeTransactionModel.find()
+			.select(['-__v'])
+			.sort('-createdAt');
+		const swapTransactions = await SwapModel.find()
+			.select(['-__v'])
+			.sort('-createdAt');
+		transactions = transactions.concat(
+			airtimeTransactionModel,
+			swapTransactions
+		);
+		transactions.sort((a, b) => {
+			const dateA = new Date(a.createdAt);
+			const dateB = new Date(b.createdAt);
+			return dateB - dateA;
+		});
+
 		let wallets = await LocalWallet.find();
 		let recents = await Recent.find({email: {$ne: req.user.email}})
 			.select('-__v')

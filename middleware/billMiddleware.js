@@ -23,7 +23,7 @@ const billAPIToken = async (req, res, next) => {
 			const response = await axios.post(url, data, config);
 			return {token: response.data.access_token, scope: response.data.scope};
 		} catch (err) {
-			const error = err.response;
+			const error = err.response?.data?.message || err.message;
 			console.log(error);
 		}
 	};

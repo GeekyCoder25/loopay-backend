@@ -1,4 +1,4 @@
-const {default: axios} = require('axios');
+const axios = require('axios');
 const LocalWallet = require('../models/wallet');
 const Notification = require('../models/notification');
 const BillTransaction = require('../models/billTransaction');
@@ -30,12 +30,10 @@ const getBills = async (req, res) => {
 				Authorization: `Bearer ${token}`,
 			},
 		};
-		console.log(countryCode);
 		const response = await axios.get(url, config);
-		console.log(response);
 		return res.status(200).json(response.data.content);
 	} catch (err) {
-		console.log(err.response?.data || err.message);
+		console.log(err.response?.data?.message || err.message);
 		res.status(400).json('Server Error');
 	}
 };

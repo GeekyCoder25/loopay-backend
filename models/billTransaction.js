@@ -33,11 +33,11 @@ const BillTransactionSchema = new Schema(
 			required: [true, 'Please provide transaction type'],
 			enum: ['bill'],
 		},
-		type: {
+		billType: {
 			type: String,
 			required: [true, 'Please provide bill type'],
 		},
-		name: {
+		billName: {
 			type: String,
 			required: [true, 'Please provide bill name'],
 		},

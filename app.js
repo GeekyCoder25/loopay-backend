@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const dotEnv = require('dotenv');
 const mongoose = require('mongoose');
+const morgan = require('morgan');
 const authRoutes = require('./routes/authRoutes');
 const userDataRoutes = require('./routes/userDataRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -49,6 +50,9 @@ cloudinary.config({
 	api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// if (process.env.NODE_ENV === 'development') {
+// 	app.use(morgan('dev'));
+// }
 app.post('/api/upload', protect, uploadPhoto);
 app.use('/api/auth', authRoutes);
 // app.use('/api', userDataRoutes);
@@ -63,4 +67,9 @@ app.get('/api/network', (req, res) => {
 app.get('/api', (req, res) => {
 	console.log('Lopay Backend');
 	res.send({app: 'Loopay'});
+});
+app.all('*', (req, res) => {
+	res
+		.status(404)
+		.json(`route '${req.originalUrl}' isn't available on Loopay api`);
 });

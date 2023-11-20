@@ -2,6 +2,7 @@ const User = require('../models/user');
 const Transaction = require('../models/transaction');
 const AirtimeTransactionModel = require('../models/airtimeTransaction');
 const SwapModel = require('../models/swapTransaction');
+const BillTransactionModel = require('../models/billTransaction');
 const Session = require('../models/session');
 const UserData = require('../models/userData');
 const Recent = require('../models/recent');
@@ -25,9 +26,13 @@ const getAllAdminInfo = async (req, res) => {
 		const swapTransactions = await SwapModel.find()
 			.select(['-__v'])
 			.sort('-createdAt');
+		const billTransactions = await BillTransactionModel.find()
+			.select(['-__v'])
+			.sort('-createdAt');
 		transactions = transactions.concat(
 			airtimeTransactionModel,
-			swapTransactions
+			swapTransactions,
+			billTransactions
 		);
 		transactions.sort((a, b) => {
 			const dateA = new Date(a.createdAt);
@@ -39,12 +44,12 @@ const getAllAdminInfo = async (req, res) => {
 		let recents = await Recent.find({email: {$ne: req.user.email}})
 			.select('-__v')
 			.sort('-updatedAt');
-		let nairaBalanceModel = await LocalWallet.find().select('+ balance');
+		let localBalanceModel = await LocalWallet.find().select('+ balance');
 		let dollarBalanceModel = await DollarWallet.find().select('+ balance');
 		let euroBalanceModel = await EuroWallet.find().select('+ balance');
 		let poundBalanceModel = await PoundWallet.find().select('+ balance');
 
-		if (!nairaBalanceModel.length) nairaBalanceModel = [0];
+		if (!localBalanceModel.length) localBalanceModel = [0];
 		if (!dollarBalanceModel.length) dollarBalanceModel = [0];
 		if (!euroBalanceModel.length) euroBalanceModel = [0];
 		if (!poundBalanceModel.length) poundBalanceModel = [0];
@@ -74,8 +79,8 @@ const getAllAdminInfo = async (req, res) => {
 				: 0;
 		};
 
-		const nairaBalance =
-			nairaBalanceModel
+		const localBalance =
+			localBalanceModel
 				.map(balance => balance.balance)
 				.reduce((a, b) => a + b) /
 				100 +
@@ -112,7 +117,7 @@ const getAllAdminInfo = async (req, res) => {
 		res.status(200).json({
 			users,
 			wallets,
-			nairaBalance,
+			localBalance,
 			dollarBalance,
 			euroBalance,
 			poundBalance,

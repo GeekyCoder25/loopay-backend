@@ -18,7 +18,7 @@ const getNetwork = async (req, res) => {
 		const response = await axios.get(url, config);
 		res.status(200).json(response.data);
 	} catch (err) {
-		const error = err.message;
+		const error = err.response?.data || err.message;
 		console.log(error);
 		res.status(400).json('Server error');
 	}
@@ -105,8 +105,9 @@ const buyAirtime = async (req, res) => {
 			throw new Error('Server error');
 		}
 	} catch (err) {
-		console.log(err.message);
-		res.status(400).json(err);
+		const error = err.response?.data || err.message;
+		console.log(error);
+		res.status(400).json({message: error});
 	}
 };
 
@@ -142,8 +143,9 @@ const getDataPlans = async (req, res) => {
 
 		res.status(200).json(data);
 	} catch (err) {
-		console.log(err.response.data?.message);
-		res.status(400).json(err.response.data?.message);
+		const error = err.response?.data || err.message;
+		console.log(error);
+		res.status(400).json({message: error});
 	}
 };
 
@@ -224,10 +226,13 @@ const buyData = async (req, res) => {
 			res
 				.status(200)
 				.json({status: 'success', message: 'Data purchase successful'});
+		} else {
+			throw new Error('Server error');
 		}
 	} catch (err) {
-		console.log(err.message);
-		res.status(400).json(err.message);
+		const error = err.response?.data || err.message;
+		console.log(error);
+		res.status(400).json({message: error});
 	}
 };
 

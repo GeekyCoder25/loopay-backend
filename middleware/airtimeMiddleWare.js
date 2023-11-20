@@ -11,7 +11,7 @@ const airtimeAPIToken = async (req, res, next) => {
 				client_id: process.env.RELOADLY_CLIENT_ID,
 				client_secret: process.env.RELOADLY_CLIENT_SECRET,
 				grant_type: 'client_credentials',
-				audience: 'https://topups-sandbox.reloadly.com',
+				audience: process.env.RELOADLY_URL,
 			});
 			const config = {
 				method: 'POST',
@@ -23,7 +23,7 @@ const airtimeAPIToken = async (req, res, next) => {
 			const response = await axios.post(url, data, config);
 			return {token: response.data.access_token, scope: response.data.scope};
 		} catch (err) {
-			const error = err.response;
+			const error = err.response?.data || err.message;
 			console.log(error);
 		}
 	};

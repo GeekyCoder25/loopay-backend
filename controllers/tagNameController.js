@@ -1,4 +1,5 @@
 const UserDataModel = require('../models/userData');
+const wallet = require('../models/wallet');
 const LocalWallet = require('../models/wallet');
 const {handleErrors} = require('../utils/ErrorHandler');
 
@@ -17,7 +18,9 @@ const getTagName = async (req, res) => {
 			tagName = syntaxCheck[1];
 		}
 		tagName = tagName.toLowerCase();
-		const result = await UserDataModel.findOne({tagName}).select([
+		let result = await UserDataModel.findOne({
+			$or: [{tagName}, {'userProfile.userName': tagName}],
+		}).select([
 			'email',
 			'userProfile.fullName',
 			'userProfile.phoneNumber',
@@ -25,6 +28,21 @@ const getTagName = async (req, res) => {
 			'tagName',
 			'blockedUsers',
 		]);
+		if (!result) {
+			const walletAccount = await wallet
+				.findOne({loopayAccNo: tagName})
+				.select(['tagName']);
+			result = await UserDataModel.findOne({
+				tagName: walletAccount.tagName,
+			}).select([
+				'email',
+				'userProfile.fullName',
+				'userProfile.phoneNumber',
+				'photoURL',
+				'tagName',
+				'blockedUsers',
+			]);
+		}
 		if (!result) throw new Error('No user found with this tag name');
 		if (type === 'requestFund') {
 			const blockedUsers = result.blockedUsers;

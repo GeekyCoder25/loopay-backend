@@ -11,7 +11,7 @@ const billAPIToken = async (req, res, next) => {
 				client_id: process.env.RELOADLY_CLIENT_ID,
 				client_secret: process.env.RELOADLY_CLIENT_SECRET,
 				grant_type: 'client_credentials',
-				audience: 'https://utilities-sandbox.reloadly.com',
+				audience: process.env.RELOADLY_BILL_URL,
 			});
 			const config = {
 				method: 'POST',

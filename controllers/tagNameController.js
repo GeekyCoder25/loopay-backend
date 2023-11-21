@@ -1,5 +1,4 @@
 const UserDataModel = require('../models/userData');
-const wallet = require('../models/wallet');
 const LocalWallet = require('../models/wallet');
 const {handleErrors} = require('../utils/ErrorHandler');
 
@@ -7,7 +6,6 @@ const getTagName = async (req, res) => {
 	try {
 		const {senderTagName} = req.params;
 		let {tagName, type} = req.body;
-
 		if (!senderTagName) throw new Error("Please provide sender's tagName");
 		if (!tagName) throw new Error("Please provide receiver's tagName");
 		if (tagName.includes('#')) {
@@ -29,20 +27,23 @@ const getTagName = async (req, res) => {
 			'blockedUsers',
 		]);
 		if (!result) {
-			const walletAccount = await wallet
-				.findOne({loopayAccNo: tagName})
-				.select(['tagName']);
-			result = await UserDataModel.findOne({
-				tagName: walletAccount.tagName,
-			}).select([
-				'email',
-				'userProfile.fullName',
-				'userProfile.phoneNumber',
-				'photoURL',
+			const wallet = await LocalWallet.findOne({loopayAccNo: tagName}).select([
 				'tagName',
-				'blockedUsers',
 			]);
+			if (wallet) {
+				result = await UserDataModel.findOne({
+					tagName: wallet.tagName,
+				}).select([
+					'email',
+					'userProfile.fullName',
+					'userProfile.phoneNumber',
+					'photoURL',
+					'tagName',
+					'blockedUsers',
+				]);
+			}
 		}
+		console.log(result);
 		if (!result) throw new Error('No user found with this tag name');
 		if (type === 'requestFund') {
 			const blockedUsers = result.blockedUsers;
@@ -62,6 +63,7 @@ const getTagName = async (req, res) => {
 		};
 		return res.status(200).json(response);
 	} catch (err) {
+		console.log(err.message);
 		res.status(400).json(err.message);
 	}
 };

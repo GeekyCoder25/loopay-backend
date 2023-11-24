@@ -51,6 +51,7 @@ const swapCurrency = async (req, res) => {
 			swapTo: toCurrency,
 			swapFromAmount: toSwap,
 			swapToAmount: toReceive,
+			currency: toCurrency,
 			reference: `TR${id}`,
 		};
 		await SwapTransaction.create(transaction);

@@ -38,7 +38,7 @@ const registerAccount = async (req, res) => {
 			throw new Error(
 				'Please provide formData for registering and sessionData for Devices and Sessions'
 			);
-		const {password} = formData;
+		const {password, localCurrencyCode} = formData;
 
 		let otpCode = '';
 		for (let i = 0; i < 4; i++) {
@@ -83,6 +83,7 @@ const registerAccount = async (req, res) => {
 				phoneNumber,
 			},
 			tagName: userName,
+			localCurrencyCode,
 		};
 		await UserDataModel.create(userData);
 		await SessionModel.create({_id, email, sessions: [sessionData]});
@@ -207,6 +208,7 @@ const loginAccount = async (req, res) => {
 			throw new Error('Please provide your email and password');
 		}
 		const result = await User.findOne({email: req.body.email});
+		const userData = await UserDataModel.findOne({email: req.body.email});
 		const compare =
 			result && (await bcrypt.compare(req.body.password, result.password));
 		if (!result) throw new Error('Invalid Credentials');
@@ -223,6 +225,7 @@ const loginAccount = async (req, res) => {
 					phoneNumber: result.phoneNumber,
 					fullName: result.fullName,
 					token: generateToken(result._id),
+					localCurrencyCode: userData.localCurrencyCode,
 				},
 			});
 		}
@@ -287,6 +290,7 @@ const confirmOTP = async (req, res) => {
 		const {otp} = req.params;
 		const {email} = req.body;
 		const result = await User.findOne({email});
+		const userData = await UserDataModel.findOne({email: req.body.email});
 		if (!result) throw new Error('No account is associated with this email');
 		else {
 			const decoded = jwt.verify(result.otpCode, process.env.JWT_SECRET);
@@ -301,6 +305,7 @@ const confirmOTP = async (req, res) => {
 					phoneNumber: result.phoneNumber,
 					fullName: result.fullName,
 					token: generateToken(result._id),
+					localCurrencyCode: userData.localCurrencyCode,
 				},
 			});
 		}

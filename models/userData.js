@@ -34,9 +34,16 @@ const UserDataSchema = new Schema(
 		tagName: {type: String, unique: true, sparse: true},
 		pin: String,
 		accountType: {type: String, enum: ['Personal', 'Business']},
-		verificationStatus: Boolean,
+		verificationStatus: {
+			type: String,
+			enum: ['verified', 'pending', 'unVerified'],
+		},
 		photo: String,
 		photoURL: String,
+		localCurrencyCode: {
+			type: String,
+			required: [true, 'Please provide local currency code'],
+		},
 		referralCode: String,
 		sessionTime: Date,
 		blockedUsers: [String],

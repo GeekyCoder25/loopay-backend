@@ -59,6 +59,7 @@ const {getStatements} = require('../controllers/statementController');
 const airtimeAPIToken = require('../middleware/airtimeMiddleWare');
 const billAPIToken = require('../middleware/billMiddleware');
 const {payABill, getBills} = require('../controllers/billController');
+const {postVerificationData} = require('../controllers/verificationController');
 
 const router = express.Router();
 
@@ -96,5 +97,6 @@ router.route('/rate').get(getRate);
 router.route('/splash').get(getFundRequest);
 router.route('/fees').get(getFees);
 router.route('/statement').get(getStatements);
+router.route('/verify').post(postVerificationData);
 
 module.exports = router;

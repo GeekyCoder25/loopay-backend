@@ -61,6 +61,10 @@ const SwapTransactionModel = new Schema(
 			type: String,
 			required: [true, 'Please provide swap to amount'],
 		},
+		currency: {
+			type: String,
+			required: [true, "Please provide transaction's currency"],
+		},
 		description: {
 			type: String,
 		},

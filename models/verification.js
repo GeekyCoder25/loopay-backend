@@ -8,8 +8,8 @@ const VerificationSchema = new Schema(
 			type: String,
 			required: [true, 'Please input your email address'],
 			validate: [isEmail, 'Invalid email address'],
+			unique: true,
 		},
-
 		country: {
 			type: String,
 			required: [true, "Please provide the user's name"],
@@ -17,18 +17,10 @@ const VerificationSchema = new Schema(
 		idType: {
 			type: String,
 			required: [true, 'Please provide ID type for verification'],
-			unique: true,
 		},
-		front: {
-			type: String,
-			required: [true, 'Please provide url to iD front image'],
-			unique: true,
-		},
-		back: {
-			type: String,
-			required: [true, 'Please provide url to iD back image'],
-			unique: true,
-		},
+		idValue: String,
+		front: String,
+		back: String,
 	},
 	{timestamps: true}
 );

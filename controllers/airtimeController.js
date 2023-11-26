@@ -25,7 +25,8 @@ const getNetwork = async (req, res) => {
 };
 const buyAirtime = async (req, res) => {
 	try {
-		const {currency, id, amount, network, phoneNo, operatorId} = req.body;
+		const {currency, id, amount, network, phoneNo, operatorId, countryCode} =
+			req.body;
 		const connectWithAPI = async () => {
 			const token = req.airtimeAPIToken;
 
@@ -35,7 +36,7 @@ const buyAirtime = async (req, res) => {
 				amount,
 				useLocalAmount: true,
 				customIdentifier: `${phoneNo}, ${currency}${amount}, ${Date.now()}`,
-				recipientPhone: {countryCode: 'NG', number: phoneNo},
+				recipientPhone: {countryCode, number: phoneNo},
 			});
 			const headers = {
 				'Content-Type': 'application/json',
@@ -102,11 +103,12 @@ const buyAirtime = async (req, res) => {
 				reference: apiData.transactionId,
 			});
 		} else {
+			console.log(apiData);
 			throw new Error('Server error');
 		}
 	} catch (err) {
+		console.log(err);
 		const error = err.response?.data || err.message;
-		console.log(error);
 		res.status(400).json({message: error});
 	}
 };
@@ -139,9 +141,9 @@ const getDataPlans = async (req, res) => {
 						value,
 					};
 				});
-			})[0];
+			});
 
-		res.status(200).json(data);
+		res.status(200).json([].concat(...data));
 	} catch (err) {
 		const error = err.response?.data || err.message;
 		console.log(error);
@@ -152,8 +154,17 @@ const getDataPlans = async (req, res) => {
 const buyData = async (req, res) => {
 	try {
 		const {email, phoneNumber} = req.user;
-		const {amount, currency, id, network, metadata, phoneNo, plan, operatorId} =
-			req.body;
+		const {
+			amount,
+			currency,
+			id,
+			network,
+			metadata,
+			phoneNo,
+			plan,
+			operatorId,
+			countryCode,
+		} = req.body;
 
 		const connectWithAPI = async () => {
 			const token = req.airtimeAPIToken;
@@ -166,7 +177,7 @@ const buyData = async (req, res) => {
 				customIdentifier: `${phoneNo}, ${currency}${amount}, ${
 					plan.value
 				}, ${Date.now()}`,
-				recipientPhone: {countryCode: 'NG', number: phoneNo},
+				recipientPhone: {countryCode, number: phoneNo},
 			});
 			const headers = {
 				'Content-Type': 'application/json',

@@ -4,10 +4,9 @@ const Notification = require('../models/notification');
 const BillTransaction = require('../models/billTransaction');
 const getBills = async (req, res) => {
 	try {
-		const query = Object.keys(req.query);
-		const countryCode = 'NG';
+		const {type, country: countryCode} = req.query;
 		const billType = () => {
-			switch (query[0]) {
+			switch (type) {
 				case 'electricity':
 					return 'ELECTRICITY_BILL_PAYMENT';
 				case 'tv':
@@ -119,4 +118,25 @@ const payABill = async (req, res) => {
 	}
 };
 
-module.exports = {getBills, payABill};
+const getBillsTransactions = async (req, res) => {
+	try {
+		const {id: referenceID} = req.params;
+		const url = `${process.env.RELOADLY_BILL_URL}/transactions/${
+			referenceID || ''
+		}`;
+		const token = req.billAPIToken;
+		const config = {
+			headers: {
+				Accept: 'application/com.reloadly.utilities-v1+json',
+				Authorization: `Bearer ${token}`,
+			},
+		};
+		const response = await axios.get(url, config);
+		return res.status(200).json(response.data.content);
+	} catch (err) {
+		console.log(err.response?.data?.message || err.message);
+		res.status(400).json('Server Error');
+	}
+};
+
+module.exports = {getBills, payABill, getBillsTransactions};

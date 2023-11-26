@@ -38,7 +38,7 @@ const registerAccount = async (req, res) => {
 			throw new Error(
 				'Please provide formData for registering and sessionData for Devices and Sessions'
 			);
-		const {password, localCurrencyCode} = formData;
+		const {password, localCurrencyCode, country} = formData;
 
 		let otpCode = '';
 		for (let i = 0; i < 4; i++) {
@@ -84,6 +84,7 @@ const registerAccount = async (req, res) => {
 			},
 			tagName: userName,
 			localCurrencyCode,
+			country,
 		};
 		await UserDataModel.create(userData);
 		await SessionModel.create({_id, email, sessions: [sessionData]});

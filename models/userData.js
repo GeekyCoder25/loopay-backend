@@ -44,6 +44,12 @@ const UserDataSchema = new Schema(
 			type: String,
 			required: [true, 'Please provide local currency code'],
 		},
+		country: {
+			type: {
+				name: String,
+				code: String,
+			},
+		},
 		referralCode: String,
 		sessionTime: Date,
 		blockedUsers: [String],

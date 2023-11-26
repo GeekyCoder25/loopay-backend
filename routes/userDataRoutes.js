@@ -53,6 +53,7 @@ const {
 	buyData,
 	getNetwork,
 	getDataPlans,
+	getOperators,
 } = require('../controllers/airtimeController');
 const {getFees} = require('../controllers/feesController');
 const {getStatements} = require('../controllers/statementController');
@@ -85,6 +86,7 @@ router.route('/transaction').get(getTransactions);
 router.route('/transferrecipient').get(getTransactions);
 router.route('/banks').get(listBanks);
 router.route('/savedbanks').get(getRecipients).post(postRecipient);
+router.route('/airtime/operators').get(airtimeAPIToken, getOperators);
 router.route('/get-network').get(airtimeAPIToken, getNetwork);
 router.route('/airtime').post(airtimeAPIToken, buyAirtime);
 router.route('/get-data-plans').get(airtimeAPIToken, getDataPlans);

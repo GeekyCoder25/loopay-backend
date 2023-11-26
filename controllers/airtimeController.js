@@ -4,6 +4,26 @@ const {addingDecimal} = require('../utils/addingDecimal');
 const AirtimeTransaction = require('../models/airtimeTransaction');
 const {default: axios} = require('axios');
 
+const getOperators = async (req, res) => {
+	try {
+		const {country} = req.query;
+		const url = `${process.env.RELOADLY_URL}/operators/countries/${country}`;
+		const token = req.airtimeAPIToken;
+		const config = {
+			headers: {
+				Accept: 'application/com.reloadly.topups-v1+json',
+				Authorization: `Bearer ${token}`,
+			},
+		};
+		const response = await axios.get(url, config);
+		res.status(200).json(response.data);
+	} catch (err) {
+		const error = err.response?.data.message || err.message;
+		console.log(error);
+		res.status(400).json(error);
+	}
+};
+
 const getNetwork = async (req, res) => {
 	try {
 		const {phone, country} = req.query;
@@ -248,6 +268,7 @@ const buyData = async (req, res) => {
 };
 
 module.exports = {
+	getOperators,
 	getNetwork,
 	buyAirtime,
 	getDataPlans,

@@ -7,9 +7,10 @@ const handleErrors = (err, res) => {
 				: Object.keys(err.keyPattern)[0];
 
 		const errorValue = errorKey => {
+			console.log(errorKey);
 			if (errorKey === 'email')
 				return 'Email has already been used with another account';
-			else if (errorKey === 'phoneNo')
+			else if (errorKey === 'phoneNo' || errorKey === 'phoneNumber')
 				return 'Phone number has already been used with another account';
 			else
 				return `${errorKey} value has already been used with another account`;

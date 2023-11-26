@@ -11,6 +11,7 @@ const postVerificationData = async (req, res) => {
 				return res.status(400).json({message: 'No file uploaded'});
 			}
 			const {front, back} = req.files;
+
 			const {data} = req.body;
 			const body = data && JSON.parse(data);
 			if (!front || !back || !body) {
@@ -48,14 +49,14 @@ const postVerificationData = async (req, res) => {
 			// }
 
 			const dataUri = new DataUriParser();
-
-			const formatAsDataUri = file => dataUri.format(file.name, file.data);
+			const dataUri2 = new DataUriParser();
 
 			const saveFrontName = `verify_${country.name}_${idType.name}_front_${req.user.email}_${req.user._id}`;
-			const saveBackName = `verify_${country.name}_${idType.name}back${req.user.email}_${req.user._id}`;
+			const saveBackName = `verify_${country.name}_${idType.name}_back_${req.user.email}_${req.user._id}`;
 
-			const formattedFrontFile = formatAsDataUri(front);
-			const formattedBackFile = formatAsDataUri(back);
+			const formattedFrontFile = dataUri.format(front.name, front.data);
+			const formattedBackFile = dataUri2.format(back.name, back.data);
+
 			await userData.updateOne(
 				{email: req.user.email},
 				{verificationStatus: 'pending'},

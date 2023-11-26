@@ -24,13 +24,13 @@ const passwordSecurityOptions = {
 
 const registerAccount = async (req, res) => {
 	try {
-		// await User.findOneAndRemove({email: 'toyibe25@gmail.com'});
-		// await UserDataModel.findOneAndRemove({email: 'toyibe25@gmail.com'});
-		// await SessionModel.findOneAndRemove({email: 'toyibe25@gmail.com'});
-		// await LocalWallet.findOneAndRemove({email: 'toyibe25@gmail.com'});
-		// await DollarWallet.findOneAndRemove({email: 'toyibe25@gmail.com'});
-		// await EuroWallet.findOneAndRemove({email: 'toyibe25@gmail.com'});
-		// await PoundWallet.findOneAndRemove({email: 'toyibe25@gmail.com'});
+		// await User.findOneAndRemove({email: 'toyibe233@gmail.com'});
+		// await UserDataModel.findOneAndRemove({email: 'toyibe233@gmail.com'});
+		// await SessionModel.findOneAndRemove({email: 'toyibe233@gmail.com'});
+		// await LocalWallet.findOneAndRemove({email: 'toyibe233@gmail.com'});
+		// await DollarWallet.findOneAndRemove({email: 'toyibe233@gmail.com'});
+		// await EuroWallet.findOneAndRemove({email: 'toyibe233@gmail.com'});
+		// await PoundWallet.findOneAndRemove({email: 'toyibe233@gmail.com'});
 		// return res.status(400).json({error: ''});
 		const {formData, sessionData} = req.body;
 
@@ -179,6 +179,7 @@ const verifyEmail = async (req, res) => {
 	try {
 		const {email, otp} = req.body;
 		const result = await User.findOne({email});
+		const userData = await UserDataModel.findOne({email});
 		const decoded = jwt.verify(result.emailOtpCode, process.env.JWT_SECRET);
 		if (decoded.id !== otp) throw new Error('Invalid OTP Code');
 		result.emailOtpCode = undefined;
@@ -194,6 +195,7 @@ const verifyEmail = async (req, res) => {
 				userName,
 				phoneNumber,
 				token: generateToken(_id),
+				localCurrencyCode: userData.localCurrencyCode,
 			},
 		});
 	} catch (err) {

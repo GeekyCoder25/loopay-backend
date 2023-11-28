@@ -14,6 +14,7 @@ const axios = require('axios');
 const Notification = require('../models/notification');
 const VerificationModel = require('../models/verification');
 const {sendMail} = require('../utils/sendEmail');
+const cloudinary = require('cloudinary').v2;
 
 const getAllAdminInfo = async (req, res) => {
 	try {
@@ -280,7 +281,6 @@ const blockTransaction = async (req, res) => {
 const getVerifications = async (req, res) => {
 	try {
 		const query = Object.keys(req.query)[0];
-		console.log(query);
 		const verifications = query
 			? await VerificationModel.find({status: query})
 			: await VerificationModel.find();
@@ -294,7 +294,7 @@ const getVerifications = async (req, res) => {
 const updateVerification = async (req, res) => {
 	try {
 		const query = Object.keys(req.query)[0];
-		const {email, subject, message} = req.body;
+		const {email, subject, message, country, idType} = req.body;
 		if (!email) throw new Error('Please provide user email');
 		if (query === 'approve') {
 			await VerificationModel.findOneAndUpdate(
@@ -356,13 +356,20 @@ const updateVerification = async (req, res) => {
 			);
 			return res.status(200).json({status: 'success'});
 		} else if (query === 'delete') {
-			await VerificationModel.findByIdAndRemove({
+			await VerificationModel.findOneAndRemove({
 				email,
 			});
 			await UserData.findOneAndUpdate(
 				{email},
 				{verificationStatus: 'unVerified'},
 				{new: true, runValidators: true}
+			);
+			cloudinary.api.delete_resources(
+				[
+					`loopay/verifications/${country}/${idType}/${email}/back`,
+					`loopay/verifications/${country}/${idType}/${email}/front`,
+				],
+				{type: 'upload', resource_type: 'image'}
 			);
 			return res.status(200).json({status: 'success'});
 		}

@@ -122,6 +122,8 @@ const buyAirtime = async (req, res) => {
 				message: 'Airtime purchase successful',
 				reference: apiData.transactionId,
 			});
+		} else if (apiData.errorCode === 'INSUFFICIENT_BALANCE') {
+			throw new Error('Server Error');
 		} else {
 			console.log(apiData);
 			throw new Error(apiData.message);

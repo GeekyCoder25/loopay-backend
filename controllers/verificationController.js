@@ -29,6 +29,12 @@ const postVerificationData = async (req, res) => {
 			) {
 				return res.status(400).json({message: 'File uploaded is not an image'});
 			}
+			const verification = await VerificationModel.findOne({
+				email: req.user.email,
+			});
+
+			if (verification)
+				throw new Error('Verification already submitted by this user');
 
 			front.name = `loopay_photo_${req.user.email}_${req.user._id}${
 				path.parse(front.name).ext
@@ -51,17 +57,12 @@ const postVerificationData = async (req, res) => {
 			const dataUri = new DataUriParser();
 			const dataUri2 = new DataUriParser();
 
-			const saveFrontName = `verify_${country.name}_${idType.name}_front_${req.user.email}_${req.user._id}`;
-			const saveBackName = `verify_${country.name}_${idType.name}_back_${req.user.email}_${req.user._id}`;
+			const saveFrontName = `${req.user.email}/front`;
+			const saveBackName = `${req.user.email}/back`;
 
 			const formattedFrontFile = dataUri.format(front.name, front.data);
 			const formattedBackFile = dataUri2.format(back.name, back.data);
 
-			await userData.updateOne(
-				{email: req.user.email},
-				{verificationStatus: 'pending'},
-				{new: true, runValidators: true}
-			);
 			cloudinary.uploader.upload(
 				formattedFrontFile.content,
 				{

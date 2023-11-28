@@ -85,6 +85,7 @@ const registerAccount = async (req, res) => {
 			tagName: userName,
 			localCurrencyCode,
 			country,
+			level: 1,
 		};
 		await UserDataModel.create(userData);
 		await SessionModel.create({_id, email, sessions: [sessionData]});

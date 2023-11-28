@@ -50,9 +50,15 @@ const UserDataSchema = new Schema(
 				code: String,
 			},
 		},
+		level: {
+			type: Number,
+			required: [true, 'Please provide limit level'],
+		},
 		referralCode: String,
 		sessionTime: Date,
 		blockedUsers: [String],
+		popUp: Boolean,
+		popUpLength: Number,
 	},
 	{timestamps: true}
 );

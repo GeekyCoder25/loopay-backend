@@ -21,6 +21,11 @@ const VerificationSchema = new Schema(
 		idValue: String,
 		front: String,
 		back: String,
+		status: {
+			type: String,
+			required: [true, 'Please provide verification status'],
+			enum: ['verified', 'pending', 'declined'],
+		},
 	},
 	{timestamps: true}
 );

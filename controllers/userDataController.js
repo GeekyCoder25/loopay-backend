@@ -37,7 +37,7 @@ const postUserData = async (req, res) => {
 const putUserData = async (req, res) => {
 	try {
 		if (req.body.email) {
-			return res.status(400).json("Your email is unique and can't be changed");
+			return res.status(400).json("Your email can't be changed");
 		}
 		const result = await UserDataModel.findOneAndUpdate(
 			{email: req.user.email},

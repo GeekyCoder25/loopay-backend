@@ -12,6 +12,8 @@ const EuroWallet = require('../models/walletEuro');
 const PoundWallet = require('../models/walletPound');
 const axios = require('axios');
 const Notification = require('../models/notification');
+const VerificationModel = require('../models/verification');
+const {sendMail} = require('../utils/sendEmail');
 
 const getAllAdminInfo = async (req, res) => {
 	try {
@@ -249,7 +251,6 @@ const finalizeWithdrawal = async (req, res) => {
 	const {transfer_code, otp} = req.body;
 	const data = {transfer_code, otp};
 	try {
-		console.log(data);
 		const response = await axios.post(url, data, config);
 		res.status(200).json(response.data);
 		await Transaction.updateOne(
@@ -276,6 +277,101 @@ const blockTransaction = async (req, res) => {
 	}
 };
 
+const getVerifications = async (req, res) => {
+	try {
+		const query = Object.keys(req.query)[0];
+		console.log(query);
+		const verifications = query
+			? await VerificationModel.find({status: query})
+			: await VerificationModel.find();
+		res.status(200).json(verifications);
+	} catch (err) {
+		console.log(err.message);
+		res.status(400).json(err.message);
+	}
+};
+
+const updateVerification = async (req, res) => {
+	try {
+		const query = Object.keys(req.query)[0];
+		const {email, subject, message} = req.body;
+		if (!email) throw new Error('Please provide user email');
+		if (query === 'approve') {
+			await VerificationModel.findOneAndUpdate(
+				{email},
+				{status: 'verified'},
+				{new: true, runValidators: true}
+			);
+			await UserData.findOneAndUpdate(
+				{email},
+				{verificationStatus: 'verified', level: 2},
+				{new: true, runValidators: true}
+			);
+			return res.status(200).json({status: 'success'});
+		} else if (query === 'email') {
+			if (!message) throw new Error('Please provide email message');
+			const html = String.raw`<div
+				style="line-height: 30px; font-family: Arial, Helvetica, sans-serif"
+			>
+				<div style="text-align: center">
+					<img
+						src="${process.env.CLOUDINARY_APP_ICON}"
+						style="width: 200px; margin: 50px auto"
+					/>
+				</div>
+				<p>${message}</p>
+				<p>
+					Best regards,<br />
+					Loopay Support Team
+				</p>
+			</div>`;
+
+			const mailOptions = {
+				from: process.env.EMAIL,
+				to: email,
+				subject: subject || 'Account Verification',
+				html,
+			};
+			await UserData.findOneAndUpdate(
+				{email},
+				{verificationStatus: 'unVerified'},
+				{new: true, runValidators: true}
+			);
+			await VerificationModel.findOneAndUpdate(
+				{email},
+				{status: 'declined'},
+				{new: true, runValidators: true}
+			);
+			sendMail(mailOptions, res, req.body);
+		} else if (query === 'decline') {
+			await UserData.findOneAndUpdate(
+				{email},
+				{verificationStatus: 'unVerified'},
+				{new: true, runValidators: true}
+			);
+			await VerificationModel.findOneAndUpdate(
+				{email},
+				{status: 'declined'},
+				{new: true, runValidators: true}
+			);
+			return res.status(200).json({status: 'success'});
+		} else if (query === 'delete') {
+			await VerificationModel.findByIdAndRemove({
+				email,
+			});
+			await UserData.findOneAndUpdate(
+				{email},
+				{verificationStatus: 'unVerified'},
+				{new: true, runValidators: true}
+			);
+			return res.status(200).json({status: 'success'});
+		}
+	} catch (err) {
+		console.log(err.message);
+		res.status(400).json(err.message);
+	}
+};
+
 module.exports = {
 	getAllAdminInfo,
 	getUser,
@@ -284,4 +380,6 @@ module.exports = {
 	transferToLoopayUser,
 	finalizeWithdrawal,
 	blockTransaction,
+	getVerifications,
+	updateVerification,
 };

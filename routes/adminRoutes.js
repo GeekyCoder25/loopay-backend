@@ -8,6 +8,8 @@ const {
 	getUser,
 	finalizeWithdrawal,
 	blockTransaction,
+	getVerifications,
+	updateVerification,
 } = require('../controllers/adminController');
 const {updateNotifications} = require('../controllers/notificationController');
 const {getRate, updateRate} = require('../controllers/currencyController');
@@ -27,5 +29,7 @@ router.post('/block-transaction', blockTransaction);
 router.put('/notifications', updateNotifications);
 router.route('/rate').get(getRate).put(updateRate);
 router.route('/fees').get(getFees).put(updateFees);
+router.route('/verifications').get(getVerifications).put(updateVerification);
+router.route('/verification').put(updateVerification);
 
 module.exports = router;

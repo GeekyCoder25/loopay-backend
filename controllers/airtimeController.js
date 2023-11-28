@@ -124,7 +124,7 @@ const buyAirtime = async (req, res) => {
 			});
 		} else {
 			console.log(apiData);
-			throw new Error('Server error');
+			throw new Error(apiData.message);
 		}
 	} catch (err) {
 		console.log(err);

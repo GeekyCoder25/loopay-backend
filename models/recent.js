@@ -31,7 +31,6 @@ const RecentSchema = new Schema(
 		},
 		photo: {
 			type: String,
-			unique: true,
 		},
 		adminUser: {
 			type: String,

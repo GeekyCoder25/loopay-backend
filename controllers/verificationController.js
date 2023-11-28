@@ -117,7 +117,6 @@ const postVerificationData = async (req, res) => {
 			);
 		} else {
 			const {country, idType} = req.body;
-			console.log(country, idType, idType.value);
 			if (!country || !idType || !idType.value)
 				throw new Error('Please provide all required data');
 			await VerificationModel.create({

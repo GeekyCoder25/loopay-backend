@@ -155,7 +155,9 @@ const getAllNairaBalance = async (req, res) => {
 };
 
 const getUser = async (req, res) => {
-	const {id} = req.params;
+	let {id} = req.params;
+	if (!id) throw new Error('Provide search params');
+	id = id.toLowerCase();
 	let user = await UserData.findOne({
 		$or: [
 			{tagName: id},
@@ -164,6 +166,14 @@ const getUser = async (req, res) => {
 			{'userProfile.phoneNumber': id},
 		],
 	}).select('-__v');
+	if (!user) {
+		const wallet = await LocalWallet.findOne({loopayAccNo: id});
+		if (wallet) {
+			user = await UserData.findOne({
+				tagName: wallet.tagName,
+			}).select('-__v');
+		}
+	}
 
 	if (!user) {
 		return res.status(404).json('No user found');
@@ -177,7 +187,7 @@ const transferToLoopayUser = async (req, res) => {
 		const {email, phoneNumber, tagName, userName, amount, currency} = req.body;
 
 		if (email === req.user.email) {
-			throw new Error("can't transfer to sender's account");
+			throw new Error("Can't transfer to sender's account");
 		}
 
 		const selectWallet = currency => {
@@ -225,11 +235,11 @@ const transferToLoopayUser = async (req, res) => {
 			adminUser: req.user.email,
 		};
 
+		const data = await Recent.findOneAndUpdate({email}, recent, {upsert: true});
 		senderWallet.balance -= convertToKobo();
 		sendeeWallet.balance += convertToKobo();
 		await senderWallet.save();
 		await sendeeWallet.save();
-		const data = await Recent.findOneAndUpdate({email}, recent, {upsert: true});
 		res.status(200).json({
 			message: 'Transfer Successful',
 			data: data || recent,

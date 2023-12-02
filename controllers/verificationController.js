@@ -124,6 +124,7 @@ const postVerificationData = async (req, res) => {
 				country: country.name,
 				idType: idType.name,
 				idValue: idType.value,
+				status: 'pending',
 			});
 			await userData.updateOne(
 				{email: req.user.email},

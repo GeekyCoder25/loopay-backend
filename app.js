@@ -71,5 +71,7 @@ app.get('/api', (req, res) => {
 app.all('*', (req, res) => {
 	res
 		.status(404)
-		.json(`route '${req.originalUrl}' isn't available on Loopay api`);
+		.json(
+			`${req.method} - route '${req.originalUrl}' isn't available on Loopay api`
+		);
 });

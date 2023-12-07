@@ -104,11 +104,14 @@ const payABill = async (req, res) => {
 			};
 
 			const transactionExists = await BillTransaction.findOne({id});
+			let savedTransaction = transactionExists;
 			if (!transactionExists) {
-				await BillTransaction.create(transaction);
+				savedTransaction = await BillTransaction.create(transaction);
 				await Notification.create(notification);
 			}
-			return res.status(200).json(response.data);
+			return res
+				.status(200)
+				.json({...response.data, transaction: savedTransaction});
 		}
 		throw new Error('Server error');
 	} catch (err) {

@@ -8,19 +8,19 @@ const PoundWallet = require('../models/walletPound');
 const swapCurrency = async (req, res) => {
 	try {
 		const {email, phoneNumber} = req.user;
-		const {fromCurrency, toCurrency, toSwap, toReceive, id} = req.body;
+		const {fromCurrency, toCurrency, toSwap, toReceive, id, fee} = req.body;
 		const user = await UserData.findOne({email});
 
 		const selectWallet = currency => {
 			switch (currency) {
-				case 'naira':
-					return LocalWallet;
 				case 'dollar':
 					return DollarWallet;
 				case 'euro':
 					return EuroWallet;
 				case 'pound':
 					return PoundWallet;
+				default:
+					return LocalWallet;
 			}
 		};
 		const fromLocalWallet = selectWallet(fromCurrency);
@@ -28,7 +28,7 @@ const swapCurrency = async (req, res) => {
 		const fromWallet = await fromLocalWallet.findOne({email});
 		const toWallet = await toWalletModal.findOne({email});
 
-		const toSwapAmount = toSwap * 100;
+		const toSwapAmount = (Number(toSwap) + Number(fee.toLocaleString())) * 100;
 		const toReceiveAmount = toReceive * 100;
 
 		if (toSwapAmount > fromWallet.balance)

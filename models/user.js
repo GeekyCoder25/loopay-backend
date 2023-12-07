@@ -50,6 +50,7 @@ const UserSchema = new Schema(
 		otpCode: String,
 		emailOtpCode: String,
 		blockedAt: Date,
+		blockEnd: Date,
 	},
 	{timestamps: true}
 );

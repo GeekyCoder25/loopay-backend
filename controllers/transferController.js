@@ -7,6 +7,7 @@ const TransactionModel = require('../models/transaction');
 const Notification = require('../models/notification');
 const {requiredKeys} = require('../utils/requiredKeys');
 const {addingDecimal} = require('../utils/addingDecimal');
+const fees = require('../models/fees');
 
 const initiateTransfer = async (req, res) => {
 	try {
@@ -19,10 +20,18 @@ const initiateTransfer = async (req, res) => {
 			},
 		};
 
-		const {amount, reason, phoneNumber, recipientCode: recipient} = req.body;
+		const {
+			amount,
+			fee,
+			reason,
+			phoneNumber,
+			recipientCode: recipient,
+		} = req.body;
+
 		if (
 			requiredKeys(req, res, [
 				'amount',
+				'fee',
 				'reason',
 				'phoneNumber',
 				'email',
@@ -35,19 +44,21 @@ const initiateTransfer = async (req, res) => {
 		if (!wallet) throw new Error('wallet not found');
 
 		const convertToKobo = () => amount * 100;
-
 		const data = {
 			source: 'balance',
 			reason,
 			amount: convertToKobo(),
 			recipient,
 		};
-		if (wallet.balance < convertToKobo()) throw new Error('Insufficient funds');
+
+		const convertToKoboWithFee = () => (Number(amount) + Number(fee)) * 100;
+		if (wallet.balance < convertToKoboWithFee())
+			throw new Error('Insufficient funds');
 		try {
 			const response = await axios.post(url, data, config);
 
 			if (response.data.status) {
-				wallet.balance -= convertToKobo();
+				wallet.balance -= convertToKoboWithFee();
 				await wallet.save();
 				const {
 					bankName,
@@ -103,8 +114,10 @@ const initiateTransfer = async (req, res) => {
 				};
 
 				const transactionExists = await TransactionModel.findOne({id});
+				let savedTransaction = transactionExists;
+
 				if (!transactionExists) {
-					await TransactionModel.create({
+					savedTransaction = await TransactionModel.create({
 						email,
 						phoneNumber,
 						...transaction,
@@ -116,6 +129,7 @@ const initiateTransfer = async (req, res) => {
 				res.status(200).json({
 					...response.data.data,
 					amount: response.data.data.amount / 100,
+					transaction: savedTransaction,
 				});
 			} else {
 				throw new Error(response.data.message);
@@ -201,8 +215,9 @@ const initiateTransferToLoopay = async (req, res) => {
 		const sendeeTransactionExists = await TransactionModel.findOne({
 			id,
 		});
+		let savedTransaction = senderTransactionExists;
 		if (!senderTransactionExists) {
-			await TransactionModel.create({
+			savedTransaction = await TransactionModel.create({
 				email: senderWallet.email,
 				phoneNumber: req.user.phoneNumber,
 				transactionType: 'debit',
@@ -243,26 +258,14 @@ const initiateTransferToLoopay = async (req, res) => {
 		await sendeeWallet.save();
 		res.status(200).json({
 			message: 'Transfer Successful',
-			data: req.body,
+			...req.body,
+			transaction: savedTransaction,
 		});
 	} catch (err) {
 		console.log(err.message);
 		res.status(400).json(err.message);
 	}
 };
-
-// const verifyTransfer = reference => {
-// 	console.log(reference);
-// 	const url = `https://api.paystack.co/transaction/verify/${reference}`;
-// 	axios
-// 		.get(url, config)
-// 		.then(response => {
-// 			console.log('Response:', response.data);
-// 		})
-// 		.catch(error => {
-// 			console.error('Error2:', error.response.data);
-// 		});
-// };
 
 module.exports = {
 	initiateTransfer,

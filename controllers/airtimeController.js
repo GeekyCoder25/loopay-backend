@@ -40,7 +40,13 @@ const getNetwork = async (req, res) => {
 	} catch (err) {
 		const error = err.response?.data || err.message;
 		console.log(error);
-		res.status(400).json('Server error');
+		res
+			.status(400)
+			.json(
+				typeof error === 'string' && error.startsWith('getaddrinfo')
+					? 'Server Error'
+					: error.message || error.error
+			);
 	}
 };
 const buyAirtime = async (req, res) => {
@@ -113,14 +119,16 @@ const buyAirtime = async (req, res) => {
 			};
 
 			const transactionExists = await AirtimeTransaction.findOne({id});
+			let savedTransaction = transactionExists;
 			if (!transactionExists) {
-				await AirtimeTransaction.create(transaction);
+				savedTransaction = await AirtimeTransaction.create(transaction);
 				await Notification.create(notification);
 			}
 			res.status(200).json({
 				status: 'success',
 				message: 'Airtime purchase successful',
 				reference: apiData.transactionId,
+				transaction: savedTransaction,
 			});
 		} else if (apiData.errorCode === 'INSUFFICIENT_BALANCE') {
 			throw new Error('Server Error');
@@ -151,11 +159,15 @@ const getDataPlans = async (req, res) => {
 		let data = response.data
 			.filter(
 				index =>
-					index.name.toLowerCase().startsWith(provider) &&
+					(index.name.toLowerCase().startsWith(provider) ||
+						index.name.toLowerCase().endsWith(provider)) &&
 					Object.entries(index.fixedAmountsDescriptions).length
 			)
 			.map(index => {
-				return Object.entries(index.fixedAmountsDescriptions).map(plan => {
+				return Object.entries({
+					...index.fixedAmountsDescriptions,
+					...index.localFixedAmountsDescriptions,
+				}).map(plan => {
 					const [key, value] = plan;
 					return {
 						operatorId: index.operatorId,
@@ -252,13 +264,16 @@ const buyData = async (req, res) => {
 			};
 
 			const transactionExists = await AirtimeTransaction.findOne({id});
+			let savedTransaction = transactionExists;
 			if (!transactionExists) {
-				await AirtimeTransaction.create(transaction);
+				savedTransaction = await AirtimeTransaction.create(transaction);
 				await Notification.create(notification);
 			}
-			res
-				.status(200)
-				.json({status: 'success', message: 'Data purchase successful'});
+			res.status(200).json({
+				status: 'success',
+				message: 'Data purchase successful',
+				transaction: savedTransaction,
+			});
 		} else {
 			throw new Error('Server error');
 		}

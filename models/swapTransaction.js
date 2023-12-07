@@ -32,7 +32,7 @@ const SwapTransactionModel = new Schema(
 		accNo: {
 			type: String,
 			required: [true, "Please provide user's account number"],
-			minLength: 10,
+			// minLength: 10,
 		},
 		tagName: {
 			type: String,
@@ -40,22 +40,20 @@ const SwapTransactionModel = new Schema(
 		},
 		fullName: {
 			type: String,
-			required: [true, "Please provide user's fullname"],
+			required: [true, "Please provide user's full name"],
 		},
 		userPhoto: String,
 		swapFrom: {
 			type: String,
 			required: [true, 'Please provide swap from currency'],
-			enum: ['naira', 'dollar', 'euro', 'pound'],
 		},
 		swapTo: {
 			type: String,
 			required: [true, 'Please provide swap to currency'],
-			enum: ['naira', 'dollar', 'euro', 'pound'],
 		},
 		swapFromAmount: {
 			type: String,
-			required: [true, 'Please provide swap from amounr'],
+			required: [true, 'Please provide swap from amount'],
 		},
 		swapToAmount: {
 			type: String,

@@ -52,13 +52,13 @@ const UserDataSchema = new Schema(
 		},
 		level: {
 			type: Number,
-			required: [true, 'Please provide limit level'],
 		},
 		referralCode: String,
 		sessionTime: Date,
 		blockedUsers: [String],
-		popUp: Boolean,
-		popUpLength: Number,
+		popUps: [],
+		popUpIDs: [String],
+		popUpLastQuery: Date,
 	},
 	{timestamps: true}
 );
@@ -67,6 +67,7 @@ UserDataSchema.pre('save', function (next) {
 	this.userProfile.fullName =
 		this.userProfile.firstName + ' ' + this.userProfile.lastName;
 	this.referralCode = Math.random().toString(36).substring(2, 8);
+	this.limit = 1;
 	next();
 });
 

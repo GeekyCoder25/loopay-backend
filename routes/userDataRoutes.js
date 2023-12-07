@@ -4,6 +4,7 @@ const {
 	postUserData,
 	putUserData,
 	updateProfile,
+	deletePopUp,
 } = require('../controllers/userDataController');
 const {
 	setTransactionPin,
@@ -65,6 +66,7 @@ const {
 	getBillsTransactions,
 } = require('../controllers/billController');
 const {postVerificationData} = require('../controllers/verificationController');
+const {accountStatus} = require('../middleware/statusMiddleWare');
 
 const router = express.Router();
 
@@ -80,31 +82,38 @@ router.route('/get-phone').post(getPhone);
 router.route('/tag-name').post(createTagName);
 router.route('/beneficiary').get(getBeneficiaries).post(postBeneficiary);
 router.route('/wallet').get(getWallet).post(postWallet);
-router.route('/loopay/transfer').post(initiateTransferToLoopay);
-router.route('/transfer').post(initiateTransfer);
+router.route('/loopay/transfer').post(accountStatus, initiateTransferToLoopay);
+router.route('/transfer').post(accountStatus, initiateTransfer);
 router.route('/transaction').get(getTransactions);
 router.route('/transferrecipient').get(getTransactions);
 router.route('/banks').get(listBanks);
 router.route('/savedbanks').get(getRecipients).post(postRecipient);
 router.route('/airtime/operators').get(airtimeAPIToken, getOperators);
 router.route('/get-network').get(airtimeAPIToken, getNetwork);
-router.route('/airtime').post(airtimeAPIToken, buyAirtime);
+router.route('/airtime').post(airtimeAPIToken, accountStatus, buyAirtime);
 router.route('/get-data-plans').get(airtimeAPIToken, getDataPlans);
-router.route('/data').post(airtimeAPIToken, buyData);
-router.route('/bill').get(billAPIToken, getBills).post(billAPIToken, payABill);
+router.route('/data').post(airtimeAPIToken, accountStatus, buyData);
+router
+	.route('/bill')
+	.get(billAPIToken, getBills)
+	.post(billAPIToken, accountStatus, payABill);
 router.route('/bill/status').get(billAPIToken, getBillsTransactions);
 router.route('/bill/status/:id').get(billAPIToken, getBillsTransactions);
-router.route('/swap').post(swapCurrency);
-router.route('/request').get(getFundRequest).post(postFundRequest);
-router.route('/request-confirm').post(confirmRequest);
+router.route('/swap').post(accountStatus, swapCurrency);
+router
+	.route('/request')
+	.get(getFundRequest)
+	.post(accountStatus, postFundRequest);
+router.route('/request-confirm').post(accountStatus, confirmRequest);
 router.route('/debit-card/:currency').get(getCards).post(postCard);
 router.route('/debit-card').post(postCard);
 router.route('/notification').get(getNotifications);
 router.route('/notification/:id').put(updateNotification);
-router.route('/rate').get(getRate);
+router.route('/rate/:currency').get(getRate);
 router.route('/splash').get(getFundRequest);
 router.route('/fees').get(getFees);
 router.route('/statement').get(getStatements);
 router.route('/verify').post(postVerificationData);
+router.route('/popup/:popUpID').delete(deletePopUp);
 
 module.exports = router;

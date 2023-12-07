@@ -24,13 +24,14 @@ const passwordSecurityOptions = {
 
 const registerAccount = async (req, res) => {
 	try {
-		// await User.findOneAndRemove({email: 'toyibe233@gmail.com'});
-		// await UserDataModel.findOneAndRemove({email: 'toyibe233@gmail.com'});
-		// await SessionModel.findOneAndRemove({email: 'toyibe233@gmail.com'});
-		// await LocalWallet.findOneAndRemove({email: 'toyibe233@gmail.com'});
-		// await DollarWallet.findOneAndRemove({email: 'toyibe233@gmail.com'});
-		// await EuroWallet.findOneAndRemove({email: 'toyibe233@gmail.com'});
-		// await PoundWallet.findOneAndRemove({email: 'toyibe233@gmail.com'});
+		// const emailToRemove = 'john@gmail.com';
+		// await User.findOneAndRemove({email: emailToRemove});
+		// await UserDataModel.findOneAndRemove({email: emailToRemove});
+		// await SessionModel.findOneAndRemove({email: emailToRemove});
+		// await LocalWallet.findOneAndRemove({email: emailToRemove});
+		// await DollarWallet.findOneAndRemove({email: emailToRemove});
+		// await EuroWallet.findOneAndRemove({email: emailToRemove});
+		// await PoundWallet.findOneAndRemove({email: emailToRemove});
 		// return res.status(400).json({error: ''});
 		const {formData, sessionData} = req.body;
 

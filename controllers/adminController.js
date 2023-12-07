@@ -342,26 +342,26 @@ const updateVerification = async (req, res) => {
 				subject: subject || 'Account Verification',
 				html,
 			};
-			await UserData.findOneAndUpdate(
-				{email},
-				{verificationStatus: 'unVerified'},
-				{new: true, runValidators: true}
-			);
 			await VerificationModel.findOneAndUpdate(
 				{email},
 				{status: 'declined'},
+				{new: true, runValidators: true}
+			);
+			await UserData.findOneAndUpdate(
+				{email},
+				{verificationStatus: 'unVerified', level: 1},
 				{new: true, runValidators: true}
 			);
 			sendMail(mailOptions, res, req.body);
 		} else if (query === 'decline') {
-			await UserData.findOneAndUpdate(
-				{email},
-				{verificationStatus: 'unVerified'},
-				{new: true, runValidators: true}
-			);
 			await VerificationModel.findOneAndUpdate(
 				{email},
 				{status: 'declined'},
+				{new: true, runValidators: true}
+			);
+			await UserData.findOneAndUpdate(
+				{email},
+				{verificationStatus: 'unVerified', level: 1},
 				{new: true, runValidators: true}
 			);
 			return res.status(200).json({status: 'success'});
@@ -371,7 +371,7 @@ const updateVerification = async (req, res) => {
 			});
 			await UserData.findOneAndUpdate(
 				{email},
-				{verificationStatus: 'unVerified'},
+				{verificationStatus: 'unVerified', level: 1},
 				{new: true, runValidators: true}
 			);
 			cloudinary.api.delete_resources(
@@ -389,6 +389,207 @@ const updateVerification = async (req, res) => {
 	}
 };
 
+const blockAccount = async (req, res) => {
+	try {
+		const {email, tagName, accNo, mailData} = req.body;
+		const {mail} = req.query;
+		let userData;
+		let wallet;
+		if (!email && tagName) {
+			userData = await UserData.findOne({tagName});
+		} else if (!email && accNo) {
+			wallet = await LocalWallet.findOne({tagName});
+		}
+		if (mail) {
+			const html = String.raw`<div
+				style="line-height: 30px; font-family: Arial, Helvetica, sans-serif"
+			>
+				<div style="text-align: center">
+					<img
+						src="${process.env.CLOUDINARY_APP_ICON}"
+						style="width: 200px; margin: 50px auto"
+					/>
+				</div>
+				<p>${mailData.message}</p>
+				<p>
+					Best regards,<br />
+					Loopay Support Team
+				</p>
+			</div>`;
+
+			const mailOptions = {
+				from: process.env.EMAIL,
+				to: email,
+				subject: mailData.subject || 'Account Deactivation',
+				html,
+			};
+			sendMail(mailOptions);
+		}
+		const user = await User.findOneAndUpdate(
+			{email: email || userData?.email || wallet.email},
+			{status: 'blocked', blockedAt: new Date()},
+			{new: true, runValidators: true}
+		);
+		res.status(200).json(user);
+	} catch (err) {
+		console.log(err.message);
+		res.status(400).json(err.message);
+	}
+};
+
+const suspendAccount = async (req, res) => {
+	try {
+		const {email, tagName, accNo, blockEnd, mailData} = req.body;
+		const {mail} = req.query;
+		if (!blockEnd) throw new Error('Please provide suspend end date');
+		let userData;
+		let wallet;
+		if (!email && tagName) {
+			userData = await UserData.findOne({tagName});
+		} else if (!email && accNo) {
+			wallet = await LocalWallet.findOne({tagName});
+		}
+
+		if (mail) {
+			const html = String.raw`<div
+				style="line-height: 30px; font-family: Arial, Helvetica, sans-serif"
+			>
+				<div style="text-align: center">
+					<img
+						src="${process.env.CLOUDINARY_APP_ICON}"
+						style="width: 200px; margin: 50px auto"
+					/>
+				</div>
+				<p>${mailData.message}</p>
+				<p>
+					Best regards,<br />
+					Loopay Support Team
+				</p>
+			</div>`;
+
+			const mailOptions = {
+				from: process.env.EMAIL,
+				to: email,
+				subject: mailData.subject || 'Account Suspension',
+				html,
+			};
+			sendMail(mailOptions);
+		}
+		const user = await User.findOneAndUpdate(
+			{email: email || userData?.email || wallet.email},
+			{status: 'blocked', blockedAt: new Date(), blockEnd},
+			{new: true, runValidators: true}
+		);
+		res.status(200).json(user);
+	} catch (err) {
+		console.log(err.message);
+		res.status(400).json(err.message);
+	}
+};
+const unblockAccount = async (req, res) => {
+	try {
+		const {email, tagName, accNo, mailData} = req.body;
+		const {mail} = req.query;
+		let userData;
+		let wallet;
+		if (!email && tagName) {
+			userData = await UserData.findOne({tagName});
+		} else if (!email && accNo) {
+			wallet = await LocalWallet.findOne({tagName});
+		}
+
+		console.log(req.body);
+		if (mail) {
+			const html = String.raw`<div
+				style="line-height: 30px; font-family: Arial, Helvetica, sans-serif"
+			>
+				<div style="text-align: center">
+					<img
+						src="${process.env.CLOUDINARY_APP_ICON}"
+						style="width: 200px; margin: 50px auto"
+					/>
+				</div>
+				<p>${mailData.message}</p>
+				<p>
+					Best regards,<br />
+					Loopay Support Team
+				</p>
+			</div>`;
+
+			const mailOptions = {
+				from: process.env.EMAIL,
+				to: email,
+				subject: mailData.subject || 'Account Activation',
+				html,
+			};
+			sendMail(mailOptions);
+		}
+		const user = await User.findOneAndUpdate(
+			{email: email || userData?.email || wallet.email},
+			{status: 'active'},
+			{new: true, runValidators: true}
+		);
+		user.blockedAt = undefined;
+		user.blockEnd = undefined;
+		await user.save();
+		res.status(200).json(user);
+	} catch (err) {
+		console.log(err.message);
+		res.status(400).json(err.message);
+	}
+};
+
+const unsuspendAccount = async (req, res) => {
+	try {
+		const {email, tagName, accNo, mailData} = req.body;
+		const {mail} = req.query;
+		let userData;
+		let wallet;
+		if (!email && tagName) {
+			userData = await UserData.findOne({tagName});
+		} else if (!email && accNo) {
+			wallet = await LocalWallet.findOne({tagName});
+		}
+		if (mail) {
+			const html = String.raw`<div
+				style="line-height: 30px; font-family: Arial, Helvetica, sans-serif"
+			>
+				<div style="text-align: center">
+					<img
+						src="${process.env.CLOUDINARY_APP_ICON}"
+						style="width: 200px; margin: 50px auto"
+					/>
+				</div>
+				<p>${mailData.message}</p>
+				<p>
+					Best regards,<br />
+					Loopay Support Team
+				</p>
+			</div>`;
+
+			const mailOptions = {
+				from: process.env.EMAIL,
+				to: email,
+				subject: mailData.subject || 'Account Activation',
+				html,
+			};
+			sendMail(mailOptions);
+		}
+		const user = await User.findOneAndUpdate(
+			{email: email || userData?.email || wallet.email},
+			{status: 'active'},
+			{new: true, runValidators: true}
+		);
+		user.blockedAt = undefined;
+		user.blockEnd = undefined;
+		await user.save();
+		res.status(200).json(user);
+	} catch (err) {
+		console.log(err.message);
+		res.status(400).json(err.message);
+	}
+};
+
 module.exports = {
 	getAllAdminInfo,
 	getUser,
@@ -399,4 +600,8 @@ module.exports = {
 	blockTransaction,
 	getVerifications,
 	updateVerification,
+	blockAccount,
+	suspendAccount,
+	unblockAccount,
+	unsuspendAccount,
 };

@@ -21,13 +21,16 @@ const sendMail = (mailOptions, res, result) => {
 
 	transporter.sendMail(mailOptions, (err, info) => {
 		if (err) {
-			console.log(err.message);
-			return res.status(500).json({error: 'Server Error'});
+			if (res) {
+				res.status(500).json({error: 'Server Error'});
+			}
+			return console.log(err.message);
 		}
-		res.status(200).json({
-			email: result.email,
-		});
-
+		if (res) {
+			res.status(200).json({
+				email: result.email,
+			});
+		}
 		console.log('Message Sent: %s', info.messageId);
 	});
 };

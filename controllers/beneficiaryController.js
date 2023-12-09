@@ -23,6 +23,8 @@ const getBeneficiaries = async (req, res) => {
 			})
 		);
 		beneficiaries = beneficiariesAfterPhotoCheck;
+		result.beneficiaries = beneficiariesAfterPhotoCheck;
+		await result.save();
 		const pluralS = beneficiaries.length > 1 ? 'ies' : 'y';
 		return res.status(200).json({
 			message: `${beneficiaries.length} beneficiar${pluralS} found`,
@@ -56,9 +58,9 @@ const postBeneficiary = async (req, res) => {
 				.status(400)
 				.json(`Please provide all required keys '${[unavailableKeys]}'`);
 		}
-		const checkBeneficiaryExists = await BeneficiaryModel.findOne({email});
-		if (checkBeneficiaryExists) {
-			const previousBeneficiaries = checkBeneficiaryExists.beneficiaries;
+		const beneficiariesExist = await BeneficiaryModel.findOne({email});
+		if (beneficiariesExist) {
+			const previousBeneficiaries = beneficiariesExist.beneficiaries;
 			const previousBeneficiariesNotTheSameWithNewBeneficiary =
 				previousBeneficiaries.filter(
 					beneficiary => beneficiary.tagName !== req.body.tagName

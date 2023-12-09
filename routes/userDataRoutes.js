@@ -67,6 +67,11 @@ const {
 } = require('../controllers/billController');
 const {postVerificationData} = require('../controllers/verificationController');
 const {accountStatus} = require('../middleware/statusMiddleWare');
+const {
+	getReferrals,
+	postReferral,
+	referralWithdraw,
+} = require('../controllers/referralController');
 
 const router = express.Router();
 
@@ -115,5 +120,7 @@ router.route('/fees').get(getFees);
 router.route('/statement').get(getStatements);
 router.route('/verify').post(postVerificationData);
 router.route('/popup/:popUpID').delete(deletePopUp);
+router.route('/referral').get(getReferrals).post(postReferral);
+router.route('/withdraw-referral').get(referralWithdraw);
 
 module.exports = router;

@@ -1,6 +1,7 @@
 /* eslint-disable no-undef */
 const cloudinary = require('cloudinary').v2;
 const path = require('path');
+
 const UserDataModel = require('../models/userData');
 const DataUriParser = require('datauri/parser');
 

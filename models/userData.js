@@ -64,10 +64,12 @@ const UserDataSchema = new Schema(
 );
 
 UserDataSchema.pre('save', function (next) {
-	this.userProfile.fullName =
-		this.userProfile.firstName + ' ' + this.userProfile.lastName;
-	this.referralCode = Math.random().toString(36).substring(2, 8);
-	this.limit = 1;
+	if (this.userProfile.fullName)
+		this.userProfile.fullName =
+			this.userProfile.firstName + ' ' + this.userProfile.lastName;
+	if (!this.referralCode)
+		this.referralCode = Math.random().toString(36).substring(2, 8);
+	if (!this.limit) this.limit = 1;
 	next();
 });
 
@@ -81,7 +83,6 @@ UserDataSchema.pre('findOneAndUpdate', function (next) {
 			' ' +
 			this._update.userProfile.lastName;
 	}
-	this.referralCode = Math.random().toString(36).substring(2, 8);
 	next();
 });
 

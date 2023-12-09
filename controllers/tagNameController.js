@@ -70,17 +70,30 @@ const getTagName = async (req, res) => {
 const createTagName = async (req, res) => {
 	try {
 		const {email} = req.user;
-		const {tagName} = req.body;
+		let {tagName} = req.body;
 		if (!tagName || tagName.length < 6 || tagName.length > 16)
 			throw new Error('Invalid tagName');
 
+		if (tagName.includes('#')) {
+			const syntaxCheck = tagName.split('#');
+			if (syntaxCheck.length > 2 || syntaxCheck[0]) {
+				return res
+					.status(400)
+					.json({tagName: 'Please provide a valid tagName'});
+			}
+			tagName = syntaxCheck[1];
+		}
 		const userData = await UserDataModel.findOne({email});
 		const wallet = await LocalWallet.findOne({email});
+		if (tagName === wallet.tagName)
+			return res.status(400).json({
+				tagName: 'Please provide a tag name different from your current one',
+			});
 		userData.tagName = tagName;
 		wallet.tagName = tagName;
 		await userData.save();
 		await wallet.save();
-		res.status(200).json('tagName updated successfully');
+		res.status(200).json({message: 'tagName updated successfully', tagName});
 	} catch (err) {
 		handleErrors(err, res);
 	}

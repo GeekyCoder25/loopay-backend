@@ -59,7 +59,6 @@ const Wallet = new Schema({
 });
 
 Wallet.pre('save', async function (next) {
-	console.log(this.currency);
 	if (!this.currency) this.currency = 'naira';
 	this.isLocal = true;
 	if (!this.balance) this.balance = 0;

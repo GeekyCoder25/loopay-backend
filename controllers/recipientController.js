@@ -30,6 +30,40 @@ const getRecipients = async (req, res) => {
 	}
 };
 
+const checkRecipient = async (req, res) => {
+	try {
+		if (requiredKeys(req, res, ['bank', 'accNo'])) return;
+		const {code, currency, slug, type} = req.body.bank;
+		const {email, phoneNumber} = req.user;
+		const transferRecipientData = {
+			type,
+			name: req.body.fullName,
+			account_number: req.body.accNo,
+			bank_code: code,
+			currency,
+		};
+		const transferRecipient = await createRecipient(transferRecipientData);
+
+		if (!transferRecipient.status) throw new Error(transferRecipient.message);
+
+		const recipient = {
+			email,
+			phoneNumber,
+			type: transferRecipient.data.type,
+			name: transferRecipient.data.details.account_name,
+			accNo: transferRecipient.data.details.account_number,
+			bankCode: transferRecipient.data.details.bank_code,
+			currency,
+			bankName: transferRecipient.data.details.bank_name,
+			slug,
+			recipientCode: transferRecipient.data.recipient_code,
+		};
+		res.status(200).json(recipient);
+	} catch (err) {
+		res.status(400).json(err.message);
+		console.log(err.message);
+	}
+};
 const postRecipient = async (req, res) => {
 	try {
 		if (requiredKeys(req, res, ['bank', 'accNo'])) return;
@@ -72,5 +106,6 @@ const postRecipient = async (req, res) => {
 
 module.exports = {
 	getRecipients,
+	checkRecipient,
 	postRecipient,
 };

@@ -7,7 +7,6 @@ const TransactionModel = require('../models/transaction');
 const Notification = require('../models/notification');
 const {requiredKeys} = require('../utils/requiredKeys');
 const {addingDecimal} = require('../utils/addingDecimal');
-const fees = require('../models/fees');
 
 const initiateTransfer = async (req, res) => {
 	try {
@@ -126,7 +125,7 @@ const initiateTransfer = async (req, res) => {
 					await Notification.create(notification);
 				}
 
-				res.status(200).json({
+				return res.status(200).json({
 					...response.data.data,
 					amount: response.data.data.amount / 100,
 					transaction: savedTransaction,
@@ -135,8 +134,8 @@ const initiateTransfer = async (req, res) => {
 				throw new Error(response.data.message);
 			}
 		} catch (err) {
-			res.status(500).json('Server Error');
-			console.log(err.response.data.message);
+			console.log(err.message);
+			return res.status(500).json('Server Error');
 		}
 	} catch (err) {
 		console.log(err.message);

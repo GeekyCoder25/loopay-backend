@@ -35,6 +35,7 @@ const {listBanks} = require('../controllers/listBank');
 const {
 	postRecipient,
 	getRecipients,
+	checkRecipient,
 } = require('../controllers/recipientController');
 const {getRole} = require('../controllers/roleController');
 const {swapCurrency} = require('../controllers/swapController');
@@ -93,6 +94,7 @@ router.route('/transaction').get(getTransactions);
 router.route('/transferrecipient').get(getTransactions);
 router.route('/banks').get(listBanks);
 router.route('/savedbanks').get(getRecipients).post(postRecipient);
+router.route('/check-recipient').post(checkRecipient);
 router.route('/airtime/operators').get(airtimeAPIToken, getOperators);
 router.route('/get-network').get(airtimeAPIToken, getNetwork);
 router.route('/airtime').post(airtimeAPIToken, accountStatus, buyAirtime);

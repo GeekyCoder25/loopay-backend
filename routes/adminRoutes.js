@@ -14,6 +14,11 @@ const {
 	suspendAccount,
 	unblockAccount,
 	unsuspendAccount,
+	getTransactions,
+	getRecent,
+	getSummary,
+	getStatement,
+	getNotifications,
 } = require('../controllers/adminController');
 const {updateNotifications} = require('../controllers/notificationController');
 const {getRate, updateRate} = require('../controllers/currencyController');
@@ -33,10 +38,12 @@ router.get('/', getAllAdminInfo);
 router.get('/users', getAllUsers);
 router.get('/naira-balance', getAllNairaBalance);
 router.get('/user/:id', getUser);
+router.get('/transactions', getTransactions);
+router.get('/recent', getRecent);
 router.post('/loopay/transfer', transferToLoopayUser);
 router.post('/finalize', finalizeWithdrawal);
 router.post('/block-transaction', blockTransaction);
-router.put('/notifications', updateNotifications);
+router.route('/notifications').get(getNotifications).put(updateNotifications);
 router.route('/rate').get(getRate).put(updateRate);
 router.route('/fees').get(getFees).put(updateFees);
 router.route('/verifications').get(getVerifications).put(updateVerification);
@@ -46,5 +53,7 @@ router.route('/unblock').post(unblockAccount);
 router.route('/unsuspend').post(unsuspendAccount);
 router.route('/popup').get(getPopUp).post(postPopUp).put(updatePopUp);
 router.route('/popup/:popUpID').delete(deletePopUp);
+router.route('/summary').get(getSummary);
+router.route('/statement').get(getStatement);
 
 module.exports = router;

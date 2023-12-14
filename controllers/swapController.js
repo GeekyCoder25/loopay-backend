@@ -28,7 +28,7 @@ const swapCurrency = async (req, res) => {
 		const fromWallet = await fromLocalWallet.findOne({email});
 		const toWallet = await toWalletModal.findOne({email});
 
-		const toSwapAmount = (Number(toSwap) + Number(fee.toLocaleString())) * 100;
+		const toSwapAmount = (Number(toSwap) + Number(fee)) * 100;
 		const toReceiveAmount = toReceive * 100;
 
 		if (toSwapAmount > fromWallet.balance)
@@ -57,6 +57,7 @@ const swapCurrency = async (req, res) => {
 		await SwapTransaction.create(transaction);
 		res.status(200).json('Swap successful');
 	} catch (err) {
+		console.log(err.message);
 		res.status(400).json(err.message);
 	}
 };

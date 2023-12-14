@@ -22,42 +22,42 @@ const TransactionModel = new Schema(
 		},
 		type: {
 			type: String,
-			required: [true, 'Please provide transfer type'],
+			// required: [true, 'Please provide transfer type'],
 			enum: ['intra', 'inter'],
 		},
 		transactionType: {
 			type: String,
 			required: [true, 'Please provide transaction type'],
-			enum: ['credit', 'debit'],
+			enum: ['credit', 'debit', 'airtime', 'data', 'bill'],
 		},
 		senderAccount: {
 			type: String,
-			required: [true, "Please provide transaction sender's account"],
+			// required: [true, "Please provide transaction sender's account"],
 		},
 		senderName: {
 			type: String,
-			required: [true, "Please provide transaction sender's name"],
+			// required: [true, "Please provide transaction sender's name"],
 		},
 		senderPhoto: String,
 		receiverAccount: {
 			type: String,
-			required: [true, "Please provide transaction receiver's account"],
+			// required: [true, "Please provide transaction receiver's account"],
 		},
 		receiverName: {
 			type: String,
-			required: [true, "Please provide transaction receiver's name"],
+			// required: [true, "Please provide transaction receiver's name"],
 		},
 		receiverPhoto: String,
 		sourceBank: {
 			type: String,
-			required: [true, 'Please provide transaction source bank'],
+			// required: [true, 'Please provide transaction source bank'],
 		},
 		sourceBankSlug: {
 			type: String,
 		},
 		destinationBank: {
 			type: String,
-			required: [true, 'Please provide transaction destination bank'],
+			// required: [true, 'Please provide transaction destination bank'],
 		},
 		destinationBankSlug: {
 			type: String,
@@ -79,6 +79,17 @@ const TransactionModel = new Schema(
 			type: String,
 			required: [true, "Please provide transaction's currency"],
 		},
+		networkProvider: {
+			type: String,
+			// enum: ['mtn', 'airtel', 'glo', '9mobile'],
+		},
+		rechargePhoneNo: {
+			type: String,
+			validate: [isMobilePhone, 'Invalid phone number'],
+		},
+		dataPlan: Schema.Types.Mixed,
+		billType: String,
+		billName: String,
 		metadata: Schema.Types.Mixed,
 	},
 	{timestamps: true}

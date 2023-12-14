@@ -1,4 +1,3 @@
-const AirtimeTransactionModel = require('../models/airtimeTransaction');
 const TransactionModel = require('../models/transaction');
 
 const getStatements = async (req, res) => {
@@ -14,15 +13,9 @@ const getStatements = async (req, res) => {
 			createdAt: {$gte: startDate, $lte: endDate},
 			currency,
 		};
-		const transactionModel = await TransactionModel.find(query);
-		const airtimeTransaction = await AirtimeTransactionModel.find(query);
-		const transactions = transactionModel
-			.concat(airtimeTransaction)
-			.sort((a, b) => {
-				const dateA = new Date(a.createdAt);
-				const dateB = new Date(b.createdAt);
-				return dateA - dateB;
-			});
+
+		const transactions = await TransactionModel.find(query).sort('-createdAt');
+
 		res.status(200).json(transactions);
 	} catch (err) {
 		console.log(err.message);

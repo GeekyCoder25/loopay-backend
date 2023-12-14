@@ -1,7 +1,7 @@
 const LocalWallet = require('../models/wallet');
 const Notification = require('../models/notification');
 const {addingDecimal} = require('../utils/addingDecimal');
-const AirtimeTransaction = require('../models/airtimeTransaction');
+const AirtimeTransaction = require('../models/transaction');
 const {default: axios} = require('axios');
 
 const getOperators = async (req, res) => {
@@ -93,7 +93,7 @@ const buyAirtime = async (req, res) => {
 				debitAccount: wallet.loopayAccNo,
 				transactionType: 'airtime',
 				networkProvider: network,
-				phoneNo,
+				rechargePhoneNo: phoneNo,
 				amount,
 				reference: apiData.transactionId,
 				currency,
@@ -242,9 +242,8 @@ const buyData = async (req, res) => {
 				debitAccount: wallet.loopayAccNo,
 				transactionType: 'data',
 				networkProvider: network,
-				phoneNo,
+				rechargePhoneNo: phoneNo,
 				amount,
-				// reference: response.data.data.reference,w3 r4
 				reference: id,
 				currency,
 				dataPlan: plan,

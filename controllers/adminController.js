@@ -1,3 +1,4 @@
+/* eslint-disable no-mixed-spaces-and-tabs */
 const User = require('../models/user');
 const Transaction = require('../models/transaction');
 const AirtimeTransactionModel = require('../models/airtimeTransaction');
@@ -18,35 +19,19 @@ const cloudinary = require('cloudinary').v2;
 
 const getAllAdminInfo = async (req, res) => {
 	try {
-		const users = await User.find().select(['-password', '-__v']);
-		const userDatas = await UserData.find().select(['-__v']);
-		let transactions = await Transaction.find()
-			.select(['-__v'])
-			.sort('-createdAt');
-		const airtimeTransactionModel = await AirtimeTransactionModel.find()
-			.select(['-__v'])
-			.sort('-createdAt');
-		const swapTransactions = await SwapModel.find()
-			.select(['-__v'])
-			.sort('-createdAt');
-		const billTransactions = await BillTransactionModel.find()
-			.select(['-__v'])
-			.sort('-createdAt');
-		transactions = transactions.concat(
-			airtimeTransactionModel,
-			swapTransactions,
-			billTransactions
-		);
-		transactions.sort((a, b) => {
-			const dateA = new Date(a.createdAt);
-			const dateB = new Date(b.createdAt);
-			return dateB - dateA;
-		});
+		const allTransactions = [
+			Transaction,
+			AirtimeTransactionModel,
+			BillTransactionModel,
+		];
+		const totalTransactionsCount = (
+			await Promise.all(
+				allTransactions.map(
+					async collection => await collection.countDocuments()
+				)
+			)
+		).reduce((a, b) => a + b, 0);
 
-		let wallets = await LocalWallet.find();
-		let recents = await Recent.find({email: {$ne: req.user.email}})
-			.select('-__v')
-			.sort('-updatedAt');
 		let localBalanceModel = await LocalWallet.find().select('+ balance');
 		let dollarBalanceModel = await DollarWallet.find().select('+ balance');
 		let euroBalanceModel = await EuroWallet.find().select('+ balance');
@@ -57,78 +42,223 @@ const getAllAdminInfo = async (req, res) => {
 		if (!euroBalanceModel.length) euroBalanceModel = [0];
 		if (!poundBalanceModel.length) poundBalanceModel = [0];
 
-		const getPendingTransactionsAmount = currency => {
-			const pendingTransactions = transactions
-				.filter(
-					transaction =>
-						transaction.currency === currency &&
-						transaction.status === 'pending'
-				)
-				.map(transaction => Number(transaction.amount));
-			return pendingTransactions.length
-				? pendingTransactions?.reduce((a, b) => a + b)
-				: 0;
+		const totalTransactionStatusBalance = async (currency, status) =>
+			await Transaction.aggregate([
+				{
+					$match: {
+						currency,
+						status,
+					},
+				},
+				{
+					$group: {
+						_id: null,
+						[currency]: {
+							$sum: {$toDouble: '$amount'}, // Assuming the amount field is stored as a string, convert it to a number
+						},
+					},
+				},
+				{
+					$project: {
+						_id: 0,
+						[currency]: 1,
+					},
+				},
+			]);
+
+		const totalTransactionStatusLength = async (currency, status) => {
+			const result = await Promise.all(
+				allTransactions.map(async collection => {
+					const result = await collection.aggregate([
+						{$match: {currency, status}},
+						{$group: {_id: '$id', doc: {$first: '$$ROOT'}}},
+						{$replaceRoot: {newRoot: '$doc'}},
+					]);
+					return result.length;
+				})
+			);
+			return result.reduce((a, b) => a + b, 0);
 		};
-		const getBlockedTransactionsAmount = currency => {
-			const pendingTransactions = transactions
-				.filter(
-					transaction =>
-						transaction.currency === currency &&
-						transaction.status === 'blocked'
-				)
-				.map(transaction => Number(transaction.amount));
-			return pendingTransactions.length
-				? pendingTransactions?.reduce((a, b) => a + b)
-				: 0;
+
+		// Transaction.countDocuments();
+
+		const currencies = ['naira', 'dollar', 'euro', 'pound'];
+		const reduceFunc = params =>
+			params.reduce((acc, obj) => {
+				const key = Object.keys(obj)[0];
+				const value = obj[key];
+				acc[key] = value;
+				return acc;
+			}, {});
+
+		const successTransactionsAmount = reduceFunc(
+			await Promise.all(
+				currencies.map(async currency => {
+					return (await totalTransactionStatusBalance(currency, 'success'))[0]
+						? (await totalTransactionStatusBalance(currency, 'success'))[0]
+						: {[currency]: 0};
+				})
+			)
+		);
+
+		// );
+
+		const pendingTransactionsAmount = reduceFunc(
+			await Promise.all(
+				currencies.map(async currency => {
+					return (await totalTransactionStatusBalance(currency, 'pending'))[0]
+						? (await totalTransactionStatusBalance(currency, 'pending'))[0]
+						: {[currency]: 0};
+				})
+			)
+		);
+
+		const blockedTransactionsAmount = reduceFunc(
+			await Promise.all(
+				currencies.map(async currency => {
+					return (await totalTransactionStatusBalance(currency, 'blocked'))[0]
+						? (await totalTransactionStatusBalance(currency, 'blocked'))[0]
+						: {[currency]: 0};
+				})
+			)
+		);
+
+		const successTransactionsLength = reduceFunc(
+			await Promise.all(
+				currencies.map(async currency => {
+					return (await totalTransactionStatusLength(currency, 'success'))
+						? {
+								[currency]: await totalTransactionStatusLength(
+									currency,
+									'success'
+								),
+						  }
+						: {[currency]: 0};
+				})
+			)
+		);
+
+		const pendingTransactionsLength = reduceFunc(
+			await Promise.all(
+				currencies.map(async currency => {
+					return (await totalTransactionStatusLength(currency, 'pending'))
+						? {
+								[currency]: await totalTransactionStatusLength(
+									currency,
+									'pending'
+								),
+						  }
+						: {[currency]: 0};
+				})
+			)
+		);
+		const blockedTransactionsLength = reduceFunc(
+			await Promise.all(
+				currencies.map(async currency => {
+					return (await totalTransactionStatusLength(currency, 'blocked'))
+						? {
+								[currency]: await totalTransactionStatusLength(
+									currency,
+									'blocked'
+								),
+						  }
+						: {[currency]: 0};
+				})
+			)
+		);
+
+		const statusTransactionsAmount = {
+			success: successTransactionsAmount,
+			pending: pendingTransactionsAmount,
+			blocked: blockedTransactionsAmount,
+		};
+		const statusTransactionsLength = {
+			success: successTransactionsLength,
+			pending: pendingTransactionsLength,
+			blocked: blockedTransactionsLength,
 		};
 
-		const localBalance =
-			localBalanceModel
-				.map(balance => balance.balance)
-				.reduce((a, b) => a + b) /
-				100 +
-			getPendingTransactionsAmount('naira') +
-			getBlockedTransactionsAmount('naira');
-		const dollarBalance =
-			dollarBalanceModel
-				.map(balance => balance.balance)
-				.reduce((a, b) => a + b) /
-				100 +
-			getPendingTransactionsAmount('dollar') +
-			getBlockedTransactionsAmount('dollar');
+		const totalCurrencyWallet = async (currencyModal, currency) =>
+			await currencyModal.aggregate([
+				{
+					$match: {
+						currency,
+					},
+				},
+				{
+					$group: {
+						_id: null,
+						totalBalance: {$sum: '$balance'},
+					},
+				},
+				{
+					$project: {
+						_id: 0,
+						totalBalance: {$round: [{$divide: ['$totalBalance', 100]}, 2]}, // Divide totalBalance by 100
+					},
+				},
+			]);
+		const localBalanceArray = await totalCurrencyWallet(LocalWallet, 'naira');
+		const dollarBalanceArray = await totalCurrencyWallet(
+			DollarWallet,
+			'dollar'
+		);
+		const euroBalanceArray = await totalCurrencyWallet(EuroWallet, 'euro');
+		const poundBalanceArray = await totalCurrencyWallet(PoundWallet, 'pound');
 
-		const euroBalance =
-			euroBalanceModel.map(balance => balance.balance).reduce((a, b) => a + b) /
-				100 +
-			getPendingTransactionsAmount('euro') +
-			getBlockedTransactionsAmount('euro');
+		const localBalance = localBalanceArray[0]
+			? localBalanceArray[0].totalBalance
+			: 0;
+		const dollarBalance = dollarBalanceArray[0]
+			? dollarBalanceArray[0].totalBalance
+			: 0;
+		const euroBalance = euroBalanceArray[0]
+			? euroBalanceArray[0].totalBalance
+			: 0;
+		const poundBalance = poundBalanceArray[0]
+			? poundBalanceArray[0].totalBalance
+			: 0;
 
-		const poundBalance =
-			poundBalanceModel
-				.map(balance => balance.balance)
-				.reduce((a, b) => a + b) /
-				100 +
-			getPendingTransactionsAmount('pound') +
-			getBlockedTransactionsAmount('pound');
-
-		//Active Sessions
-		const lastActiveSessions = await Session.find().select('-__v');
-
-		const notifications = await Notification.find()
-			.select('-__v')
-			.sort('-createdAt');
-		res.status(200).json({
-			users,
-			wallets,
+		const allBalances = {
 			localBalance,
 			dollarBalance,
 			euroBalance,
 			poundBalance,
+		};
+		//Active Sessions
+		const lastActiveSessions = await Session.find({}, {updatedAt: 1, email: 1});
+
+		const unReadNotifications = await Notification.find({
+			adminStatus: 'unread',
+		}).countDocuments();
+
+		const users = {
+			total: await User.countDocuments(),
+			page: req.query.users || 1,
+		};
+		const userData = {
+			total: await UserData.countDocuments(),
+			page: req.query.users || 1,
+		};
+		const transactions = {
+			total: totalTransactionsCount,
+			page: req.query.transactions || 1,
+		};
+		const notifications = {
+			total: await Notification.countDocuments(),
+			page: req.query.notifications || 1,
+		};
+
+		res.status(200).json({
+			users,
+			allBalances,
 			transactions,
 			lastActiveSessions,
-			userDatas,
-			recents,
+			userData,
 			notifications,
+			statusTransactionsAmount,
+			statusTransactionsLength,
+			unReadNotifications,
 		});
 	} catch (err) {
 		console.log(err.message);
@@ -137,12 +267,135 @@ const getAllAdminInfo = async (req, res) => {
 };
 
 const getAllUsers = async (req, res) => {
+	const {limit = 50, page = 1, userData} = req.query;
+	const roundedLimit = Math.round(Number(limit) || 25);
+	const skip = (page - 1 >= 0 ? page - 1 : 0) * roundedLimit;
+
 	try {
-		const users = await User.find().select(['-password', '-__v']);
+		const users = userData
+			? (
+					await User.aggregate([
+						{
+							$lookup: {
+								from: 'userdatas', // Name of the other collection
+								localField: 'email', // Field from the 'User' collection
+								foreignField: 'email', // Field from the 'UserData' collection
+								as: 'userData', // Output array field name
+							},
+						},
+						{$skip: skip},
+						{$limit: Number(limit)},
+					]).exec()
+			  ).map(({userData, ...rest}) => {
+					return {
+						...rest,
+						...userData[0],
+					};
+			  })
+			: await User.find().select(['-password', '-__v']).skip(skip).limit(limit);
+
+		const totalUsersCount = await User.countDocuments();
 		if (!users) throw new Error('No users found');
-		res.status(200).json(users);
+		res.status(200).json({
+			page: Number(page) || 1,
+			pageSize: users.length,
+			totalPages: totalUsersCount / roundedLimit,
+			total: totalUsersCount,
+			data: users,
+		});
 	} catch (err) {
 		res.status(400).json(err.message);
+	}
+};
+
+const getNotifications = async (req, res) => {
+	const {limit = 25, page = 1, status, start, end} = req.query;
+	const roundedLimit = Math.round(Number(limit) || 25);
+	const skip = (page - 1 >= 0 ? page - 1 : 0) * roundedLimit;
+
+	try {
+		let query = {};
+		let dateQuery = {};
+		if (status) {
+			query.status = status.split(',');
+		}
+		if (start) {
+			const date = new Date(start);
+			!isNaN(date.getTime()) ? (dateQuery.$gte = date) : '';
+		}
+		if (end) {
+			const date = new Date(end);
+			!isNaN(date.getTime()) ? (dateQuery.$lte = date) : '';
+		}
+		if (Object.keys(dateQuery).length) {
+			query.createdAt = dateQuery;
+		}
+		const totalNotificationsCount = await Notification.find(
+			query
+		).countDocuments();
+
+		const notifications = await Notification.find(query)
+			.skip(skip)
+			.limit(roundedLimit)
+			.select('-__v')
+			.sort('-createdAt');
+
+		res.status(200).json({
+			page: Number(page) || 1,
+			pageSize: notifications.length,
+			totalPages: totalNotificationsCount / roundedLimit,
+			total: totalNotificationsCount,
+			data: notifications,
+		});
+	} catch (err) {
+		res.status(400).json(err.message);
+		console.log(err.message);
+	}
+};
+const getTransactions = async (req, res) => {
+	const {limit = 25, page = 1, currency, status, start, end} = req.query;
+	const roundedLimit = Math.round(Number(limit) || 25);
+	const skip = (page - 1 >= 0 ? page - 1 : 0) * roundedLimit;
+
+	try {
+		let query = {};
+		let dateQuery = {};
+		if (currency) {
+			query.currency = currency.split(',');
+		}
+
+		if (status) {
+			query.status = status.split(',');
+		}
+		if (start) {
+			const date = new Date(start);
+			!isNaN(date.getTime()) ? (dateQuery.$gte = date) : '';
+		}
+		if (end) {
+			const date = new Date(end);
+			!isNaN(date.getTime()) ? (dateQuery.$lte = date) : '';
+		}
+		if (Object.keys(dateQuery).length) {
+			query.createdAt = dateQuery;
+		}
+		const totalTransactionsCount = await Transaction.find(
+			query
+		).countDocuments();
+		const transactions = await Transaction.find(query)
+			.skip(skip)
+			.limit(roundedLimit)
+			.select(['-__v'])
+			.sort('-createdAt');
+		res.status(200).json({
+			page: Number(page) || 1,
+			pageSize: transactions.length,
+			totalPages: totalTransactionsCount / roundedLimit,
+			total: totalTransactionsCount,
+			data: transactions,
+		});
+	} catch (err) {
+		res.status(400).json(err.message);
+		console.log(err.message);
 	}
 };
 
@@ -155,31 +408,50 @@ const getAllNairaBalance = async (req, res) => {
 };
 
 const getUser = async (req, res) => {
-	let {id} = req.params;
-	if (!id) throw new Error('Provide search params');
-	id = id.toLowerCase();
-	let user = await UserData.findOne({
-		$or: [
-			{tagName: id},
-			{'userProfile.userName': id},
-			{email: id},
-			{'userProfile.phoneNumber': id},
-		],
-	}).select('-__v');
-	if (!user) {
-		const wallet = await LocalWallet.findOne({loopayAccNo: id});
-		if (wallet) {
-			user = await UserData.findOne({
-				tagName: wallet.tagName,
-			}).select('-__v');
+	try {
+		let {id} = req.params;
+		if (!id) throw new Error('Provide search params');
+		id = id.toLowerCase();
+		let user = await UserData.findOne({
+			$or: [
+				{tagName: id},
+				{'userProfile.userName': id},
+				{email: id},
+				{'userProfile.phoneNumber': id},
+			],
+		}).select('-__v');
+		if (!user) {
+			const wallet = await LocalWallet.findOne({loopayAccNo: id});
+			if (wallet) {
+				user = await UserData.findOne({
+					tagName: wallet.tagName,
+				}).select('-__v');
+			}
 		}
-	}
 
-	if (!user) {
-		return res.status(404).json('No user found');
+		if (!user) {
+			return res.status(404).json('No user found');
+		}
+		if (!user.tagName) user.tagName = user.userProfile.userName;
+		return res.status(200).json(user);
+	} catch (err) {
+		res.status(400).json(err.message);
+		console.log(err.message);
 	}
-	if (!user.tagName) user.tagName = user.userProfile.userName;
-	return res.status(200).json(user);
+};
+
+const getRecent = async (req, res) => {
+	try {
+		const {limit = 50} = req.user;
+		let recent = await Recent.find({email: {$ne: req.user.email}})
+			.select('-__v')
+			.sort('-updatedAt')
+			.limit(limit);
+		return res.status(200).json(recent);
+	} catch (err) {
+		res.status(400).json(err.message);
+		console.log(err.message);
+	}
 };
 
 const transferToLoopayUser = async (req, res) => {
@@ -590,10 +862,109 @@ const unsuspendAccount = async (req, res) => {
 	}
 };
 
+const getSummary = async (req, res) => {
+	try {
+		const {currency} = req.query;
+
+		const addAmountsAggregate = async ({
+			currency,
+			status,
+			transactionType,
+			type,
+		}) => {
+			const query = {};
+			if (currency) {
+				query.currency = currency;
+			}
+
+			if (status) {
+				query.status = status;
+			}
+			if (transactionType) {
+				query.transactionType = transactionType;
+			}
+			if (type) {
+				query.type = type;
+			}
+			return await Transaction.aggregate([
+				{
+					$match: query,
+				},
+				{
+					$group: {
+						_id: null,
+						amount: {
+							$sum: {$toDouble: '$amount'}, // Assuming the amount field is stored as a string, convert it to a number
+						},
+					},
+				},
+				{
+					$project: {
+						_id: 0,
+						amount: 1,
+					},
+				},
+			]);
+		};
+		const empty = {
+			amount: 0,
+		};
+		const incomeArray = await addAmountsAggregate({
+			currency,
+			type: 'inter',
+			status: 'success',
+			transactionType: 'credit',
+		});
+		const income = incomeArray[0] || empty;
+		const outgoingArray = await addAmountsAggregate({
+			currency,
+			type: 'inter',
+			status: 'success',
+			transactionType: 'debit',
+		});
+		const outgoing = outgoingArray[0] || empty;
+
+		const pendingArray = await addAmountsAggregate({
+			currency,
+			type: 'inter',
+			status: 'pending',
+		});
+		const pending = pendingArray[0] || empty;
+		res.status(200).json({currency, data: {income, outgoing, pending}});
+	} catch (err) {
+		console.log(err.message);
+		res.status(400).json(err.message);
+	}
+};
+
+const getStatement = async (req, res) => {
+	try {
+		const {start, end, currency} = req.query;
+		if (!start || !end)
+			throw new Error('Please provide the start and end dates query');
+		if (!currency) throw new Error('Please provide the statement currency');
+		const startDate = new Date(start);
+		const endDate = new Date(end);
+		const query = {
+			createdAt: {$gte: startDate, $lte: endDate},
+			currency,
+		};
+		const transactions = await Transaction.find(query).sort('-createdAt');
+		res
+			.status(200)
+			.json({currency, count: transactions.length, data: transactions});
+	} catch (err) {
+		console.log(err.message);
+		res.status(400).json(err.message);
+	}
+};
 module.exports = {
 	getAllAdminInfo,
 	getUser,
 	getAllUsers,
+	getNotifications,
+	getTransactions,
+	getRecent,
 	getAllNairaBalance,
 	transferToLoopayUser,
 	finalizeWithdrawal,
@@ -604,4 +975,6 @@ module.exports = {
 	suspendAccount,
 	unblockAccount,
 	unsuspendAccount,
+	getSummary,
+	getStatement,
 };

@@ -22,7 +22,15 @@ const createRecipient = async recipientData => {
 const getRecipients = async (req, res) => {
 	try {
 		const {email} = req.user;
-		const recipient = await RecipientModel.find({email});
+		const {limit, currency} = req.query;
+		let query = {};
+		if (!currency) {
+			throw new Error('Currency not provided');
+		}
+		query.email = email;
+		query.currency = currency.split(',');
+		const recipient = await RecipientModel.find(query).limit(limit);
+		console.log(limit);
 		res.status(200).json(recipient);
 	} catch (err) {
 		res.status(400).json(err.message);

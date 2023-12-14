@@ -1,7 +1,7 @@
 const axios = require('axios');
 const LocalWallet = require('../models/wallet');
 const Notification = require('../models/notification');
-const BillTransaction = require('../models/billTransaction');
+const BillTransaction = require('../models/transaction');
 const getBills = async (req, res) => {
 	try {
 		const {type, country: countryCode} = req.query;

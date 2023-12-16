@@ -353,23 +353,39 @@ const getNotifications = async (req, res) => {
 	}
 };
 const getTransactions = async (req, res) => {
-	const {limit = 25, page = 1, currency, status, start, end} = req.query;
+	const {
+		limit = 25,
+		page = 1,
+		currency,
+		status,
+		start,
+		end,
+		userId,
+	} = req.query;
 	const roundedLimit = Math.round(Number(limit) || 25);
 	const skip = (page - 1 >= 0 ? page - 1 : 0) * roundedLimit;
 
 	try {
 		let query = {};
 		let dateQuery = {};
+		if (userId) {
+			const idType = userId.split(':')[0];
+			const idValue = userId.split(':')[1];
+			query[idType] = idValue;
+		}
 		if (currency) {
 			query.currency = currency.split(',');
 		}
-
 		if (status) {
 			query.status = status.split(',');
 		}
 		if (start) {
 			const date = new Date(start);
 			!isNaN(date.getTime()) ? (dateQuery.$gte = date) : '';
+		}
+		if (end) {
+			const date = new Date(end);
+			!isNaN(date.getTime()) ? (dateQuery.$lte = date) : '';
 		}
 		if (end) {
 			const date = new Date(end);
@@ -412,20 +428,44 @@ const getUser = async (req, res) => {
 		let {id} = req.params;
 		if (!id) throw new Error('Provide search params');
 		id = id.toLowerCase();
-		let user = await UserData.findOne({
-			$or: [
-				{tagName: id},
-				{'userProfile.userName': id},
-				{email: id},
-				{'userProfile.phoneNumber': id},
-			],
-		}).select('-__v');
+		const findUser = async queryParam => {
+			const user = await User.findOne({
+				$or: [
+					{tagName: id},
+					{'userProfile.userName': id},
+					{email: id},
+					{'userProfile.phoneNumber': id},
+					queryParam,
+				],
+			});
+			if (user) {
+				const userData = await UserData.findOne({email: user.email});
+				return {
+					...user.toObject(),
+					...userData.toObject(),
+				};
+			}
+			return null;
+		};
+
+		let user = await findUser({tagName: id});
+		if (!user) {
+			const userData = await UserData.findOne({
+				$or: [
+					{tagName: id},
+					{'userProfile.userName': id},
+					{email: id},
+					{'userProfile.phoneNumber': id},
+				],
+			});
+			if (userData) {
+				user = await findUser({email: userData.email});
+			}
+		}
 		if (!user) {
 			const wallet = await LocalWallet.findOne({loopayAccNo: id});
 			if (wallet) {
-				user = await UserData.findOne({
-					tagName: wallet.tagName,
-				}).select('-__v');
+				user = await findUser({email: wallet.email});
 			}
 		}
 

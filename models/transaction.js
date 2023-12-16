@@ -87,6 +87,10 @@ const TransactionModel = new Schema(
 			type: String,
 			validate: [isMobilePhone, 'Invalid phone number'],
 		},
+		debitAccount: {
+			type: String,
+			// required: [true, 'Please provide debit account'],
+		},
 		dataPlan: Schema.Types.Mixed,
 		billType: String,
 		billName: String,

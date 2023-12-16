@@ -28,7 +28,7 @@ const swapCurrency = async (req, res) => {
 		const fromWallet = await fromLocalWallet.findOne({email});
 		const toWallet = await toWalletModal.findOne({email});
 
-		const toSwapAmount = (Number(toSwap) + Number(fee)) * 100;
+		const toSwapAmount = Number(toSwap) * 100;
 		const toReceiveAmount = toReceive * 100;
 
 		if (toSwapAmount > fromWallet.balance)

@@ -33,6 +33,8 @@ const UserDataSchema = new Schema(
 		},
 		tagName: {type: String, unique: true, sparse: true},
 		pin: String,
+		invalidPinTried: Number,
+		lastPinCheck: Date,
 		accountType: {type: String, enum: ['Personal', 'Business']},
 		verificationStatus: {
 			type: String,
@@ -64,7 +66,7 @@ const UserDataSchema = new Schema(
 );
 
 UserDataSchema.pre('save', function (next) {
-	if (this.userProfile.fullName)
+	if (!this.userProfile.fullName)
 		this.userProfile.fullName =
 			this.userProfile.firstName + ' ' + this.userProfile.lastName;
 	if (!this.referralCode)

@@ -222,6 +222,23 @@ const initiateTransferToLoopay = async (req, res) => {
 				transactionType: 'debit',
 				...transaction,
 			});
+			const notification = {
+				id,
+				email: senderWallet.email,
+				phoneNumber,
+				type: 'transfer',
+				header: 'Debit transaction',
+				message: `You sent ${
+					currency + addingDecimal(Number(amount).toLocaleString())
+				} ${req.user.firstName} ${req.user.lastName}`,
+				adminMessage: `${req.user.firstName} ${req.user.lastName} sent ${
+					currency + addingDecimal(Number(amount).toLocaleString())
+				} to ${fullName}`,
+				status: 'unread',
+				photo: senderPhoto,
+				metadata: {...transaction, transactionType: 'credit'},
+			};
+			await Notification.create(notification);
 		}
 		if (!sendeeTransactionExists) {
 			await TransactionModel.create({

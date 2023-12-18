@@ -7,6 +7,10 @@ const PaymentProofModel = new Schema(
 			type: String,
 			required: [true, 'please provide payment proof'],
 		},
+		currency: {
+			type: String,
+			required: [true, 'please provide payment currency'],
+		},
 		message: String,
 		image: {
 			type: String,

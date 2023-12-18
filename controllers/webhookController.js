@@ -51,7 +51,7 @@ const webhookHandler = async (req, res) => {
 			if (!transactionsExists) {
 				await TransactionModel.create({
 					email,
-					phoneNumber: phone,
+					phoneNumber: phone || wallet.phoneNumber,
 					...transaction,
 				});
 

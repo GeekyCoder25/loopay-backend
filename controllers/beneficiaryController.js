@@ -5,7 +5,7 @@ const getBeneficiaries = async (req, res) => {
 	try {
 		const {email} = req.user;
 
-		const result = await BeneficiaryModel.findOne({email});
+		const result = await BeneficiaryModel.findOne({email}).limit(10);
 		if (!result) return res.status(204).json('No saved beneficiaries');
 		let beneficiaries = result.beneficiaries;
 		const beneficiariesAfterPhotoCheck = [];
@@ -18,6 +18,7 @@ const getBeneficiaries = async (req, res) => {
 						photo: result.photoURL || '',
 						tagName: result.tagName,
 						fullName: result.userProfile.fullName,
+						verificationStatus: result.verificationStatus,
 					});
 				}
 			})

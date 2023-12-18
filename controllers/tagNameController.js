@@ -18,14 +18,7 @@ const getTagName = async (req, res) => {
 		tagName = tagName.toLowerCase();
 		let result = await UserDataModel.findOne({
 			$or: [{tagName}, {'userProfile.userName': tagName}],
-		}).select([
-			'email',
-			'userProfile.fullName',
-			'userProfile.phoneNumber',
-			'photoURL',
-			'tagName',
-			'blockedUsers',
-		]);
+		});
 		if (!result) {
 			const wallet = await LocalWallet.findOne({loopayAccNo: tagName}).select([
 				'tagName',
@@ -33,16 +26,10 @@ const getTagName = async (req, res) => {
 			if (wallet) {
 				result = await UserDataModel.findOne({
 					tagName: wallet.tagName,
-				}).select([
-					'email',
-					'userProfile.fullName',
-					'userProfile.phoneNumber',
-					'photoURL',
-					'tagName',
-					'blockedUsers',
-				]);
+				});
 			}
 		}
+		console.log(result);
 		if (!result) throw new Error('No user found with this tag name');
 		if (type === 'requestFund') {
 			const blockedUsers = result.blockedUsers;
@@ -59,6 +46,7 @@ const getTagName = async (req, res) => {
 			phoneNumber: result.userProfile.phoneNumber,
 			accNo: result.userProfile.phoneNumber.slice(4),
 			photo: result.photoURL || '',
+			verificationStatus: result.verificationStatus,
 		};
 		return res.status(200).json(response);
 	} catch (err) {
@@ -105,27 +93,23 @@ const getPhone = async (req, res) => {
 		let {phoneNumber: sendeePhoneNo} = req.body;
 
 		if (!senderPhoneNo)
-			return res.status(400).json("Please provide sender's phone number");
+			return res.status(400).json("Please provide sender's account number");
 		if (!sendeePhoneNo)
-			return res.status(400).json("Please provide receiver's phone number");
+			return res.status(400).json("Please provide receiver's account number");
 
-		if (sendeePhoneNo.length < 13)
-			throw new Error('Please provide a valid phone number');
+		if (sendeePhoneNo.length < 10)
+			throw new Error('Please provide a valid account number');
+
+		const wallet = await LocalWallet.findOne({
+			loopayAccNo: sendeePhoneNo,
+		});
+		if (!wallet) throw new Error('No user found with this account number');
+		if (senderPhoneNo === wallet.loopayAccNo)
+			throw new Error('No user found with this account number');
 
 		const result = await UserDataModel.findOne({
-			'userProfile.phoneNumber': sendeePhoneNo,
-		}).select([
-			'email',
-			'userProfile.fullName',
-			'userProfile.phoneNumber',
-			'userProfile.userName',
-			'photoURL',
-			'tagName',
-		]);
-		if (!result) throw new Error('No user found with this phone number');
-		if (senderPhoneNo === result.userProfile.phoneNumber)
-			throw new Error('No user found with this phone number');
-
+			email: wallet.email,
+		});
 		const response = {
 			email: result.email,
 			fullName: result.userProfile.fullName,
@@ -133,6 +117,7 @@ const getPhone = async (req, res) => {
 			phoneNumber: result.userProfile.phoneNumber,
 			accNo: result.userProfile.phoneNumber.slice(4),
 			photo: result.photoURL || '',
+			verificationStatus: result.verificationStatus,
 		};
 		return res.status(200).json(response);
 	} catch (err) {

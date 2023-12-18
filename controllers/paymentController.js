@@ -71,7 +71,7 @@ const postPaymentProof = async (req, res) => {
 				</div>`;
 				const mailOptions = {
 					from: process.env.EMAIL,
-					to: process.env.ADMIN_EMAIL || process.env.EMAIL,
+					to: process.env.ADMIN_EMAIL,
 					subject: 'Email Verification',
 					html,
 				};

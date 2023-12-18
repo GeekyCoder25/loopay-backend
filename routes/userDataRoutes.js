@@ -73,6 +73,7 @@ const {
 	postReferral,
 	referralWithdraw,
 } = require('../controllers/referralController');
+const {postPaymentProof} = require('../controllers/paymentController');
 
 const router = express.Router();
 
@@ -124,5 +125,6 @@ router.route('/verify').post(postVerificationData);
 router.route('/popup/:popUpID').delete(deletePopUp);
 router.route('/referral').get(getReferrals).post(postReferral);
 router.route('/withdraw-referral').get(referralWithdraw);
+router.route('/payment-proof').post(postPaymentProof);
 
 module.exports = router;

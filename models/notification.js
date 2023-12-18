@@ -8,7 +8,6 @@ const NotificationSchema = new Schema(
 		id: {
 			type: String,
 			required: [true, 'Please input notification ID'],
-			unique: true,
 		},
 		email: {
 			type: String,

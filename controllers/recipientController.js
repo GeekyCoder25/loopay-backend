@@ -30,7 +30,6 @@ const getRecipients = async (req, res) => {
 		query.email = email;
 		query.currency = currency.split(',');
 		const recipient = await RecipientModel.find(query).limit(limit);
-		console.log(limit);
 		res.status(200).json(recipient);
 	} catch (err) {
 		res.status(400).json(err.message);

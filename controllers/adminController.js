@@ -366,7 +366,7 @@ const getTransactions = async (req, res) => {
 	const skip = (page - 1 >= 0 ? page - 1 : 0) * roundedLimit;
 
 	try {
-		let query = {};
+		const query = {};
 		let dateQuery = {};
 		if (userId) {
 			const idType = userId.split(':')[0];
@@ -914,11 +914,11 @@ const getSummary = async (req, res) => {
 		}) => {
 			const query = {};
 			if (currency) {
-				query.currency = currency;
+				query.currency = currency.split(',');
 			}
 
 			if (status) {
-				query.status = status;
+				query.status = status.split(',');
 			}
 			if (transactionType) {
 				query.transactionType = transactionType;

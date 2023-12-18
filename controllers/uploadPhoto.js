@@ -5,9 +5,9 @@ const path = require('path');
 const UserDataModel = require('../models/userData');
 const DataUriParser = require('datauri/parser');
 
-const datauri = new DataUriParser();
+const dataUri = new DataUriParser();
 
-const formatAsDataUri = file => datauri.format(file.name, file.data);
+const formatAsDataUri = file => dataUri.format(file.name, file.data);
 
 const uploadPhoto = (req, res) => {
 	if (!req.files) {

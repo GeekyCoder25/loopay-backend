@@ -810,7 +810,6 @@ const unblockAccount = async (req, res) => {
 			wallet = await LocalWallet.findOne({tagName});
 		}
 
-		console.log(req.body);
 		if (mail) {
 			const html = String.raw`<div
 				style="line-height: 30px; font-family: Arial, Helvetica, sans-serif"

@@ -72,19 +72,22 @@ const postPaymentProof = async (req, res) => {
 				const mailOptions = {
 					from: process.env.EMAIL,
 					to: process.env.ADMIN_EMAIL,
-					subject: 'Email Verification',
+					subject: 'Payment proof',
 					html,
 				};
-				sendMail(mailOptions);
-				await PaymentProofModel.create({
-					email: req.user.email,
-					...body,
-					image: result.secure_url,
-				});
-				res.status(200).json({
-					message: 'Proof submitted successfully',
-					imageUrl: result.secure_url,
-				});
+				const responseData = async () => {
+					await PaymentProofModel.create({
+						email: req.user.email,
+						...body,
+						image: result.secure_url,
+					});
+					res.status(200).json({
+						message: 'Proof submitted successfully',
+						imageUrl: result.secure_url,
+					});
+				};
+				const errorFunc = () => res.status(400).json('Server error');
+				sendMail(mailOptions, '', '', responseData, errorFunc);
 			}
 		);
 	} catch (err) {

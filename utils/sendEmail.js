@@ -1,8 +1,8 @@
 const nodemailer = require('nodemailer');
 
-const sendMail = (mailOptions, res, result) => {
+const sendMail = (mailOptions, res, result, customFunc, errorFunc) => {
 	const transport = () => {
-		if (process.env.NODE_ENV === 'production') {
+		if (process.env.NODE_ENV !== 'production') {
 			return {
 				service: 'gmail',
 				auth: {
@@ -22,8 +22,10 @@ const sendMail = (mailOptions, res, result) => {
 	transporter.sendMail(mailOptions, (err, info) => {
 		if (err) {
 			if (res) {
-				res.status(500).json({error: 'Server Error'});
+				console.log(err.message);
+				return res.status(500).json({error: 'Server Error'});
 			}
+			if (errorFunc) errorFunc();
 			return console.log(err.message);
 		}
 		if (res) {
@@ -31,6 +33,7 @@ const sendMail = (mailOptions, res, result) => {
 				email: result.email,
 			});
 		}
+		if (customFunc) customFunc();
 		console.log('Message Sent: %s', info.messageId);
 	});
 };

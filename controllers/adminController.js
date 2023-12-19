@@ -997,6 +997,17 @@ const getStatement = async (req, res) => {
 		res.status(400).json(err.message);
 	}
 };
+
+const deleteResources = async (req, res) => {
+	const {prefix} = req.query;
+	if (!prefix) {
+		return res.status(400).json('Please provide prefix resource to delete');
+	}
+	cloudinary.api
+		.delete_resources_by_prefix(prefix)
+		.then(res.status(200).json('Deleted'));
+};
+
 module.exports = {
 	getAllAdminInfo,
 	getUser,
@@ -1016,4 +1027,5 @@ module.exports = {
 	unsuspendAccount,
 	getSummary,
 	getStatement,
+	deleteResources,
 };

@@ -38,13 +38,27 @@ const checkTransactionPin = async (req, res) => {
 		}
 		if (!result.pin) throw new Error('Pin not set yet');
 		const compare = await bcrypt.compare(req.body.pin, result.pin);
+		const attemptRemain =
+			5 - (result.invalidPinTried ? result.invalidPinTried + 1 : 1);
 		if (!compare) {
+			if (result.invalidPinTried >= 4) {
+				result.invalidPinTried = 5;
+				result.lastPinCheck = new Date();
+				await result.save();
+				throw new Error(
+					`Invalid Pin, transaction banned temporarily for security, try again in ${result.lastPinCheck}`
+				);
+			}
 			result.invalidPinTried
 				? (result.invalidPinTried += 1)
 				: (result.invalidPinTried = 1);
 			result.lastPinCheck = new Date();
 			await result.save();
-			throw new Error('Invalid Pin');
+			throw new Error(
+				`Invalid Pin, ${attemptRemain} attempt${
+					attemptRemain === 1 ? '' : 's'
+				} left`
+			);
 		}
 		result.invalidPinTried = 0;
 		result.lastPinCheck = undefined;

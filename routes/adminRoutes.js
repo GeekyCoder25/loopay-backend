@@ -19,6 +19,7 @@ const {
 	getSummary,
 	getStatement,
 	getNotifications,
+	deleteResources,
 } = require('../controllers/adminController');
 const {updateNotifications} = require('../controllers/notificationController');
 const {getRate, updateRate} = require('../controllers/currencyController');
@@ -55,5 +56,6 @@ router.route('/popup').get(getPopUp).post(postPopUp).put(updatePopUp);
 router.route('/popup/:popUpID').delete(deletePopUp);
 router.route('/summary').get(getSummary);
 router.route('/statement').get(getStatement);
+router.route('/media-resource').delete(deleteResources);
 
 module.exports = router;

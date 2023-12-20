@@ -11,6 +11,9 @@ const setTransactionPin = async (req, res) => {
 		const salt = await bcrypt.genSalt(10);
 		const hash = await bcrypt.hash(pin, salt);
 		result.pin = hash;
+		result.invalidPinTried = 0;
+		result.lastPinCheck = undefined;
+		await result.save();
 		result.save();
 		res.status(200).json('Transaction pin set successfully');
 	} catch (err) {
@@ -31,9 +34,11 @@ const checkTransactionPin = async (req, res) => {
 
 			let hoursDifference = timeDifference / (1000 * 3600);
 			if (hoursDifference < 24) {
-				throw new Error(
-					`Transaction banned temporarily for security, try again in ${result.lastPinCheck}`
-				);
+				return res
+					.status(401)
+					.json(
+						`Transaction banned temporarily, try again in ${result.lastPinCheck}`
+					);
 			}
 		}
 		if (!result.pin) throw new Error('Pin not set yet');
@@ -45,9 +50,11 @@ const checkTransactionPin = async (req, res) => {
 				result.invalidPinTried = 5;
 				result.lastPinCheck = new Date();
 				await result.save();
-				throw new Error(
-					`Invalid Pin, transaction banned temporarily for security, try again in ${result.lastPinCheck}`
-				);
+				return res
+					.status(401)
+					.json(
+						`Incorrect Pin, transaction banned temporarily, try again in ${result.lastPinCheck}`
+					);
 			}
 			result.invalidPinTried
 				? (result.invalidPinTried += 1)
@@ -55,7 +62,7 @@ const checkTransactionPin = async (req, res) => {
 			result.lastPinCheck = new Date();
 			await result.save();
 			throw new Error(
-				`Invalid Pin, ${attemptRemain} attempt${
+				`Incorrect Pin, ${attemptRemain} attempt${
 					attemptRemain === 1 ? '' : 's'
 				} left`
 			);
@@ -65,7 +72,6 @@ const checkTransactionPin = async (req, res) => {
 		await result.save();
 		res.status(200).json(compare);
 	} catch (err) {
-		console.log(err.message);
 		res.status(400).json(err.message);
 	}
 };

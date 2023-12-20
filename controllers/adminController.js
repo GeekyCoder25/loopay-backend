@@ -483,10 +483,31 @@ const getUser = async (req, res) => {
 const getRecent = async (req, res) => {
 	try {
 		const {limit = 50} = req.user;
-		let recent = await Recent.find({email: {$ne: req.user.email}})
-			.select('-__v')
-			.sort('-updatedAt')
-			.limit(limit);
+		let recent = (
+			await Recent.aggregate([
+				{
+					$match: {
+						email: {$ne: req.user.email},
+					},
+				},
+				{$sort: {updatedAt: -1}},
+				{$limit: Number(limit)},
+				{
+					$lookup: {
+						from: 'userdatas', // Name of the UserData collection
+						localField: 'email', // Field to match in Recent collection
+						foreignField: 'email', // Field to match in UserData collection
+						as: 'userData',
+					},
+				},
+				{$project: {userData: {pin: 0, __v: 0}, __v: 0}},
+			]).exec()
+		).map(({userData, ...rest}) => {
+			return {
+				...rest,
+				...userData[0],
+			};
+		});
 		return res.status(200).json(recent);
 	} catch (err) {
 		res.status(400).json(err.message);
@@ -540,10 +561,6 @@ const transferToLoopayUser = async (req, res) => {
 		const recent = {
 			email,
 			phoneNumber,
-			fullName: sendeeData.userProfile.fullName,
-			tagName: tagName || userName,
-			accNo: sendeeWallet.loopayAccNo,
-			photo: sendeeData.photoURL,
 			adminUser: req.user.email,
 		};
 

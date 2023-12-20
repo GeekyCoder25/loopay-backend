@@ -17,6 +17,7 @@ const Wallet = new Schema({
 		validate: [isEmail, 'Invalid email address'],
 	},
 	balance: Number,
+	bookBalance: Number,
 	loopayAccNo: {
 		type: String,
 		required: [true, 'please provide your account number'],

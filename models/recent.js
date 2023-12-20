@@ -15,23 +15,6 @@ const RecentSchema = new Schema(
 			required: [true, 'Please input your phone number'],
 			validate: [isMobilePhone, 'Invalid phone number'],
 		},
-		fullName: {
-			type: String,
-			required: [true, "Please provide the user's name"],
-		},
-		tagName: {
-			type: String,
-			required: [true, "Please provide user loopay's tag name"],
-			unique: true,
-		},
-		accNo: {
-			type: String,
-			required: [true, 'Please provide user account number'],
-			unique: true,
-		},
-		photo: {
-			type: String,
-		},
 		adminUser: {
 			type: String,
 			required: [true, 'Please provide user admin email'],

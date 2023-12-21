@@ -54,6 +54,7 @@ const Wallet = new Schema({
 		validate: [isMobilePhone, 'Invalid phone number'],
 	},
 	isLocal: Boolean,
+	status: {type: String, enum: ['active', 'inactive']},
 	apiData: {
 		type: Schema.Types.Mixed,
 	},
@@ -65,6 +66,13 @@ Wallet.pre('save', async function (next) {
 	if (!this.balance) this.balance = 0;
 	if (!this.tagName) this.tagName = this.userName || this.phoneNumber;
 	next();
+});
+
+Wallet.post('save', async function (doc) {
+	if (doc.balance > 0 && doc.status !== 'active') {
+		doc.status = 'active';
+		await doc.save();
+	}
 });
 
 module.exports = mongoose.model('local-wallet', Wallet);

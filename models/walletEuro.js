@@ -52,6 +52,7 @@ const EuroWallet = new Schema({
 		required: [true, 'please provide your phone number'],
 		validate: [isMobilePhone, 'Invalid phone number'],
 	},
+	status: {type: String, enum: ['active', 'inactive']},
 	apiData: {
 		type: Schema.Types.Mixed,
 	},
@@ -62,6 +63,13 @@ EuroWallet.pre('save', async function (next) {
 	if (!this.balance) this.balance = 0;
 	if (!this.tagName) this.tagName = this.userName || this.phoneNumber;
 	next();
+});
+
+EuroWallet.post('save', async function (doc) {
+	if (doc.balance > 0 && doc.status !== 'active') {
+		doc.status = 'active';
+		await doc.save();
+	}
 });
 
 module.exports = mongoose.model('wallet-euro', EuroWallet);

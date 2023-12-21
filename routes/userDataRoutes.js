@@ -5,6 +5,7 @@ const {
 	putUserData,
 	updateProfile,
 	deletePopUp,
+	deleteAccount,
 } = require('../controllers/userDataController');
 const {
 	setTransactionPin,
@@ -24,6 +25,7 @@ const {
 const {
 	getBeneficiaries,
 	postBeneficiary,
+	deleteBeneficiary,
 } = require('../controllers/beneficiaryController');
 const {getWallet, postWallet} = require('../controllers/walletController');
 const {
@@ -36,6 +38,7 @@ const {
 	postRecipient,
 	getRecipients,
 	checkRecipient,
+	deleteRecipient,
 } = require('../controllers/recipientController');
 const {getRole} = require('../controllers/roleController');
 const {swapCurrency} = require('../controllers/swapController');
@@ -88,6 +91,7 @@ router.route('/get-tag/:senderTagName').post(getTagName);
 router.route('/get-phone').post(getPhone);
 router.route('/tag-name').post(createTagName);
 router.route('/beneficiary').get(getBeneficiaries).post(postBeneficiary);
+router.delete('/beneficiary/:tagName', deleteBeneficiary);
 router.route('/wallet').get(getWallet).post(postWallet);
 router.route('/loopay/transfer').post(accountStatus, initiateTransferToLoopay);
 router.route('/transfer').post(accountStatus, initiateTransfer);
@@ -95,6 +99,7 @@ router.route('/transaction').get(getTransactions);
 router.route('/transferrecipient').get(getTransactions);
 router.route('/banks').get(listBanks);
 router.route('/savedbanks').get(getRecipients).post(postRecipient);
+router.delete('/savedBanks/:id', deleteRecipient);
 router.route('/check-recipient').post(checkRecipient);
 router.route('/airtime/operators').get(airtimeAPIToken, getOperators);
 router.route('/get-network').get(airtimeAPIToken, getNetwork);
@@ -126,5 +131,6 @@ router.route('/popup/:popUpID').delete(deletePopUp);
 router.route('/referral').get(getReferrals).post(postReferral);
 router.route('/withdraw-referral').get(referralWithdraw);
 router.route('/payment-proof').post(postPaymentProof);
+router.route('/delete-account/:email').delete(deleteAccount);
 
 module.exports = router;

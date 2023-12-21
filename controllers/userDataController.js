@@ -1,10 +1,23 @@
+const User = require('../models/user');
 const UserDataModel = require('../models/userData');
+const SessionModel = require('../models/session');
+const LocalWallet = require('../models/wallet');
+const DollarWallet = require('../models/walletDollar');
+const EuroWallet = require('../models/walletEuro');
+const PoundWallet = require('../models/walletPound');
+
 const {
 	excludedFieldsInObject,
 	excludedFieldsInArray,
 } = require('../utils/mongodbExclude');
 const {handleErrors} = require('../utils/ErrorHandler');
 const PopUp = require('../models/popUp');
+const Transaction = require('../models/transaction');
+const Fees = require('../models/fees');
+const Notification = require('../models/notification');
+const Recent = require('../models/recent');
+const Recipient = require('../models/recipient');
+const Referral = require('../models/referral');
 
 const getUserData = async (req, res) => {
 	try {
@@ -128,10 +141,42 @@ const deletePopUp = async (req, res) => {
 	}
 };
 
+const deleteAccount = async (req, res) => {
+	try {
+		const {email} = req.params;
+		if (req.user.email !== email) {
+			throw new Error('Invalid process');
+		}
+		const query = {email};
+		const collections = [
+			User,
+			UserDataModel,
+			SessionModel,
+			LocalWallet,
+			DollarWallet,
+			EuroWallet,
+			PoundWallet,
+			Transaction,
+			Fees,
+			Notification,
+			Recent,
+			Recipient,
+			Referral,
+		];
+		collections.forEach(collection => collection.deleteMany(query));
+
+		res.status(200).json({status: 'success'});
+	} catch (err) {
+		console.log(err.message);
+		res.status(400).json(err.message);
+	}
+};
+
 module.exports = {
 	getUserData,
 	postUserData,
 	putUserData,
 	updateProfile,
 	deletePopUp,
+	deleteAccount,
 };

@@ -90,7 +90,40 @@ const postBeneficiary = async (req, res) => {
 	}
 };
 
+const deleteBeneficiary = async (req, res) => {
+	try {
+		const {email} = req.user;
+		const beneficiariesExist = await BeneficiaryModel.findOne({email});
+		let beneficiaries;
+		let previousBeneficiaries;
+		if (beneficiariesExist) {
+			previousBeneficiaries = beneficiariesExist.beneficiaries;
+			const filteredBeneficiaries = previousBeneficiaries.filter(
+				beneficiary => beneficiary.tagName !== req.params.tagName
+			);
+			beneficiaries = filteredBeneficiaries;
+			await BeneficiaryModel.findOneAndUpdate(
+				{email},
+				{beneficiaries},
+				{
+					new: true,
+					runValidators: true,
+				}
+			);
+		} else {
+			throw new Error('No beneficiary to delete');
+		}
+		const deletedBeneficiary = previousBeneficiaries.find(
+			beneficiary => beneficiary.tagName === req.params.tagName
+		);
+		return res.status(200).json(deletedBeneficiary);
+	} catch (err) {
+		res.status(400).json(err.message);
+	}
+};
+
 module.exports = {
 	getBeneficiaries,
 	postBeneficiary,
+	deleteBeneficiary,
 };

@@ -19,24 +19,6 @@ const createRecipient = async recipientData => {
 	}
 };
 
-const getRecipients = async (req, res) => {
-	try {
-		const {email} = req.user;
-		const {limit, currency} = req.query;
-		let query = {};
-		if (!currency) {
-			throw new Error('Currency not provided');
-		}
-		query.email = email;
-		query.currency = currency.split(',');
-		const recipient = await RecipientModel.find(query).limit(limit);
-		res.status(200).json(recipient);
-	} catch (err) {
-		res.status(400).json(err.message);
-		console.log(err.message);
-	}
-};
-
 const checkRecipient = async (req, res) => {
 	try {
 		if (requiredKeys(req, res, ['bank', 'accNo'])) return;
@@ -65,6 +47,24 @@ const checkRecipient = async (req, res) => {
 			slug,
 			recipientCode: transferRecipient.data.recipient_code,
 		};
+		res.status(200).json(recipient);
+	} catch (err) {
+		res.status(400).json(err.message);
+		console.log(err.message);
+	}
+};
+
+const getRecipients = async (req, res) => {
+	try {
+		const {email} = req.user;
+		const {limit, currency} = req.query;
+		let query = {};
+		if (!currency) {
+			throw new Error('Currency not provided');
+		}
+		query.email = email;
+		query.currency = currency.split(',');
+		const recipient = await RecipientModel.find(query).limit(limit);
 		res.status(200).json(recipient);
 	} catch (err) {
 		res.status(400).json(err.message);
@@ -111,8 +111,20 @@ const postRecipient = async (req, res) => {
 	}
 };
 
+const deleteRecipient = async (req, res) => {
+	try {
+		const response = await RecipientModel.findOneAndRemove({
+			_id: req.params.id,
+		});
+		return res.status(200).json(response);
+	} catch (err) {
+		res.status(400).json(err.message);
+		console.log(err.message);
+	}
+};
 module.exports = {
 	getRecipients,
 	checkRecipient,
 	postRecipient,
+	deleteRecipient,
 };

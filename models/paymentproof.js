@@ -1,8 +1,22 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const {isEmail} = require('validator');
 
 const PaymentProofModel = new Schema(
 	{
+		email: {
+			type: String,
+			required: [true, 'Please input your email address'],
+			validate: [isEmail, 'Invalid email address'],
+		},
+		tagName: {
+			type: String,
+			required: [true, 'Please provide tag name'],
+		},
+		accNo: {
+			type: String,
+			required: [true, 'Please provide account number'],
+		},
 		amount: {
 			type: String,
 			required: [true, 'please provide payment proof'],

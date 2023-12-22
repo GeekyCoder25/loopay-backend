@@ -1,9 +1,6 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const User = require('../models/user');
 const Transaction = require('../models/transaction');
-const AirtimeTransactionModel = require('../models/airtimeTransaction');
-const SwapModel = require('../models/swapTransaction');
-const BillTransactionModel = require('../models/billTransaction');
 const Session = require('../models/session');
 const UserData = require('../models/userData');
 const Recent = require('../models/recent');
@@ -15,22 +12,13 @@ const axios = require('axios');
 const Notification = require('../models/notification');
 const VerificationModel = require('../models/verification');
 const {sendMail} = require('../utils/sendEmail');
+const PaymentProof = require('../models/paymentproof');
+const {addingDecimal} = require('../utils/addingDecimal');
 const cloudinary = require('cloudinary').v2;
 
 const getAllAdminInfo = async (req, res) => {
 	try {
-		const allTransactions = [
-			Transaction,
-			AirtimeTransactionModel,
-			BillTransactionModel,
-		];
-		const totalTransactionsCount = (
-			await Promise.all(
-				allTransactions.map(
-					async collection => await collection.countDocuments()
-				)
-			)
-		).reduce((a, b) => a + b, 0);
+		const totalTransactionsCount = await Transaction.countDocuments();
 
 		let localBalanceModel = await LocalWallet.find().select('+ balance');
 		let dollarBalanceModel = await DollarWallet.find().select('+ balance');
@@ -66,19 +54,8 @@ const getAllAdminInfo = async (req, res) => {
 				},
 			]);
 
-		const totalTransactionStatusLength = async (currency, status) => {
-			const result = await Promise.all(
-				allTransactions.map(async collection => {
-					const result = await collection.aggregate([
-						{$match: {currency, status}},
-						{$group: {_id: '$id', doc: {$first: '$$ROOT'}}},
-						{$replaceRoot: {newRoot: '$doc'}},
-					]);
-					return result.length;
-				})
-			);
-			return result.reduce((a, b) => a + b, 0);
-		};
+		const totalTransactionStatusLength = async (currency, status) =>
+			await Transaction.find({currency, status}).countDocuments();
 
 		// Transaction.countDocuments();
 
@@ -1015,6 +992,121 @@ const getStatement = async (req, res) => {
 	}
 };
 
+const getPaymentProofs = async (req, res) => {
+	const {limit = 50, page = 1, currency} = req.query;
+	const roundedLimit = Math.round(Number(limit) || 25);
+	const skip = (page - 1 >= 0 ? page - 1 : 0) * roundedLimit;
+	const query = {};
+
+	if (currency) {
+		query.currency = currency.split(',');
+	}
+	const proofs = await PaymentProof.find(query).skip(skip).limit(limit);
+	const totalProofsCount = await PaymentProof.find(query).countDocuments();
+	res.status(200).json({
+		page: Number(page) || 1,
+		pageSize: proofs.length,
+		totalPages: totalProofsCount / roundedLimit,
+		data: proofs,
+	});
+};
+
+const approveProof = async (req, res) => {
+	try {
+		const {email, _id, tagName, amount, currency} = req.body;
+
+		const selectWallet = currency => {
+			switch (currency) {
+				case 'naira':
+					return LocalWallet;
+				case 'dollar':
+					return DollarWallet;
+				case 'euro':
+					return EuroWallet;
+				case 'pound':
+					return PoundWallet;
+				default:
+					return LocalWallet;
+			}
+		};
+		const currencyWallet = selectWallet(currency);
+
+		const senderWallet = await currencyWallet.findOne({
+			email: req.user.email,
+		});
+		const sendeeWallet = await currencyWallet.findOne({email});
+		const sendeeData = await UserData.findOne({email});
+		if (sendeeWallet.tagName !== tagName)
+			throw new Error('Invalid Account Transfer');
+
+		const convertToKobo = () => {
+			const naira = amount.split('.')[0];
+			const kobo = amount.split('.')[1];
+			if (kobo === '00') {
+				return naira * 100;
+			}
+			return naira * 100 + Number(kobo);
+		};
+		if (senderWallet.balance < convertToKobo())
+			throw new Error('Insufficient funds');
+
+		const data = await PaymentProof.findByIdAndRemove(_id);
+
+		senderWallet.balance -= convertToKobo();
+		sendeeWallet.balance += convertToKobo();
+		await senderWallet.save();
+		await sendeeWallet.save();
+		res.status(200).json({
+			message: 'Transaction approved successfully',
+			data,
+		});
+	} catch (err) {
+		console.log(err.message);
+		res.status(400).json(err.message);
+	}
+};
+
+const declineProof = async (req, res) => {
+	try {
+		const {id} = req.params;
+		const {amount, email, currency, tagName} = req.body;
+		const user = await UserData.findOne({email});
+		const notification = {
+			email,
+			id,
+			phoneNumber: user.userProfile.phoneNumber,
+			type: 'proof',
+			header: 'Proof declined',
+			message: `Your payment proof of ${
+				currency + addingDecimal(Number(amount).toLocaleString())
+			} has been declined`,
+			adminMessage: `${req.user.firstName} ${
+				req.user.lastName
+			} declined #${tagName} proof of ${
+				currency + addingDecimal(Number(amount).toLocaleString())
+			}`,
+			status: 'unread',
+			photo: user.photoURL,
+		};
+		const data = await PaymentProof.findByIdAndRemove({_id: id});
+		await Notification.create(notification);
+		cloudinary.api.delete_resources(
+			`loopay/payment-proofs/${email}_${req.user._id}`,
+			{
+				type: 'upload',
+				resource_type: 'image',
+			}
+		);
+		res.status(200).json({
+			message: 'Transaction declined successfully',
+			data,
+		});
+	} catch (err) {
+		console.log(err.message);
+		res.status(400).json(err.message);
+	}
+};
+
 const deleteResources = async (req, res) => {
 	const {prefix} = req.query;
 	if (!prefix) {
@@ -1035,6 +1127,8 @@ module.exports = {
 	getAllNairaBalance,
 	transferToLoopayUser,
 	finalizeWithdrawal,
+	approveProof,
+	declineProof,
 	blockTransaction,
 	getVerifications,
 	updateVerification,
@@ -1044,5 +1138,6 @@ module.exports = {
 	unsuspendAccount,
 	getSummary,
 	getStatement,
+	getPaymentProofs,
 	deleteResources,
 };

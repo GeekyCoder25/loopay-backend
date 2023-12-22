@@ -34,7 +34,7 @@ const postPaymentProof = async (req, res) => {
 		file.name = `loopay_proof_${req.user.email}_${req.user._id}${
 			path.parse(file.name).ext
 		}`;
-		const saveFileName = `proof${req.user.email}_${req.user._id}`;
+		const saveFileName = `${req.user.email}_${req.user._id}`;
 
 		const formattedFile = formatAsDataUri(file);
 
@@ -75,6 +75,8 @@ const postPaymentProof = async (req, res) => {
 					subject: 'Payment proof',
 					html,
 				};
+				if (!body.tagName || !body.accNo)
+					throw new Error('Please provide all required fields');
 				const responseData = async () => {
 					await PaymentProofModel.create({
 						email: req.user.email,

@@ -109,7 +109,7 @@ const initiateTransfer = async (req, res) => {
 					} to an external bank account ${name}`,
 					status: 'unread',
 					photo: senderPhoto,
-					metadata: {...transaction, transactionType: 'credit'},
+					metadata: {...transaction, transactionType: 'debit'},
 				};
 
 				const transactionExists = await TransactionModel.findOne({id});

@@ -1,5 +1,3 @@
-const AirtimeTransactionModel = require('../models/airtimeTransaction');
-const BillTransactionModel = require('../models/billTransaction');
 const SwapModel = require('../models/swapTransaction');
 const TransactionModel = require('../models/transaction');
 
@@ -13,10 +11,10 @@ const getTransactions = async (req, res) => {
 			query.currency = currency.split(',');
 		}
 		let transactions = await TransactionModel.find(query).sort('-createdAt');
-		if (swap) {
-			const swapTransactions = await SwapModel.find(query).sort('-createdAt');
-			transactions.concat(swapTransactions);
-		}
+		// if (swap) {
+		const swapTransactions = await SwapModel.find(query).sort('-createdAt');
+		transactions.concat(swapTransactions);
+		// }
 
 		transactions.sort((a, b) => {
 			const dateA = new Date(a.createdAt);

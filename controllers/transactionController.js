@@ -14,11 +14,10 @@ const getTransactions = async (req, res) => {
 		}
 		let transactions = await TransactionModel.find(query).sort('-createdAt');
 		if (swap) {
-			const swapTransactions = await TransactionModel.find(query).sort(
-				'-createdAt'
-			);
+			const swapTransactions = await SwapModel.find(query).sort('-createdAt');
 			transactions.concat(swapTransactions);
 		}
+
 		transactions.sort((a, b) => {
 			const dateA = new Date(a.createdAt);
 			const dateB = new Date(b.createdAt);

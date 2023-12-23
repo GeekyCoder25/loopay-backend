@@ -3,7 +3,7 @@ const TransactionModel = require('../models/transaction');
 
 const getTransactions = async (req, res) => {
 	try {
-		const {date, swap, currency} = req.query;
+		const {date, currency} = req.query;
 		const {email} = req.user;
 		const query = {email};
 
@@ -11,10 +11,6 @@ const getTransactions = async (req, res) => {
 			query.currency = currency.split(',');
 		}
 		let transactions = await TransactionModel.find(query).sort('-createdAt');
-		// if (swap) {
-		const swapTransactions = await SwapModel.find(query).sort('-createdAt');
-		transactions.concat(swapTransactions);
-		// }
 
 		transactions.sort((a, b) => {
 			const dateA = new Date(a.createdAt);

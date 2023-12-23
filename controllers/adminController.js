@@ -14,6 +14,7 @@ const VerificationModel = require('../models/verification');
 const {sendMail} = require('../utils/sendEmail');
 const PaymentProof = require('../models/paymentproof');
 const {addingDecimal} = require('../utils/addingDecimal');
+const Wallet = require('../models/wallet');
 const cloudinary = require('cloudinary').v2;
 
 const getAllAdminInfo = async (req, res) => {
@@ -417,9 +418,11 @@ const getUser = async (req, res) => {
 			});
 			if (user) {
 				const userData = await UserData.findOne({email: user.email});
+				const wallet = await Wallet.findOne({email: user.email});
 				return {
 					...user.toObject(),
 					...userData.toObject(),
+					wallet: {...wallet.toObject()},
 				};
 			}
 			return null;
@@ -449,7 +452,7 @@ const getUser = async (req, res) => {
 		if (!user) {
 			return res.status(404).json('No user found');
 		}
-		if (!user.tagName) user.tagName = user.userProfile.userName;
+		// if (!user.tagName) user.tagName = user.userProfile.userName;
 		return res.status(200).json(user);
 	} catch (err) {
 		res.status(400).json(err.message);

@@ -55,6 +55,7 @@ const UserDataSchema = new Schema(
 		level: {
 			type: Number,
 		},
+		bvn: String,
 		referralCode: String,
 		sessionTime: Date,
 		blockedUsers: [String],

@@ -126,11 +126,22 @@ const postVerificationData = async (req, res) => {
 				idValue: idType.value,
 				status: 'pending',
 			});
-			await userData.updateOne(
-				{email: req.user.email},
-				{verificationStatus: 'pending'},
-				{new: true, runValidators: true}
-			);
+			if (
+				idType.name.toLowerCase() === 'bvn' ||
+				idType.name.toLowerCase() === 'bank verification number'
+			) {
+				await userData.updateOne(
+					{email: req.user.email},
+					{verificationStatus: 'pending', bvn: idType.value},
+					{new: true, runValidators: true}
+				);
+			} else {
+				await userData.updateOne(
+					{email: req.user.email},
+					{verificationStatus: 'pending'},
+					{new: true, runValidators: true}
+				);
+			}
 			res.status(200).json({
 				message: 'Verification submitted successfully',
 				verificationStatus: true,

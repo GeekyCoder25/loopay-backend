@@ -1,4 +1,4 @@
-const SwapTransaction = require('../models/swapTransaction');
+const Transaction = require('../models/transaction');
 const UserData = require('../models/userData');
 const LocalWallet = require('../models/wallet');
 const DollarWallet = require('../models/walletDollar');
@@ -54,7 +54,7 @@ const swapCurrency = async (req, res) => {
 			currency: toCurrency,
 			reference: `TR${id}`,
 		};
-		await SwapTransaction.create(transaction);
+		await Transaction.create(transaction);
 		res.status(200).json('Swap successful');
 	} catch (err) {
 		console.log(err.message);

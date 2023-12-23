@@ -28,7 +28,7 @@ const TransactionModel = new Schema(
 		transactionType: {
 			type: String,
 			required: [true, 'Please provide transaction type'],
-			enum: ['credit', 'debit', 'airtime', 'data', 'bill'],
+			enum: ['credit', 'debit', 'airtime', 'data', 'bill', 'swap'],
 		},
 		senderAccount: {
 			type: String,
@@ -64,7 +64,7 @@ const TransactionModel = new Schema(
 		},
 		amount: {
 			type: String,
-			required: [true, 'Please provide transaction amount'],
+			// required: [true, 'Please provide transaction amount'],
 		},
 		description: {
 			type: String,
@@ -72,6 +72,7 @@ const TransactionModel = new Schema(
 		reference: {
 			type: String,
 			required: [true, "Please provide transaction's reference"],
+			unique: true,
 		},
 		paystackReference: String,
 		transferCode: String,
@@ -94,6 +95,13 @@ const TransactionModel = new Schema(
 		dataPlan: Schema.Types.Mixed,
 		billType: String,
 		billName: String,
+		swapFrom: String,
+		swapTo: String,
+		swapFromAmount: String,
+		swapToAmount: String,
+		accNo: String,
+		tagName: String,
+		fullName: String,
 		metadata: Schema.Types.Mixed,
 	},
 	{timestamps: true}

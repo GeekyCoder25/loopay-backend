@@ -405,17 +405,10 @@ const getUser = async (req, res) => {
 	try {
 		let {id} = req.params;
 		if (!id) throw new Error('Provide search params');
-		id = id.toLowerCase();
+		// id = id.toLowerCase();
+
 		const findUser = async queryParam => {
-			const user = await User.findOne({
-				$or: [
-					{tagName: id},
-					{'userProfile.userName': id},
-					{email: id},
-					{'userProfile.phoneNumber': id},
-					queryParam,
-				],
-			});
+			const user = await User.findOne(queryParam);
 			if (user) {
 				const userData = await UserData.findOne({email: user.email});
 				const wallet = await Wallet.findOne({email: user.email});
@@ -428,7 +421,15 @@ const getUser = async (req, res) => {
 			return null;
 		};
 
-		let user = await findUser({tagName: id});
+		let user = await findUser({
+			$or: [
+				{tagName: id},
+				{'userProfile.userName': id},
+				{email: id},
+				{'userProfile.phoneNumber': id},
+			],
+		});
+
 		if (!user) {
 			const userData = await UserData.findOne({
 				$or: [
@@ -452,7 +453,7 @@ const getUser = async (req, res) => {
 		if (!user) {
 			return res.status(404).json('No user found');
 		}
-		// if (!user.tagName) user.tagName = user.userProfile.userName;
+		if (!user.tagName) user.tagName = user.userProfile.userName;
 		return res.status(200).json(user);
 	} catch (err) {
 		res.status(400).json(err.message);

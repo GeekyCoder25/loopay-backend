@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 
-const sendMail = (mailOptions, res, result, customFunc, errorFunc) => {
+const sendMail = (mailOptions, res, email, customFunc, errorFunc) => {
 	const transport = () => {
 		if (process.env.NODE_ENV === 'production') {
 			return {
@@ -30,7 +30,7 @@ const sendMail = (mailOptions, res, result, customFunc, errorFunc) => {
 		}
 		if (res) {
 			res.status(200).json({
-				email: result.email,
+				email,
 			});
 		}
 		if (customFunc) customFunc();

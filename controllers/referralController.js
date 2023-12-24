@@ -3,6 +3,7 @@ const UserDataModel = require('../models/userData');
 const walletDollar = require('../models/walletDollar');
 const TransactionModel = require('../models/transaction');
 const Notification = require('../models/notification');
+const User = require('../models/user');
 const uuid = require('uuid').v4;
 
 const getReferrals = async (req, res) => {
@@ -46,15 +47,16 @@ const postReferral = async (req, res, {referrerEmail, refereeEmail}) => {
 		const referralEmail = refereeEmail || req.body.email;
 		const referralsExists = await ReferralModel.findOne({email});
 
+		const referralUser = await User.findOne({
+			email: referralEmail,
+		});
 		const referralUserData = await UserDataModel.findOne({
 			email: referralEmail,
 		});
-		const fiveMinutesAgo = new Date();
-		fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
 		if (!referralUserData) throw new Error('Invalid user account');
 		else if (referralEmail === email) {
 			throw new Error("You can't refer yourself");
-		} else if (new Date(referralUserData.createdAt) < fiveMinutesAgo) {
+		} else if (!referralUser.emailOtpCode) {
 			throw new Error('not a new user');
 		}
 
@@ -112,7 +114,9 @@ const postReferral = async (req, res, {referrerEmail, refereeEmail}) => {
 				referral: req.body,
 			});
 	} catch (err) {
-		return res.status(400).json(err.message);
+		if (res) {
+			return res.status(400).json(err.message);
+		}
 	}
 };
 

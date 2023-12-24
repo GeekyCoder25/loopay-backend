@@ -163,7 +163,7 @@ const deleteAccount = async (req, res) => {
 			Recipient,
 			Referral,
 		];
-		collections.forEach(collection => collection.deleteMany(query));
+		collections.forEach(async collection => await collection.deleteMany(query));
 
 		res.status(200).json({status: 'success'});
 	} catch (err) {

@@ -12,7 +12,7 @@ const {isStrongPassword} = require('validator');
 const {sendMail} = require('../utils/sendEmail');
 const {createVirtualAccount} = require('../services/createVirtualAccount');
 const {handleErrors} = require('../utils/ErrorHandler');
-const {postReferrer} = require('./referralController');
+const {postReferral} = require('./referralController');
 
 const passwordSecurityOptions = {
 	minLength: 6,
@@ -21,6 +21,48 @@ const passwordSecurityOptions = {
 	minUppercase: 0,
 	minNumbers: 0,
 	minSymbols: 0,
+};
+
+const verifyEmailHTML = async (email, res) => {
+	let otpCode = '';
+	for (let i = 0; i < 4; i++) {
+		otpCode += _.random(9);
+	}
+	const html = String.raw`<div
+			style="line-height: 30px; font-family: Arial, Helvetica, sans-serif"
+		>
+			<div style="text-align: center">
+				<img
+					src="${process.env.CLOUDINARY_APP_ICON}"
+					style="width: 200px; margin: 50px auto"
+				/>
+			</div>
+			<p>
+				Kindly input the 4 digits code below to verify your email address.
+				<br/> Your One Time Password is <b>${otpCode}</b>.
+				<br />
+				Please enter this OTP within ${process.env.RESET_PASSWORD_TIMEOUT} to
+				proceed with your account creation. If you did not initiate this
+				verification, kindly ignore this email and avoid sharing this code with a
+				third party
+			</p>
+			<p>
+				Best regards,<br />
+				Loopay Support Team
+			</p>
+		</div>`;
+
+	const mailOptions = {
+		from: process.env.EMAIL,
+		to: email,
+		subject: 'Email Verification',
+		html,
+	};
+
+	const otpToken = generateTokenForOTP(otpCode);
+	await User.findOneAndUpdate({email}, {emailOtpCode: otpToken});
+	console.log(otpCode);
+	sendMail(mailOptions, res, email);
 };
 
 const registerAccount = async (req, res) => {
@@ -41,22 +83,17 @@ const registerAccount = async (req, res) => {
 				'Please provide formData for registering and sessionData for Devices and Sessions'
 			);
 		const {password, localCurrencyCode, country, referralCode} = formData;
-		let otpCode = '';
-		for (let i = 0; i < 4; i++) {
-			otpCode += _.random(9);
-		}
-		const fiveMinutesAgo = new Date();
-		fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
 
 		const user = await User.findOne({
-			email: req.body.formData.email,
-			createdAt: {$gt: fiveMinutesAgo},
+			email: formData.email,
 			emailOtpCode: {$exists: true},
 		});
 
 		if (user) {
+			const {email} = formData;
 			const sessionData = await SessionModel.findOne({email: user.email});
 			const result = Object.assign(user, sessionData);
+			verifyEmailHTML(email, res);
 			return res.status(200).json(result);
 		}
 
@@ -68,8 +105,6 @@ const registerAccount = async (req, res) => {
 			const salt = await bcrypt.genSalt(10);
 			const hash = await bcrypt.hash(password, salt);
 			formData.password = hash;
-			const otpToken = generateTokenForOTP(otpCode);
-			formData.emailOtpCode = otpToken;
 		}
 		const result = await User.create(formData);
 		const {_id, email, firstName, middleName, lastName, userName, phoneNumber} =
@@ -91,23 +126,15 @@ const registerAccount = async (req, res) => {
 			};
 			if (referralCode) {
 				const referrer = await UserDataModel.findOne({referralCode});
-
-				if (!referrer)
+				if (!referrer) {
 					return res.status(400).json({
 						referralCode: 'No user with this referral code',
 					});
-
-				await postReferrer('', '', {
-					referrerEmail: referrer.email,
-					refereeEmail: email,
-				});
+				}
+				userData.referrerCode = referralCode;
 			}
 			await UserDataModel.create(userData);
 			await SessionModel.create({_id, email, sessions: [sessionData]});
-			if (referralCode) {
-				const referrer = UserDataModel.findOne({referralCode});
-				console.log(referrer);
-			}
 			const paystack = await createVirtualAccount({
 				email,
 				first_name: firstName,
@@ -156,38 +183,7 @@ const registerAccount = async (req, res) => {
 			throw new Error(err.message);
 		}
 
-		const html = String.raw`<div
-			style="line-height: 30px; font-family: Arial, Helvetica, sans-serif"
-		>
-			<div style="text-align: center">
-				<img
-					src="${process.env.CLOUDINARY_APP_ICON}"
-					style="width: 200px; margin: 50px auto"
-				/>
-			</div>
-			<p>
-				Kindly input the 4 digits code below to verify your email address.
-				<br/> Your One Time Password is <b>${otpCode}</b>.
-				<br />
-				Please enter this OTP within ${process.env.RESET_PASSWORD_TIMEOUT} to
-				proceed with your account creation. If you did not initiate this
-				verification, kindly ignore this email and avoid sharing this code with a
-				third party
-			</p>
-			<p>
-				Best regards,<br />
-				Loopay Support Team
-			</p>
-		</div>`;
-
-		const mailOptions = {
-			from: process.env.EMAIL,
-			to: email,
-			subject: 'Email Verification',
-			html,
-		};
-
-		sendMail(mailOptions, res, result);
+		verifyEmailHTML(email, res);
 	} catch (err) {
 		console.log(err.message);
 		handleErrors(err, res);
@@ -201,6 +197,13 @@ const verifyEmail = async (req, res) => {
 		const userData = await UserDataModel.findOne({email});
 		const decoded = jwt.verify(result.emailOtpCode, process.env.JWT_SECRET);
 		if (decoded.id !== otp) throw new Error('Invalid OTP Code');
+		const referrer = await UserDataModel.findOne({
+			referralCode: userData.referrerCode,
+		});
+		await postReferral('', '', {
+			referrerEmail: referrer.email,
+			refereeEmail: email,
+		});
 		result.emailOtpCode = undefined;
 		await result.save();
 		const {_id, role, firstName, lastName, userName, phoneNumber} = result;
@@ -229,7 +232,11 @@ const loginAccount = async (req, res) => {
 		if (!email || !password) {
 			throw new Error('Please provide your email and password');
 		}
-		const result = await User.findOne({email});
+		const result = await User.findOne({
+			email,
+			emailOtpCode: {$exists: false},
+		});
+		console.log(result);
 		const userData = await UserDataModel.findOne({email});
 		const compare =
 			result &&

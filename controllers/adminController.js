@@ -405,7 +405,6 @@ const getUser = async (req, res) => {
 	try {
 		let {id} = req.params;
 		if (!id) throw new Error('Provide search params');
-		// id = id.toLowerCase();
 
 		const findUser = async queryParam => {
 			const user = await User.findOne(queryParam);

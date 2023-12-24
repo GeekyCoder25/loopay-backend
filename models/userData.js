@@ -57,6 +57,7 @@ const UserDataSchema = new Schema(
 		},
 		bvn: String,
 		referralCode: String,
+		referrerCode: String,
 		sessionTime: Date,
 		blockedUsers: [String],
 		popUps: [],

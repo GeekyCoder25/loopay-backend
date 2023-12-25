@@ -66,7 +66,7 @@ DollarWallet.pre('save', async function (next) {
 });
 
 DollarWallet.post('save', async function (doc) {
-	if (doc.balance > 0 && doc.status !== 'active') {
+	if (doc.status !== 'active') {
 		doc.status = 'active';
 		await doc.save();
 	}

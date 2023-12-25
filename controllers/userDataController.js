@@ -18,6 +18,7 @@ const Notification = require('../models/notification');
 const Recent = require('../models/recent');
 const Recipient = require('../models/recipient');
 const Referral = require('../models/referral');
+const Beneficiary = require('../models/beneficiary');
 
 const getUserData = async (req, res) => {
 	try {
@@ -147,7 +148,6 @@ const deleteAccount = async (req, res) => {
 		if (req.user.email !== email) {
 			throw new Error('Invalid process');
 		}
-		const query = {email};
 		const collections = [
 			User,
 			UserDataModel,
@@ -162,8 +162,11 @@ const deleteAccount = async (req, res) => {
 			Recent,
 			Recipient,
 			Referral,
+			Beneficiary,
 		];
-		collections.forEach(async collection => await collection.deleteMany(query));
+		collections.forEach(
+			async collection => await collection.deleteMany({email})
+		);
 
 		res.status(200).json({status: 'success'});
 	} catch (err) {

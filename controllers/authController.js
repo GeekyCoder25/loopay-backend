@@ -76,12 +76,7 @@ const registerAccount = async (req, res) => {
 		// await EuroWallet.findOneAndRemove({email: emailToRemove});
 		// await PoundWallet.findOneAndRemove({email: emailToRemove});
 		// return res.status(400).json({error: ''});
-		const {formData, sessionData} = req.body;
-
-		if (!formData || !sessionData)
-			throw new Error(
-				'Please provide formData for registering and sessionData for Devices and Sessions'
-			);
+		const formData = req.body;
 		const {password, localCurrencyCode, country, referralCode} = formData;
 
 		const user = await User.findOne({
@@ -91,8 +86,7 @@ const registerAccount = async (req, res) => {
 
 		if (user) {
 			const {email} = formData;
-			const sessionData = await SessionModel.findOne({email: user.email});
-			const result = Object.assign(user, sessionData);
+			const result = Object.assign(user);
 			verifyEmailHTML(email, res);
 			return res.status(200).json(result);
 		}
@@ -134,7 +128,6 @@ const registerAccount = async (req, res) => {
 				userData.referrerCode = referralCode;
 			}
 			await UserDataModel.create(userData);
-			await SessionModel.create({_id, email, sessions: [sessionData]});
 			const paystack = await createVirtualAccount({
 				email,
 				first_name: firstName,
@@ -192,7 +185,7 @@ const registerAccount = async (req, res) => {
 
 const verifyEmail = async (req, res) => {
 	try {
-		const {email, otp} = req.body;
+		const {email, otp, session} = req.body;
 		const result = await User.findOne({email});
 		const userData = await UserDataModel.findOne({email});
 		const decoded = jwt.verify(result.emailOtpCode, process.env.JWT_SECRET);
@@ -207,6 +200,8 @@ const verifyEmail = async (req, res) => {
 		result.emailOtpCode = undefined;
 		await result.save();
 		const {_id, role, firstName, lastName, userName, phoneNumber} = result;
+
+		await SessionModel.create({_id, email, sessions: [session]});
 		res.status(201).json({
 			success: 'Account Created Successfully',
 			data: {
@@ -236,7 +231,6 @@ const loginAccount = async (req, res) => {
 			email,
 			emailOtpCode: {$exists: false},
 		});
-		console.log(result);
 		const userData = await UserDataModel.findOne({email});
 		const compare =
 			result &&
@@ -308,7 +302,7 @@ const forgetPassword = async (req, res) => {
 				html: message,
 			};
 
-			sendMail(mailOptions, res, result);
+			sendMail(mailOptions, res, email);
 		}
 	} catch (err) {
 		res.status(400).json({error: err.message});

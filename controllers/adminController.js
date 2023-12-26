@@ -1004,8 +1004,32 @@ const getPaymentProofs = async (req, res) => {
 	if (currency) {
 		query.currency = currency.split(',');
 	}
-	const proofs = await PaymentProof.find(query).skip(skip).limit(limit);
 	const totalProofsCount = await PaymentProof.find(query).countDocuments();
+	const proofs = (
+		await PaymentProof.aggregate([
+			{$match: query},
+			{$skip: skip},
+			{$limit: Number(limit)},
+			{
+				$lookup: {
+					from: 'userdatas', // Name of the other collection
+					localField: 'email', // Field from the 'User' collection
+					foreignField: 'email', // Field from the 'UserData' collection
+					as: 'userData', // Output array field name
+				},
+			},
+			{$skip: skip},
+			{$limit: Number(limit)},
+		]).exec()
+	).map(({userData, ...rest}) => {
+		return {
+			...rest,
+			userData: {
+				...userData[0].userProfile,
+				verificationStatus: userData[0].verificationStatus,
+			},
+		};
+	});
 	res.status(200).json({
 		page: Number(page) || 1,
 		pageSize: proofs.length,
@@ -1038,7 +1062,7 @@ const approveProof = async (req, res) => {
 			email: req.user.email,
 		});
 		const sendeeWallet = await currencyWallet.findOne({email});
-		const sendeeData = await UserData.findOne({email});
+		await UserData.findOne({email});
 		if (sendeeWallet.tagName !== tagName)
 			throw new Error('Invalid Account Transfer');
 

@@ -71,7 +71,7 @@ const updatePopUp = async (req, res) => {
 const deletePopUp = async (req, res) => {
 	try {
 		const {popUpID} = req.params;
-		const popUp = await PopUp.findOneAndRemove({popUpID});
+		await PopUp.findOneAndRemove({popUpID});
 		res.status(200).json('Deleted successfully');
 	} catch (err) {
 		console.log(err.message);

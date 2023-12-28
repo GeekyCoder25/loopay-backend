@@ -15,6 +15,7 @@ const {sendMail} = require('../utils/sendEmail');
 const PaymentProof = require('../models/paymentproof');
 const {addingDecimal} = require('../utils/addingDecimal');
 const Wallet = require('../models/wallet');
+const PopUp = require('../models/popUp');
 const cloudinary = require('cloudinary').v2;
 
 const getAllAdminInfo = async (req, res) => {
@@ -227,6 +228,18 @@ const getAllAdminInfo = async (req, res) => {
 			page: req.query.notifications || 1,
 		};
 
+		const drawerCount = {};
+
+		const documentsToCount = [
+			{doc: PaymentProof, label: 'proofs'},
+			{doc: PopUp, label: 'announcements'},
+			{doc: VerificationModel, label: 'verifications'},
+		];
+
+		for (const index of documentsToCount) {
+			drawerCount[index.label] = await index.doc.find().countDocuments();
+		}
+
 		res.status(200).json({
 			users,
 			allBalances,
@@ -237,6 +250,7 @@ const getAllAdminInfo = async (req, res) => {
 			statusTransactionsAmount,
 			statusTransactionsLength,
 			unReadNotifications,
+			drawerCount,
 		});
 	} catch (err) {
 		console.log(err.message);
@@ -1063,17 +1077,10 @@ const approveProof = async (req, res) => {
 		});
 		const sendeeWallet = await currencyWallet.findOne({email});
 		await UserData.findOne({email});
-		if (sendeeWallet.tagName !== tagName)
+		if (sendeeWallet?.tagName !== tagName)
 			throw new Error('Invalid Account Transfer');
 
-		const convertToKobo = () => {
-			const naira = amount.split('.')[0];
-			const kobo = amount.split('.')[1];
-			if (kobo === '00') {
-				return naira * 100;
-			}
-			return naira * 100 + Number(kobo);
-		};
+		const convertToKobo = () => amount * 100;
 		if (senderWallet.balance < convertToKobo())
 			throw new Error('Insufficient funds');
 

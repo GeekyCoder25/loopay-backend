@@ -8,7 +8,8 @@ const PoundWallet = require('../models/walletPound');
 const swapCurrency = async (req, res) => {
 	try {
 		const {email, phoneNumber} = req.user;
-		const {fromCurrency, toCurrency, toSwap, toReceive, id, fee} = req.body;
+		const {fromCurrency, toCurrency, toSwap, toReceive, id, swapRate} =
+			req.body;
 		const user = await UserData.findOne({email});
 
 		const selectWallet = currency => {
@@ -51,9 +52,11 @@ const swapCurrency = async (req, res) => {
 			swapTo: toCurrency,
 			swapFromAmount: toSwap,
 			swapToAmount: toReceive,
+			swapRate,
 			currency: toCurrency,
 			reference: `TR${id}`,
 		};
+		console.log(req.body);
 		await Transaction.create(transaction);
 		res.status(200).json('Swap successful');
 	} catch (err) {

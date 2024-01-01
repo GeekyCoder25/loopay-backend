@@ -99,6 +99,7 @@ const TransactionModel = new Schema(
 		swapTo: String,
 		swapFromAmount: String,
 		swapToAmount: String,
+		swapRate: Number,
 		accNo: String,
 		tagName: String,
 		fullName: String,

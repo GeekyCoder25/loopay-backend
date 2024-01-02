@@ -30,6 +30,10 @@ const TransactionModel = new Schema(
 			required: [true, 'Please provide transaction type'],
 			enum: ['credit', 'debit', 'airtime', 'data', 'bill', 'swap'],
 		},
+		method: {
+			type: String,
+			enum: ['intra', 'inter', 'card', 'deposit'],
+		},
 		senderAccount: {
 			type: String,
 			// required: [true, "Please provide transaction sender's account"],

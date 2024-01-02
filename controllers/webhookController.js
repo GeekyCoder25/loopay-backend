@@ -28,6 +28,7 @@ const webhookHandler = async (req, res) => {
 				status: event.data.status,
 				type: 'inter',
 				transactionType: 'credit',
+				method: 'inter',
 				senderAccount: sender_bank_account_number,
 				senderName: account_name || sender_name || 'An external user',
 				receiverAccount: receiver_bank_account_number,

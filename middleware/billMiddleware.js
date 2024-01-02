@@ -26,7 +26,7 @@ const billAPIToken = async (req, res, next) => {
 	};
 
 	const token = await getToken();
-	req.billAPIToken = token.token;
+	req.billAPIToken = token?.token;
 	next();
 };
 

@@ -1,4 +1,3 @@
-const SwapModel = require('../models/swapTransaction');
 const TransactionModel = require('../models/transaction');
 
 const getTransactions = async (req, res) => {

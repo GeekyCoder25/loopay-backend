@@ -1010,46 +1010,52 @@ const getStatement = async (req, res) => {
 };
 
 const getPaymentProofs = async (req, res) => {
-	const {limit = 50, page = 1, currency} = req.query;
-	const roundedLimit = Math.round(Number(limit) || 25);
-	const skip = (page - 1 >= 0 ? page - 1 : 0) * roundedLimit;
-	const query = {};
+	try {
+		const {limit = 50, page = 1, currency} = req.query;
+		const roundedLimit = Math.round(Number(limit) || 25);
+		const skip = (page - 1 >= 0 ? page - 1 : 0) * roundedLimit;
+		const query = {};
 
-	if (currency) {
-		query.currency = currency.split(',');
-	}
-	const totalProofsCount = await PaymentProof.find(query).countDocuments();
-	const proofs = (
-		await PaymentProof.aggregate([
-			{$match: query},
-			{$skip: skip},
-			{$limit: Number(limit)},
-			{
-				$lookup: {
-					from: 'userdatas', // Name of the other collection
-					localField: 'email', // Field from the 'User' collection
-					foreignField: 'email', // Field from the 'UserData' collection
-					as: 'userData', // Output array field name
+		if (currency) {
+			query.currency = currency.split(',');
+		}
+		const totalProofsCount = await PaymentProof.find(query).countDocuments();
+		const proofs = (
+			await PaymentProof.aggregate([
+				{$match: query},
+				{$skip: skip},
+				{$limit: Number(limit)},
+				{
+					$lookup: {
+						from: 'userdatas', // Name of the other collection
+						localField: 'email', // Field from the 'User' collection
+						foreignField: 'email', // Field from the 'UserData' collection
+						as: 'userData', // Output array field name
+					},
 				},
-			},
-			{$skip: skip},
-			{$limit: Number(limit)},
-		]).exec()
-	).map(({userData, ...rest}) => {
-		return {
-			...rest,
-			userData: {
-				...userData[0].userProfile,
-				verificationStatus: userData[0].verificationStatus,
-			},
-		};
-	});
-	res.status(200).json({
-		page: Number(page) || 1,
-		pageSize: proofs.length,
-		totalPages: totalProofsCount / roundedLimit,
-		data: proofs,
-	});
+				{$skip: skip},
+				{$limit: Number(limit)},
+			]).exec()
+		).map(({userData, ...rest}) => {
+			return {
+				...rest,
+				userData: {
+					...userData[0].userProfile,
+					verificationStatus: userData[0].verificationStatus,
+					country: userData[0].country,
+				},
+			};
+		});
+		res.status(200).json({
+			page: Number(page) || 1,
+			pageSize: proofs.length,
+			totalPages: totalProofsCount / roundedLimit,
+			data: proofs,
+		});
+	} catch (err) {
+		console.log(err.message);
+		res.status(400).json(err.message);
+	}
 };
 
 const approveProof = async (req, res) => {
@@ -1085,6 +1091,28 @@ const approveProof = async (req, res) => {
 			throw new Error('Insufficient funds');
 
 		const data = await PaymentProof.findByIdAndRemove(_id);
+		const user = await UserData.findOne({email});
+		await Transaction.create({
+			email: sendeeWallet.email,
+			phoneNumber: sendeeWallet.phoneNumber,
+			transactionType: 'credit',
+			method: 'deposit',
+			id: _id,
+			status: 'success',
+			type: 'intra',
+			senderAccount: senderWallet.loopayAccNo,
+			senderPhoto: '',
+			receiverAccount: sendeeWallet.loopayAccNo,
+			receiverName: user.userProfile.fullName,
+			receiverPhoto: user.photoURL || '',
+			sourceBank: 'Loopay',
+			destinationBank: 'Loopay',
+			amount,
+			description: 'deposit',
+			reference: `TR${_id}`,
+			currency,
+			createdAt: new Date(),
+		});
 
 		senderWallet.balance -= convertToKobo();
 		sendeeWallet.balance += convertToKobo();

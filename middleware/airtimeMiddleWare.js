@@ -26,7 +26,7 @@ const airtimeAPIToken = async (req, res, next) => {
 	};
 
 	const token = await getToken();
-	req.airtimeAPIToken = token.token;
+	req.airtimeAPIToken = token?.token;
 
 	next();
 };

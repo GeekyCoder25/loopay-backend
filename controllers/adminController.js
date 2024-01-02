@@ -1064,13 +1064,13 @@ const approveProof = async (req, res) => {
 
 		const selectWallet = currency => {
 			switch (currency) {
-				case 'naira':
+				case 'NGN':
 					return LocalWallet;
-				case 'dollar':
+				case 'USD':
 					return DollarWallet;
-				case 'euro':
+				case 'EUR':
 					return EuroWallet;
-				case 'pound':
+				case 'GBP':
 					return PoundWallet;
 				default:
 					return LocalWallet;

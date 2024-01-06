@@ -1,5 +1,8 @@
 const axios = require('axios');
 const LocalWallet = require('../models/wallet');
+const DollarWallet = require('../models/walletDollar');
+const EuroWallet = require('../models/walletEuro');
+const PoundWallet = require('../models/walletPound');
 const Notification = require('../models/notification');
 const BillTransaction = require('../models/transaction');
 const getBills = async (req, res) => {
@@ -47,10 +50,57 @@ const payABill = async (req, res) => {
 			metadata,
 			referenceId,
 			subscriberAccountNumber,
+			paymentCurrency,
 		} = req.body;
-		const wallet = await LocalWallet.findOne({phoneNumber});
+
+		let nairaAmount = amount;
+
+		const selectWallet = currency => {
+			switch (currency) {
+				case 'USD':
+					return DollarWallet;
+				case 'EUR':
+					return EuroWallet;
+				case 'GBP':
+					return PoundWallet;
+				default:
+					return LocalWallet;
+			}
+		};
+		const wallet = await selectWallet(paymentCurrency).findOne({phoneNumber});
+
 		if (wallet.balance < amount * 100) {
 			return res.status(400).json('Insufficient balance');
+		}
+		if (paymentCurrency && paymentCurrency !== 'NGN') {
+			const getRate = async () => {
+				const apiData = await axios.get(
+					`https://open.er-api.com/v6/latest/NGN`
+				);
+				const rates = apiData.data.rates;
+				const rate =
+					rates[paymentCurrency] >= 1
+						? rates[paymentCurrency]
+						: 1 / rates[paymentCurrency];
+				return rate;
+			};
+			const rate = await getRate();
+			nairaAmount = Math.floor(amount * rate);
+			if (nairaAmount < provider.minLocalTransactionAmount) {
+				const num = provider.minLocalTransactionAmount / rate;
+				const precision = 2;
+				const roundedNum = Math.ceil(num * 10 ** precision) / 10 ** precision;
+				return res
+					.status(400)
+					.json(`Minimum amount in ${paymentCurrency} is ${roundedNum}`);
+			} else if (nairaAmount > provider.maxLocalTransactionAmount) {
+				const num = provider.maxLocalTransactionAmount / rate;
+				const precision = 2;
+				const roundedNum = Math.ceil(num * 10 ** precision) / 10 ** precision;
+				return res
+					.status(400)
+					.json(`Maximum amount in ${paymentCurrency} is ${roundedNum}`);
+			}
 		}
 
 		const url = `${process.env.RELOADLY_BILL_URL}/pay`;
@@ -65,7 +115,7 @@ const payABill = async (req, res) => {
 
 		const body = JSON.stringify({
 			subscriberAccountNumber,
-			amount,
+			amount: nairaAmount,
 			amountId: amountId || null,
 			billerId: provider.id,
 			useLocalAmount: true,

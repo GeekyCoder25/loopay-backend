@@ -104,7 +104,7 @@ router.route('/check-recipient').post(checkRecipient);
 router.route('/airtime/operators').get(airtimeAPIToken, getOperators);
 router.route('/get-network').get(airtimeAPIToken, getNetwork);
 router.route('/airtime').post(airtimeAPIToken, accountStatus, buyAirtime);
-router.route('/get-data-plans').get(airtimeAPIToken, getDataPlans);
+router.route('/data-plans').get(airtimeAPIToken, getDataPlans);
 router.route('/data').post(airtimeAPIToken, accountStatus, buyData);
 router
 	.route('/bill')

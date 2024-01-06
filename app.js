@@ -3,17 +3,16 @@ const express = require('express');
 const cors = require('cors');
 const dotEnv = require('dotenv');
 const mongoose = require('mongoose');
-const morgan = require('morgan');
 const authRoutes = require('./routes/authRoutes');
 const userDataRoutes = require('./routes/userDataRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const path = require('path');
 const fileUpload = require('express-fileupload');
 const cloudinary = require('cloudinary').v2;
-const {protect, authorize} = require('./middleware/authMiddleware');
+const {protect} = require('./middleware/authMiddleware');
 const {uploadPhoto} = require('./controllers/uploadPhoto');
 const {webhookHandler} = require('./controllers/webhookController');
-const {removeUnverifiedUsers} = require('./middleware/networkMiddleware');
+const morgan = require('morgan');
 require('colors');
 dotEnv.config();
 // eslint-disable-next-line no-undef
@@ -55,11 +54,9 @@ cloudinary.config({
 // }
 app.post('/api/upload', protect, uploadPhoto);
 app.use('/api/auth', authRoutes);
-// app.use('/api', userDataRoutes);
 app.use('/api/user', protect, userDataRoutes);
 app.use('/api/admin', protect, adminRoutes);
 app.use('/api/webhook', webhookHandler);
-
 app.get('/api/network', (req, res) => {
 	console.log('network request');
 	res.send({network: true});

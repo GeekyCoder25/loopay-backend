@@ -1,4 +1,7 @@
 const LocalWallet = require('../models/wallet');
+const DollarWallet = require('../models/walletDollar');
+const EuroWallet = require('../models/walletEuro');
+const PoundWallet = require('../models/walletPound');
 const Notification = require('../models/notification');
 const {addingDecimal} = require('../utils/addingDecimal');
 const AirtimeTransaction = require('../models/transaction');
@@ -51,15 +54,24 @@ const getNetwork = async (req, res) => {
 };
 const buyAirtime = async (req, res) => {
 	try {
-		const {currency, id, amount, network, phoneNo, operatorId, countryCode} =
-			req.body;
+		const {email, phoneNumber} = req.user;
+		const {
+			currency,
+			id,
+			amount,
+			network,
+			phoneNo,
+			operatorId,
+			countryCode,
+			paymentCurrency,
+		} = req.body;
+
 		const connectWithAPI = async () => {
 			const token = req.airtimeAPIToken;
-
 			const url = `${process.env.RELOADLY_URL}/topups`;
 			const body = JSON.stringify({
 				operatorId,
-				amount,
+				amount: nairaAmount,
 				useLocalAmount: true,
 				customIdentifier: `${phoneNo}, ${currency}${amount}, ${Date.now()}`,
 				recipientPhone: {countryCode, number: phoneNo},
@@ -76,11 +88,48 @@ const buyAirtime = async (req, res) => {
 			});
 			return response.json();
 		};
-		const {email, phoneNumber} = req.user;
-		const wallet = await LocalWallet.findOne({phoneNumber});
+		let nairaAmount = amount;
+
+		const selectWallet = currency => {
+			switch (currency) {
+				case 'USD':
+					return DollarWallet;
+				case 'EUR':
+					return EuroWallet;
+				case 'GBP':
+					return PoundWallet;
+				default:
+					return LocalWallet;
+			}
+		};
+		const wallet = await selectWallet(paymentCurrency).findOne({phoneNumber});
 		if (wallet.balance < amount * 100) {
 			return res.status(400).json('Insufficient balance');
 		}
+		if (paymentCurrency && paymentCurrency !== 'NGN') {
+			const getRate = async () => {
+				const apiData = await axios.get(
+					`https://open.er-api.com/v6/latest/NGN`
+				);
+				const rates = apiData.data.rates;
+				const rate =
+					rates[paymentCurrency] >= 1
+						? rates[paymentCurrency]
+						: 1 / rates[paymentCurrency];
+				return rate;
+			};
+			const rate = await getRate();
+			nairaAmount = Math.floor(amount * rate);
+			if (nairaAmount < 50) {
+				const num = 50 / rate;
+				const precision = 2;
+				const roundedNum = Math.ceil(num * 10 ** precision) / 10 ** precision;
+				return res
+					.status(400)
+					.json(`Minimum amount in ${paymentCurrency} is ${roundedNum}`);
+			}
+		}
+
 		const apiData = await connectWithAPI();
 		if (apiData.status === 'SUCCESSFUL') {
 			wallet.balance -= amount * 100;
@@ -189,7 +238,6 @@ const buyData = async (req, res) => {
 	try {
 		const {email, phoneNumber} = req.user;
 		const {
-			amount,
 			currency,
 			id,
 			network,
@@ -198,15 +246,15 @@ const buyData = async (req, res) => {
 			plan,
 			operatorId,
 			countryCode,
+			paymentCurrency,
 		} = req.body;
 
 		const connectWithAPI = async () => {
 			const token = req.airtimeAPIToken;
-
 			const url = `${process.env.RELOADLY_URL}/topups`;
 			const body = JSON.stringify({
 				operatorId,
-				amount,
+				amount: nairaAmount,
 				useLocalAmount: true,
 				customIdentifier: `${phoneNo}, ${currency}${amount}, ${
 					plan.value
@@ -226,7 +274,42 @@ const buyData = async (req, res) => {
 			return response.json();
 		};
 
-		const wallet = await LocalWallet.findOne({phoneNumber});
+		let {amount} = req.body;
+		const nairaAmount = amount;
+
+		const selectWallet = currency => {
+			switch (currency) {
+				case 'USD':
+					return DollarWallet;
+				case 'EUR':
+					return EuroWallet;
+				case 'GBP':
+					return PoundWallet;
+				default:
+					return LocalWallet;
+			}
+		};
+		const wallet = await selectWallet(paymentCurrency).findOne({phoneNumber});
+
+		if (paymentCurrency && paymentCurrency !== 'NGN') {
+			const getRate = async () => {
+				const apiData = await axios.get(
+					`https://open.er-api.com/v6/latest/NGN`
+				);
+				const rates = apiData.data.rates;
+				const rate =
+					rates[paymentCurrency] >= 1
+						? rates[paymentCurrency]
+						: 1 / rates[paymentCurrency];
+				return rate;
+			};
+			const rate = await getRate();
+			amount = amount / rate;
+
+			if (wallet.balance < amount * 100) {
+				return res.status(400).json(`Insufficient ${paymentCurrency} balance`);
+			}
+		}
 		if (wallet.balance < amount * 100) {
 			return res.status(400).json('Insufficient balance');
 		}

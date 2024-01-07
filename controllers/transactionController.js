@@ -2,50 +2,45 @@ const TransactionModel = require('../models/transaction');
 
 const getTransactions = async (req, res) => {
 	try {
-		const {date, currency} = req.query;
+		const {limit = 25, page = 1, currency, start, end} = req.query;
 		const {email} = req.user;
 		const query = {email};
+		const roundedLimit = Math.round(Number(limit) || 25);
+		const skip = (page - 1 >= 0 ? page - 1 : 0) * roundedLimit;
 
 		if (currency) {
 			query.currency = currency.split(',');
 		}
-		let transactions = await TransactionModel.find(query).sort('-createdAt');
-
-		transactions.sort((a, b) => {
-			const dateA = new Date(a.createdAt);
-			const dateB = new Date(b.createdAt);
-			return dateB - dateA;
-		});
-
-		if (date && JSON.parse(date)) {
-			const groupTransactionsByDate = inputArray => {
-				const groupedByDate = {};
-
-				inputArray.forEach(transaction => {
-					const dateObject = new Date(transaction.createdAt);
-					const options = {month: 'short'};
-					const date = `${dateObject.getDate()} ${dateObject.toLocaleString(
-						'en-US',
-						options
-					)} ${dateObject.getFullYear()}`;
-					if (!groupedByDate[date]) {
-						groupedByDate[date] = [];
-					}
-					groupedByDate[date].push(transaction);
-				});
-
-				const resultArray = Object.keys(groupedByDate).map(date => {
-					return {
-						date,
-						histories: groupedByDate[date],
-					};
-				});
-
-				return resultArray;
-			};
-			return res.status(200).json(groupTransactionsByDate(transactions));
+		let dateQuery = {};
+		if (start) {
+			const date = new Date(start);
+			!isNaN(date.getTime()) ? (dateQuery.$gte = date) : '';
 		}
-		res.status(200).json({count: transactions.length, transactions});
+		if (end) {
+			const date = new Date(end);
+			!isNaN(date.getTime()) ? (dateQuery.$lte = date) : '';
+		}
+		if (Object.keys(dateQuery).length) {
+			query.createdAt = dateQuery;
+		}
+		let transactions;
+		transactions = await TransactionModel.find(query)
+			.skip(skip)
+			.limit(roundedLimit)
+			.select(['-__v'])
+			.limit(limit)
+			.sort('-createdAt');
+
+		const totalTransactionsCount = await TransactionModel.find(
+			query
+		).countDocuments();
+		res.status(200).json({
+			page: Number(page) || 1,
+			pageSize: transactions.length,
+			totalPages: totalTransactionsCount / roundedLimit,
+			total: totalTransactionsCount,
+			data: transactions,
+		});
 	} catch (err) {
 		console.log(err.message);
 		return res.status(400).json(err.message);

@@ -32,7 +32,7 @@ const TransactionModel = new Schema(
 		},
 		method: {
 			type: String,
-			enum: ['intra', 'inter', 'card', 'deposit'],
+			enum: ['intra', 'inter', 'card', 'deposit', 'transfer'],
 		},
 		senderAccount: {
 			type: String,

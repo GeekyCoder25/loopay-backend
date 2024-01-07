@@ -49,9 +49,9 @@ cloudinary.config({
 	api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// if (process.env.NODE_ENV === 'development') {
-// 	app.use(morgan('dev'));
-// }
+if (process.env.NODE_ENV === 'development') {
+	app.use(morgan('dev'));
+}
 app.post('/api/upload', protect, uploadPhoto);
 app.use('/api/auth', authRoutes);
 app.use('/api/user', protect, userDataRoutes);

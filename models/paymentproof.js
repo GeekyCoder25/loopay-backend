@@ -28,8 +28,14 @@ const PaymentProofModel = new Schema(
 		message: String,
 		image: {
 			type: String,
-			required: [true, 'please provide image url'],
+			// required: [true, 'please provide image url'],
 		},
+		type: {
+			type: String,
+			required: [true, 'Please provide proof type'],
+			enum: ['card', 'transfer', 'deposit'],
+		},
+		reference: String,
 	},
 	{timestamps: true}
 );

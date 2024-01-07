@@ -379,10 +379,6 @@ const getTransactions = async (req, res) => {
 			const date = new Date(end);
 			!isNaN(date.getTime()) ? (dateQuery.$lte = date) : '';
 		}
-		if (end) {
-			const date = new Date(end);
-			!isNaN(date.getTime()) ? (dateQuery.$lte = date) : '';
-		}
 		if (Object.keys(dateQuery).length) {
 			query.createdAt = dateQuery;
 		}
@@ -1060,7 +1056,7 @@ const getPaymentProofs = async (req, res) => {
 
 const approveProof = async (req, res) => {
 	try {
-		const {email, _id, tagName, amount, currency} = req.body;
+		const {email, _id, tagName, amount, currency, type: method} = req.body;
 
 		const selectWallet = currency => {
 			switch (currency) {
@@ -1096,7 +1092,7 @@ const approveProof = async (req, res) => {
 			email: sendeeWallet.email,
 			phoneNumber: sendeeWallet.phoneNumber,
 			transactionType: 'credit',
-			method: 'deposit',
+			method,
 			id: _id,
 			status: 'success',
 			type: 'intra',

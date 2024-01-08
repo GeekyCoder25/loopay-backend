@@ -13,6 +13,7 @@ const {sendMail} = require('../utils/sendEmail');
 const {createVirtualAccount} = require('../services/createVirtualAccount');
 const {handleErrors} = require('../utils/ErrorHandler');
 const {postReferral} = require('./referralController');
+const unverifiedUser = require('../models/unverifiedUser');
 
 const passwordSecurityOptions = {
 	minLength: 6,
@@ -60,36 +61,27 @@ const verifyEmailHTML = async (email, res) => {
 	};
 
 	const otpToken = generateTokenForOTP(otpCode);
-	await User.findOneAndUpdate({email}, {emailOtpCode: otpToken});
+	await unverifiedUser.findOneAndUpdate({email}, {emailOtpCode: otpToken});
 	console.log(otpCode);
 	sendMail(mailOptions, res, email);
 };
 
 const registerAccount = async (req, res) => {
 	try {
-		// const emailToRemove = 'john@gmail.com';
-		// await User.findOneAndRemove({email: emailToRemove});
-		// await UserDataModel.findOneAndRemove({email: emailToRemove});
-		// await SessionModel.findOneAndRemove({email: emailToRemove});
-		// await LocalWallet.findOneAndRemove({email: emailToRemove});
-		// await DollarWallet.findOneAndRemove({email: emailToRemove});
-		// await EuroWallet.findOneAndRemove({email: emailToRemove});
-		// await PoundWallet.findOneAndRemove({email: emailToRemove});
-		// return res.status(400).json({error: ''});
 		const formData = req.body;
-		const {password, localCurrencyCode, country, referralCode} = formData;
+		const {email, password, referralCode} = formData;
 
-		const user = await User.findOne({
+		const unverified = await unverifiedUser.findOne({
 			email: formData.email,
-			emailOtpCode: {$exists: true},
 		});
 
-		if (user) {
+		if (unverified) {
 			const {email} = formData;
-			const result = Object.assign(user);
+			const result = Object.assign(unverified);
 			verifyEmailHTML(email, res);
 			return res.status(200).json(result);
 		}
+		const user = await User.create(formData);
 
 		if (!isStrongPassword(password, passwordSecurityOptions)) {
 			return res.status(400).json({
@@ -100,81 +92,16 @@ const registerAccount = async (req, res) => {
 			const hash = await bcrypt.hash(password, salt);
 			formData.password = hash;
 		}
-		const result = await User.create(formData);
-		const {_id, email, firstName, middleName, lastName, userName, phoneNumber} =
-			result;
-		try {
-			const userData = {
-				_id,
-				email,
-				userProfile: {
-					firstName,
-					lastName,
-					userName,
-					phoneNumber,
-				},
-				tagName: userName,
-				localCurrencyCode,
-				country,
-				level: 1,
-			};
-			if (referralCode) {
-				const referrer = await UserDataModel.findOne({referralCode});
-				if (!referrer) {
-					return res.status(400).json({
-						referralCode: 'No user with this referral code',
-					});
-				}
-				userData.referrerCode = referralCode;
+		if (referralCode) {
+			const referrer = await UserDataModel.findOne({referralCode});
+			if (!referrer) {
+				return res.status(400).json({
+					referralCode: 'No user with this referral code',
+				});
 			}
-			await UserDataModel.create(userData);
-			const paystack = await createVirtualAccount({
-				email,
-				first_name: firstName,
-				middle_name: middleName,
-				last_name: lastName,
-				phone: phoneNumber,
-				preferred_bank: process.env.PREFERRED_BANK,
-				country: 'NG',
-			});
-			if (typeof paystack === 'string') {
-				await User.findByIdAndRemove(_id);
-				await UserDataModel.findByIdAndRemove(_id);
-				await SessionModel.findByIdAndRemove(_id);
-				return res.status(500).json(paystack);
-			}
-			const {id, account_number, bank} = paystack.data;
-			delete paystack.data.assignment;
-			const apiData = paystack.data;
-			const allWalletData = {
-				_id,
-				tagName: userName,
-				phoneNumber,
-				loopayAccNo: phoneNumber.slice(4),
-				firstName,
-				lastName,
-				email,
-			};
-			const paystackData = {
-				walletID: Number(id),
-				accNo: account_number,
-				bank: bank.name,
-				apiData,
-			};
-			await LocalWallet.create({...allWalletData, ...paystackData});
-			await DollarWallet.create({...allWalletData});
-			await EuroWallet.create({...allWalletData});
-			await PoundWallet.create({...allWalletData});
-		} catch (err) {
-			await User.findByIdAndRemove(_id);
-			await UserDataModel.findByIdAndRemove(_id);
-			await SessionModel.findByIdAndRemove(_id);
-			await LocalWallet.findByIdAndRemove(_id);
-			await DollarWallet.findByIdAndRemove(_id);
-			await EuroWallet.findByIdAndRemove(_id);
-			await PoundWallet.findByIdAndRemove(_id);
-			throw new Error(err.message);
 		}
+		await unverifiedUser.create(formData);
+		await User.findByIdAndRemove(user._id);
 
 		verifyEmailHTML(email, res);
 	} catch (err) {
@@ -184,23 +111,101 @@ const registerAccount = async (req, res) => {
 };
 
 const verifyEmail = async (req, res) => {
+	const {_id} = await unverifiedUser.findOne({email: req.body.email});
 	try {
 		const {email, otp, session} = req.body;
-		const result = await User.findOne({email});
-		const userData = await UserDataModel.findOne({email});
-		const decoded = jwt.verify(result.emailOtpCode, process.env.JWT_SECRET);
+		const unverified = await unverifiedUser.findOne({email});
+		const decoded = jwt.verify(unverified.emailOtpCode, process.env.JWT_SECRET);
 		if (decoded.id !== otp) throw new Error('Invalid OTP Code');
-		const referrer = await UserDataModel.findOne({
-			referralCode: userData.referrerCode,
-		});
-		await postReferral('', '', {
-			referrerEmail: referrer.email,
-			refereeEmail: email,
-		});
-		result.emailOtpCode = undefined;
-		await result.save();
-		const {_id, role, firstName, lastName, userName, phoneNumber} = result;
 
+		const {
+			_id,
+			firstName,
+			middleName,
+			lastName,
+			userName,
+			phoneNumber,
+			localCurrencyCode,
+			country,
+			role,
+			referrerCode,
+			password,
+		} = unverified;
+
+		const formData = {
+			_id,
+			email,
+			role,
+			firstName,
+			lastName,
+			userName,
+			phoneNumber,
+			password,
+		};
+		const userData = {
+			_id,
+			email,
+			userProfile: {
+				firstName,
+				lastName,
+				userName,
+				phoneNumber,
+			},
+			tagName: userName,
+			localCurrencyCode,
+			country,
+			level: 1,
+		};
+
+		await User.create(formData);
+		await UserDataModel.create(userData);
+		const paystack = await createVirtualAccount({
+			email,
+			first_name: firstName,
+			middle_name: middleName,
+			last_name: lastName,
+			phone: phoneNumber,
+			preferred_bank: process.env.PREFERRED_BANK,
+			country: 'NG',
+		});
+		if (typeof paystack === 'string') {
+			await User.findByIdAndRemove(_id);
+			await UserDataModel.findByIdAndRemove(_id);
+			await SessionModel.findByIdAndRemove(_id);
+			return res.status(500).json(paystack);
+		}
+		const {id, account_number, bank} = paystack.data;
+		delete paystack.data.assignment;
+		const apiData = paystack.data;
+		const allWalletData = {
+			_id,
+			tagName: userName,
+			phoneNumber,
+			loopayAccNo: phoneNumber.slice(4),
+			firstName,
+			lastName,
+			email,
+		};
+		const paystackData = {
+			walletID: Number(id),
+			accNo: account_number,
+			bank: bank.name,
+			apiData,
+		};
+		await LocalWallet.create({...allWalletData, ...paystackData});
+		await DollarWallet.create({...allWalletData});
+		await EuroWallet.create({...allWalletData});
+		await PoundWallet.create({...allWalletData});
+		if (referrerCode) {
+			const referrer = await UserDataModel.findOne({
+				referralCode: unverified.referrerCode,
+			});
+			await postReferral('', '', {
+				referrerEmail: referrer.email,
+				refereeEmail: email,
+			});
+		}
+		await unverifiedUser.findByIdAndRemove(_id);
 		await SessionModel.create({_id, email, sessions: [session]});
 		res.status(201).json({
 			success: 'Account Created Successfully',
@@ -217,6 +222,13 @@ const verifyEmail = async (req, res) => {
 		});
 	} catch (err) {
 		console.log(err.message);
+		await User.findByIdAndRemove(_id);
+		await UserDataModel.findByIdAndRemove(_id);
+		await SessionModel.findByIdAndRemove(_id);
+		await LocalWallet.findByIdAndRemove(_id);
+		await DollarWallet.findByIdAndRemove(_id);
+		await EuroWallet.findByIdAndRemove(_id);
+		await PoundWallet.findByIdAndRemove(_id);
 		res.status(401).json({error: err.message});
 	}
 };

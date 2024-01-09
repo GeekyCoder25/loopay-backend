@@ -123,14 +123,14 @@ const deleteSession = async (req, res) => {
 			session => session.deviceID !== req.params.id
 		);
 		sessions = sessionAfterDelete;
-		await SessionModel.findOneAndUpdate(
-			{email},
-			{sessions},
-			{
-				new: true,
-				runValidators: true,
-			}
-		);
+		// await SessionModel.findOneAndUpdate(
+		// 	{email},
+		// 	{sessions},
+		// 	{
+		// 		new: true,
+		// 		runValidators: true,
+		// 	}
+		// );
 		if (sessionToDelete.length < 1) {
 			return res
 				.status(200)

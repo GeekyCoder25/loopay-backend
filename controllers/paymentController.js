@@ -22,14 +22,12 @@ const postPaymentProof = async (req, res) => {
 			const body = JSON.parse(req.body.data);
 			if (!body.amount) throw new Error('amount upload not found');
 			else if (isNaN(Number(body.amount))) throw new Error('Invalid amount');
-			// eslint-disable-next-line no-undef
 			if (file.size > process.env.MAX_FILE_UPLOAD)
-				throw new Error({
-					message: `Please upload an image less than ${
-						// eslint-disable-next-line no-undef
+				throw new Error(
+					`Please upload an image less than ${
 						process.env.MAX_FILE_UPLOAD / 1000000
-					}MB`,
-				});
+					}MB`
+				);
 
 			file.name = `loopay_proof_${req.user.email}_${req.user._id}${
 				path.parse(file.name).ext
@@ -38,7 +36,7 @@ const postPaymentProof = async (req, res) => {
 
 			const formattedFile = formatAsDataUri(file);
 
-			cloudinary.uploader.upload(
+			return cloudinary.uploader.upload(
 				formattedFile.content,
 				{public_id: saveFileName, folder: 'loopay/payment-proofs'},
 				async (error, result) => {
@@ -97,7 +95,7 @@ const postPaymentProof = async (req, res) => {
 				email: req.user.email,
 				...req.body,
 			});
-			res.status(200).json({
+			return res.status(200).json({
 				message: 'Proof submitted successfully',
 			});
 		}

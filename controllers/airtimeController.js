@@ -89,6 +89,7 @@ const buyAirtime = async (req, res) => {
 			return response.json();
 		};
 		let nairaAmount = amount;
+		let rate;
 
 		const selectWallet = currency => {
 			switch (currency) {
@@ -118,10 +119,11 @@ const buyAirtime = async (req, res) => {
 						: 1 / rates[paymentCurrency];
 				return rate;
 			};
-			const rate = await getRate();
-			nairaAmount = Math.floor(amount * rate);
+			const rateCalculate = await getRate();
+			rate = rateCalculate;
+			nairaAmount = Math.floor(amount * rateCalculate);
 			if (nairaAmount < 50) {
-				const num = 50 / rate;
+				const num = 50 / rateCalculate;
 				const precision = 2;
 				const roundedNum = Math.ceil(num * 10 ** precision) / 10 ** precision;
 				return res
@@ -148,6 +150,9 @@ const buyAirtime = async (req, res) => {
 				currency,
 				metadata: apiData,
 			};
+			if (rate) {
+				transaction.rate = `1 ${paymentCurrency} = ${rate.toFixed(2)} NGN`;
+			}
 			const notification = {
 				email,
 				id,
@@ -276,6 +281,7 @@ const buyData = async (req, res) => {
 
 		let {amount} = req.body;
 		const nairaAmount = amount;
+		let rate;
 
 		const selectWallet = currency => {
 			switch (currency) {
@@ -303,8 +309,9 @@ const buyData = async (req, res) => {
 						: 1 / rates[paymentCurrency];
 				return rate;
 			};
-			const rate = await getRate();
-			amount = amount / rate;
+			const rateCalculate = await getRate();
+			rate = rateCalculate;
+			amount = amount / rateCalculate;
 
 			if (wallet.balance < amount * 100) {
 				return res.status(400).json(`Insufficient ${paymentCurrency} balance`);
@@ -332,6 +339,9 @@ const buyData = async (req, res) => {
 				dataPlan: plan,
 				metadata: metadata || null,
 			};
+			if (rate) {
+				transaction.rate = `1 ${paymentCurrency} = ${rate.toFixed(2)} NGN`;
+			}
 			const notification = {
 				email,
 				id,

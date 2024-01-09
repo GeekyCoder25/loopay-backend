@@ -99,6 +99,7 @@ const TransactionModel = new Schema(
 		dataPlan: Schema.Types.Mixed,
 		billType: String,
 		billName: String,
+		rate: String,
 		swapFrom: String,
 		swapTo: String,
 		swapFromAmount: String,

@@ -54,6 +54,7 @@ const payABill = async (req, res) => {
 		} = req.body;
 
 		let nairaAmount = amount;
+		let rate;
 
 		const selectWallet = currency => {
 			switch (currency) {
@@ -84,17 +85,18 @@ const payABill = async (req, res) => {
 						: 1 / rates[paymentCurrency];
 				return rate;
 			};
-			const rate = await getRate();
+			const rateCalculate = await getRate();
+			rate = rateCalculate;
 			nairaAmount = Math.floor(amount * rate);
 			if (nairaAmount < provider.minLocalTransactionAmount) {
-				const num = provider.minLocalTransactionAmount / rate;
+				const num = provider.minLocalTransactionAmount / rateCalculate;
 				const precision = 2;
 				const roundedNum = Math.ceil(num * 10 ** precision) / 10 ** precision;
 				return res
 					.status(400)
 					.json(`Minimum amount in ${paymentCurrency} is ${roundedNum}`);
 			} else if (nairaAmount > provider.maxLocalTransactionAmount) {
-				const num = provider.maxLocalTransactionAmount / rate;
+				const num = provider.maxLocalTransactionAmount / rateCalculate;
 				const precision = 2;
 				const roundedNum = Math.ceil(num * 10 ** precision) / 10 ** precision;
 				return res
@@ -141,6 +143,9 @@ const payABill = async (req, res) => {
 				currency: wallet.currency,
 				metadata: response.data,
 			};
+			if (rate) {
+				transaction.rate = `1 ${paymentCurrency} = ${rate.toFixed(2)} NGN`;
+			}
 			const notification = {
 				email,
 				id,

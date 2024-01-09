@@ -62,7 +62,6 @@ const verifyEmailHTML = async (email, res) => {
 
 	const otpToken = generateTokenForOTP(otpCode);
 	await unverifiedUser.findOneAndUpdate({email}, {emailOtpCode: otpToken});
-	console.log(otpCode);
 	sendMail(mailOptions, res, email);
 };
 
@@ -108,7 +107,6 @@ const registerAccount = async (req, res) => {
 		verifyEmailHTML(email, res);
 	} catch (err) {
 		console.log(err.message);
-		await User.findByIdAndRemove();
 		handleErrors(err, res);
 	}
 };
@@ -210,7 +208,7 @@ const verifyEmail = async (req, res) => {
 		}
 		await unverifiedUser.findByIdAndRemove(_id);
 		await SessionModel.create({_id, email, sessions: [session]});
-		res.status(201).json({
+		return res.status(201).json({
 			success: 'Account Created Successfully',
 			data: {
 				role,
@@ -224,7 +222,7 @@ const verifyEmail = async (req, res) => {
 			},
 		});
 	} catch (err) {
-		console.log(err.message);
+		console.log(err.message.red);
 		await User.findByIdAndRemove(_id);
 		await UserDataModel.findByIdAndRemove(_id);
 		await SessionModel.findByIdAndRemove(_id);

@@ -30,7 +30,7 @@ const getOperators = async (req, res) => {
 const getNetwork = async (req, res) => {
 	try {
 		const {phone, country} = req.query;
-		const url = `${process.env.RELOADLY_URL}/operators/auto-detect/phone/${phone}/countries/${country}?&suggestedAmounts=true`;
+		const url = `${process.env.RELOADLY_URL_TEST}/operators/auto-detect/phone/${phone}/countries/${country}?&suggestedAmounts=true`;
 		const token = req.airtimeAPIToken;
 		const config = {
 			headers: {

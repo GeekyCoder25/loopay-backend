@@ -10,7 +10,7 @@ const {default: axios} = require('axios');
 const getOperators = async (req, res) => {
 	try {
 		const {country} = req.query;
-		const url = `${process.env.RELOADLY_URL}/operators/countries/${country}`;
+		const url = `${req.apiConfig.URL}/operators/countries/${country}`;
 		const token = req.airtimeAPIToken;
 		const config = {
 			headers: {
@@ -30,7 +30,7 @@ const getOperators = async (req, res) => {
 const getNetwork = async (req, res) => {
 	try {
 		const {phone, country} = req.query;
-		const url = `${process.env.RELOADLY_URL_TEST}/operators/auto-detect/phone/${phone}/countries/${country}?&suggestedAmounts=true`;
+		const url = `${req.apiConfig.URL}/operators/auto-detect/phone/${phone}/countries/${country}?&suggestedAmounts=true`;
 		const token = req.airtimeAPIToken;
 		const config = {
 			headers: {
@@ -68,7 +68,7 @@ const buyAirtime = async (req, res) => {
 
 		const connectWithAPI = async () => {
 			const token = req.airtimeAPIToken;
-			const url = `${process.env.RELOADLY_URL_TEST}/topups`;
+			const url = `${req.apiConfig.URL}/topups`;
 			const body = JSON.stringify({
 				operatorId,
 				amount: nairaAmount,
@@ -200,7 +200,7 @@ const buyAirtime = async (req, res) => {
 const getDataPlans = async (req, res) => {
 	try {
 		const {provider, country} = req.query;
-		const url = `${process.env.RELOADLY_URL}/operators/countries/${country}?&includeData=true`;
+		const url = `${req.apiConfig.URL}/operators/countries/${country}?&includeData=true`;
 		const token = req.airtimeAPIToken;
 		const config = {
 			headers: {
@@ -209,7 +209,6 @@ const getDataPlans = async (req, res) => {
 			},
 		};
 		const response = await axios.get(url, config);
-
 		let data = response.data
 			.filter(
 				index =>
@@ -234,7 +233,7 @@ const getDataPlans = async (req, res) => {
 		res.status(200).json([].concat(...data));
 	} catch (err) {
 		const error = err.response?.data || err.message;
-		console.log(error);
+		console.log();
 		res.status(400).json({message: error});
 	}
 };
@@ -256,7 +255,7 @@ const buyData = async (req, res) => {
 
 		const connectWithAPI = async () => {
 			const token = req.airtimeAPIToken;
-			const url = `${process.env.RELOADLY_URL}/topups`;
+			const url = `${req.apiConfig.URL}/topups`;
 			const body = JSON.stringify({
 				operatorId,
 				amount: nairaAmount,

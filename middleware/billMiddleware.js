@@ -1,14 +1,16 @@
 const {default: axios} = require('axios');
+const {env} = require('../utils/environments');
 
 const billAPIToken = async (req, res, next) => {
+	const reloadly = env.reloadlyBill();
 	const getToken = async () => {
 		try {
 			const url = 'https://auth.reloadly.com/oauth/token';
 			const data = JSON.stringify({
-				client_id: process.env.RELOADLY_CLIENT_ID,
-				client_secret: process.env.RELOADLY_CLIENT_SECRET,
+				client_id: reloadly.ID,
+				client_secret: reloadly.SECRET,
 				grant_type: 'client_credentials',
-				audience: process.env.RELOADLY_BILL_URL,
+				audience: reloadly.URL,
 			});
 			const config = {
 				method: 'POST',
@@ -27,6 +29,8 @@ const billAPIToken = async (req, res, next) => {
 
 	const token = await getToken();
 	req.billAPIToken = token?.token;
+	req.apiConfig = reloadly;
+
 	next();
 };
 

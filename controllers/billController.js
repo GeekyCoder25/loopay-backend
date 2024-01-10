@@ -23,7 +23,7 @@ const getBills = async (req, res) => {
 			}
 		};
 		const url = `${
-			process.env.RELOADLY_BILL_URL
+			req.apiConfig.URL
 		}/billers?countryISOCode=${countryCode}&size=50&type=${billType()}`;
 		const token = req.billAPIToken;
 		const config = {
@@ -105,7 +105,7 @@ const payABill = async (req, res) => {
 			}
 		}
 
-		const url = `${process.env.RELOADLY_BILL_URL}/pay`;
+		const url = `${req.apiConfig.URL}/pay`;
 		const token = req.billAPIToken;
 		const config = {
 			headers: {
@@ -179,9 +179,7 @@ const payABill = async (req, res) => {
 const getBillsTransactions = async (req, res) => {
 	try {
 		const {id: referenceID} = req.params;
-		const url = `${process.env.RELOADLY_BILL_URL}/transactions/${
-			referenceID || ''
-		}`;
+		const url = `${req.apiConfig.URL}/transactions/${referenceID || ''}`;
 		const token = req.billAPIToken;
 		const config = {
 			headers: {

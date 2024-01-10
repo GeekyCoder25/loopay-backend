@@ -13,6 +13,7 @@ const {protect} = require('./middleware/authMiddleware');
 const {uploadPhoto} = require('./controllers/uploadPhoto');
 const {webhookHandler} = require('./controllers/webhookController');
 const morgan = require('morgan');
+const {env} = require('./utils/environments');
 require('colors');
 dotEnv.config();
 // eslint-disable-next-line no-undef

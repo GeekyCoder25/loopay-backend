@@ -1,14 +1,16 @@
 const {default: axios} = require('axios');
+const {env} = require('../utils/environments');
 
 const airtimeAPIToken = async (req, res, next) => {
+	const reloadly = env.reloadly();
 	const getToken = async () => {
 		try {
 			const url = 'https://auth.reloadly.com/oauth/token';
 			const data = JSON.stringify({
-				client_id: process.env.RELOADLY_CLIENT_ID_TEST,
-				client_secret: process.env.RELOADLY_CLIENT_SECRET_TEST,
+				client_id: reloadly.ID,
+				client_secret: reloadly.SECRET,
 				grant_type: 'client_credentials',
-				audience: process.env.RELOADLY_URL_TEST,
+				audience: reloadly.URL,
 			});
 			const config = {
 				method: 'POST',
@@ -27,6 +29,7 @@ const airtimeAPIToken = async (req, res, next) => {
 
 	const token = await getToken();
 	req.airtimeAPIToken = token?.token;
+	req.apiConfig = reloadly;
 
 	next();
 };

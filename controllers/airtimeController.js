@@ -68,7 +68,7 @@ const buyAirtime = async (req, res) => {
 
 		const connectWithAPI = async () => {
 			const token = req.airtimeAPIToken;
-			const url = `${process.env.RELOADLY_URL}/topups`;
+			const url = `${process.env.RELOADLY_URL_TEST}/topups`;
 			const body = JSON.stringify({
 				operatorId,
 				amount: nairaAmount,

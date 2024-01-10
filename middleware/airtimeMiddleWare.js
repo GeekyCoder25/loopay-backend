@@ -5,10 +5,10 @@ const airtimeAPIToken = async (req, res, next) => {
 		try {
 			const url = 'https://auth.reloadly.com/oauth/token';
 			const data = JSON.stringify({
-				client_id: process.env.RELOADLY_CLIENT_ID,
-				client_secret: process.env.RELOADLY_CLIENT_SECRET,
+				client_id: process.env.RELOADLY_CLIENT_ID_TEST,
+				client_secret: process.env.RELOADLY_CLIENT_SECRET_TEST,
 				grant_type: 'client_credentials',
-				audience: process.env.RELOADLY_URL,
+				audience: process.env.RELOADLY_URL_TEST,
 			});
 			const config = {
 				method: 'POST',

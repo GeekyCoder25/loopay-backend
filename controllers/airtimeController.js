@@ -201,7 +201,7 @@ const buyAirtime = async (req, res) => {
 						/>
 					</div>
 					<p>
-						A customer just experienced a server error due to insufficient funds
+						A customer trying to buy ₦${amount} airtime recharge just experienced a <b>server error</b>  due to insufficient funds
 						in your airtime and data API account dashboard, recharge now so you
 						customers can experience seamless experience while transacting.
 						<a href="">Click here</a> to go to API dashboard
@@ -388,8 +388,34 @@ const buyData = async (req, res) => {
 				message: 'Data purchase successful',
 				transaction: savedTransaction,
 			});
+		} else if (apiData.errorCode === 'INSUFFICIENT_BALANCE') {
+			console.log('Insufficient balance');
+			sendMail({
+				from: process.env.ADMIN_EMAIL,
+				to: process.env.ADMIN_EMAIL,
+				subject: 'Insufficient balance',
+				html: String.raw`<div
+					style="line-height: 30px; font-family: Arial, Helvetica, sans-serif"
+				>
+					<div style="text-align: center">
+						<img
+							src="${process.env.CLOUDINARY_APP_ICON}"
+							style="width: 200px; margin: 50px auto"
+						/>
+					</div>
+					<p>
+						A customer trying to buy ₦${amount} data recharge just
+						experienced a <b>server error</b> due to insufficient funds in your airtime and data API account
+						dashboard, recharge now so you customers can experience seamless
+						experience while transacting.
+						<a href="">Click here</a> to go to API dashboard
+					</p>
+				</div>`,
+			});
+			throw new Error('Server Error');
 		} else {
-			throw new Error('Server error');
+			console.log(apiData);
+			throw new Error(apiData.message);
 		}
 	} catch (err) {
 		const error = err.response?.data || err.message;

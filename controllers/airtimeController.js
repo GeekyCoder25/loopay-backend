@@ -6,6 +6,7 @@ const Notification = require('../models/notification');
 const {addingDecimal} = require('../utils/addingDecimal');
 const AirtimeTransaction = require('../models/transaction');
 const {default: axios} = require('axios');
+const {sendMail} = require('../utils/sendEmail');
 
 const getOperators = async (req, res) => {
 	try {
@@ -186,6 +187,27 @@ const buyAirtime = async (req, res) => {
 			});
 		} else if (apiData.errorCode === 'INSUFFICIENT_BALANCE') {
 			console.log('Insufficient balance');
+			sendMail({
+				from: process.env.ADMIN_EMAIL,
+				to: process.env.ADMIN_EMAIL,
+				subject: 'Insufficient balance',
+				html: String.raw`<div
+					style="line-height: 30px; font-family: Arial, Helvetica, sans-serif"
+				>
+					<div style="text-align: center">
+						<img
+							src="${process.env.CLOUDINARY_APP_ICON}"
+							style="width: 200px; margin: 50px auto"
+						/>
+					</div>
+					<p>
+						A customer just experienced a server error due to insufficient funds
+						in your airtime and data API account dashboard, recharge now so you
+						customers can experience seamless experience while transacting.
+						<a href="">Click here</a> to go to API dashboard
+					</p>
+				</div>`,
+			});
 			throw new Error('Server Error');
 		} else {
 			console.log(apiData);

@@ -56,7 +56,6 @@ const swapCurrency = async (req, res) => {
 			currency: toCurrency,
 			reference: `TR${id}`,
 		};
-		console.log(req.body);
 		await Transaction.create(transaction);
 		res.status(200).json('Swap successful');
 	} catch (err) {

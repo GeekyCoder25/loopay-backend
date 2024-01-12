@@ -202,7 +202,9 @@ const buyAirtime = async (req, res) => {
 						/>
 					</div>
 					<p>
-						A customer trying to buy ₦${nairaAmount} airtime recharge just experienced a <b>server error</b>  due to insufficient funds
+						A customer trying to buy ₦${Number(
+							nairaAmount
+						).toLocaleString()} airtime recharge just experienced a <b>server error</b>  due to insufficient funds
 						in your airtime and data API account dashboard, recharge now so you
 						customers can experience seamless experience while transacting.
 						<a href="">Click here</a> to go to API dashboard
@@ -408,7 +410,9 @@ const buyData = async (req, res) => {
 						/>
 					</div>
 					<p>
-						A customer trying to buy ₦${nairaAmount} data recharge just
+						A customer trying to buy ₦${Number(
+							nairaAmount
+						).toLocaleString()} data recharge just
 						experienced a <b>server error</b> due to insufficient funds in your airtime and data API account
 						dashboard, recharge now so you customers can experience seamless
 						experience while transacting.

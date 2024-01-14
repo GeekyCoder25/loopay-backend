@@ -108,6 +108,8 @@ const registerAccount = async (req, res) => {
 	} catch (err) {
 		console.log(err.message);
 		handleErrors(err, res);
+	} finally {
+		await User.findOneAndRemove(req.body.formData?.email);
 	}
 };
 

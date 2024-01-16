@@ -80,7 +80,7 @@ const registerAccount = async (req, res) => {
 			verifyEmailHTML(email, res);
 			return res.status(200).json(result);
 		}
-		const user = await unverified.create(formData);
+		const user = await unverifiedUser.create(formData);
 
 		if (!isStrongPassword(password, passwordSecurityOptions)) {
 			return res.status(400).json({

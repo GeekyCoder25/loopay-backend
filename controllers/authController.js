@@ -193,10 +193,10 @@ const verifyEmail = async (req, res) => {
 			bank: bank.name,
 			apiData,
 		};
-		// await LocalWallet.create({...allWalletData, ...paystackData});
-		// await DollarWallet.create({...allWalletData});
-		// await EuroWallet.create({...allWalletData});
-		// await PoundWallet.create({...allWalletData});
+		await LocalWallet.create({...allWalletData, ...paystackData});
+		await DollarWallet.create({...allWalletData});
+		await EuroWallet.create({...allWalletData});
+		await PoundWallet.create({...allWalletData});
 		if (referrerCode) {
 			const referrer = await UserDataModel.findOne({
 				referralCode: unverified.referrerCode,

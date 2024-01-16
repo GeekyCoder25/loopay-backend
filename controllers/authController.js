@@ -80,10 +80,9 @@ const registerAccount = async (req, res) => {
 			verifyEmailHTML(email, res);
 			return res.status(200).json(result);
 		}
-		const user = await User.create(formData);
+		const user = await unverified.create(formData);
 
 		if (!isStrongPassword(password, passwordSecurityOptions)) {
-			await User.findByIdAndRemove(user._id);
 			return res.status(400).json({
 				password: 'Please input a stronger password\n at least 6 digits',
 			});
@@ -95,7 +94,6 @@ const registerAccount = async (req, res) => {
 		if (referralCode) {
 			const referrer = await UserDataModel.findOne({referralCode});
 			if (!referrer) {
-				await User.findByIdAndRemove(user._id);
 				return res.status(400).json({
 					referralCode: 'No user with this referral code',
 				});
@@ -108,8 +106,6 @@ const registerAccount = async (req, res) => {
 	} catch (err) {
 		console.log(err.message);
 		handleErrors(err, res);
-	} finally {
-		await User.findOneAndRemove(req.body.formData?.email);
 	}
 };
 

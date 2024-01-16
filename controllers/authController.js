@@ -80,7 +80,7 @@ const registerAccount = async (req, res) => {
 			verifyEmailHTML(email, res);
 			return res.status(200).json(result);
 		}
-		const user = await unverifiedUser.create(formData);
+		await unverifiedUser.create(formData);
 
 		if (!isStrongPassword(password, passwordSecurityOptions)) {
 			return res.status(400).json({
@@ -99,8 +99,6 @@ const registerAccount = async (req, res) => {
 				});
 			}
 		}
-		await unverifiedUser.create(formData);
-		await User.findByIdAndRemove(user._id);
 
 		verifyEmailHTML(email, res);
 	} catch (err) {

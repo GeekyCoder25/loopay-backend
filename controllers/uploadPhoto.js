@@ -20,11 +20,9 @@ const uploadPhoto = (req, res) => {
 		return res.status(400).json({message: 'File uploaded is not an image'});
 	}
 
-	// eslint-disable-next-line no-undef
 	if (file.size > process.env.MAX_FILE_UPLOAD) {
 		return res.status(400).json({
 			message: `Please upload an image less than ${
-				// eslint-disable-next-line no-undef
 				process.env.MAX_FILE_UPLOAD / 1000000
 			}MB`,
 		});

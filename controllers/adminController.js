@@ -284,7 +284,7 @@ const getAllUsers = async (req, res) => {
 						...userData[0],
 					};
 			  })
-			: await User.find().select(['-password', '-__v']).skip(skip).limit(limit);
+			: await User.find().select(['-password', '-__v']);
 
 		const totalUsersCount = await User.countDocuments();
 		if (!users) throw new Error('No users found');

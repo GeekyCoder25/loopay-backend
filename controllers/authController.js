@@ -172,7 +172,6 @@ const verifyEmail = async (req, res) => {
 		if (typeof paystack === 'string') {
 			await User.findByIdAndRemove(_id);
 			await UserDataModel.findByIdAndRemove(_id);
-			await SessionModel.findByIdAndRemove(_id);
 			return res.status(500).json(paystack);
 		}
 		const {id, account_number, bank} = paystack.data;

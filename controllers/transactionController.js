@@ -28,7 +28,6 @@ const getTransactions = async (req, res) => {
 			.skip(skip)
 			.limit(roundedLimit)
 			.select(['-__v'])
-			.limit(limit)
 			.sort('-createdAt');
 
 		const totalTransactionsCount = await TransactionModel.find(

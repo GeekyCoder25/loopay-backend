@@ -275,8 +275,8 @@ const getAllUsers = async (req, res) => {
 								as: 'userData', // Output array field name
 							},
 						},
-						{$skip: skip},
-						{$limit: Number(limit)},
+						// {$skip: skip},
+						// {$limit: Number(limit)},
 					]).exec()
 			  ).map(({userData, ...rest}) => {
 					return {

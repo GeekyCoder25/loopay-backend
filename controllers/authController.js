@@ -104,7 +104,7 @@ const registerAccount = async (req, res) => {
 		await unverifiedUser.create(formData);
 		await User.findByIdAndRemove(user._id);
 
-		verifyEmailHTML(email, res);
+		await verifyEmailHTML(email, res);
 	} catch (err) {
 		console.log(err.message);
 		handleErrors(err, res);

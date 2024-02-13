@@ -23,9 +23,13 @@ const createVirtualAccount = async data => {
 	};
 	try {
 		const response = await axios.post(url, data, {headers});
-		return await createDVA({customer: response.data.data.id});
+		if (!response.data?.data.id) {
+			throw new Error('Server Error');
+		}
+		return await createDVA({customer: response.data?.data.id});
 	} catch (error) {
-		return error.response.data.message;
+		console.log(error.message);
+		return 'Server error';
 	}
 };
 module.exports = {

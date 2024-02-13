@@ -33,6 +33,7 @@ const {
 	getPopUp,
 	updatePopUp,
 } = require('../controllers/popUpController');
+const {reverseTransaction} = require('../controllers/transferController');
 
 const router = express.Router();
 
@@ -45,6 +46,7 @@ router.get('/user/:id', getUser);
 router.get('/transactions', getTransactions);
 router.get('/recent', getRecent);
 router.post('/loopay/transfer', transferToLoopayUser);
+router.post('/transfer/reverse', reverseTransaction);
 router.post('/finalize', finalizeWithdrawal);
 router.post('/block-transaction', blockTransaction);
 router.route('/notifications').get(getNotifications).put(updateNotifications);

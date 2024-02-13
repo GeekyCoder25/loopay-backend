@@ -285,7 +285,69 @@ const initiateTransferToLoopay = async (req, res) => {
 	}
 };
 
+const reverseTransaction = async (req, res) => {
+	try {
+		const {reference} = req.body;
+		if (!reference) throw new Error('Reference ID not provided');
+
+		const sender = await TransactionModel.findOne({
+			reference,
+			transactionType: 'credit',
+		});
+		const receiver = await TransactionModel.findOne({
+			reference,
+			transactionType: 'debit',
+		});
+
+		if (!sender) throw new Error("Can't trace account");
+
+		const selectWallet = currency => {
+			switch (currency) {
+				case 'naira':
+					return LocalWallet;
+				case 'dollar':
+					return DollarWallet;
+				case 'euro':
+					return EuroWallet;
+				case 'pound':
+					return PoundWallet;
+				default:
+					return LocalWallet;
+			}
+		};
+		const currencyWallet = selectWallet(sender.currency);
+
+		const senderWallet = await currencyWallet.findOne({
+			email: sender.email,
+		});
+		const receiverWallet = await currencyWallet.findOne({
+			email: receiver.email,
+		});
+		const amount = await receiver.amount;
+		const amountInUnits = amount * 100;
+		await TransactionModel.findOneAndUpdate(
+			{reference, transactionType: 'credit'},
+			{status: 'refunded'}
+		);
+		await TransactionModel.findOneAndUpdate(
+			{reference, transactionType: 'debit'},
+			{status: 'reversed'}
+		);
+
+		senderWallet.balance -= amountInUnits;
+		receiverWallet.balance += amountInUnits;
+		await senderWallet.save();
+		await receiverWallet.save();
+
+		res.status(200).json({status: true, message: 'Transaction reversed'});
+	} catch (err) {
+		console.log(err.message);
+		res.status(400).json({status: false, message: err.message});
+	}
+};
+
 module.exports = {
 	initiateTransfer,
 	initiateTransferToLoopay,
+	reverseTransaction,
 };

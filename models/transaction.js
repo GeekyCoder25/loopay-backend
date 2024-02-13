@@ -76,7 +76,6 @@ const TransactionModel = new Schema(
 		reference: {
 			type: String,
 			required: [true, "Please provide transaction's reference"],
-			unique: true,
 		},
 		paystackReference: String,
 		transferCode: String,

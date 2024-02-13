@@ -207,7 +207,7 @@ const buyAirtime = async (req, res) => {
 						).toLocaleString()} airtime recharge just experienced a <b>server error</b>  due to insufficient funds
 						in your airtime and data API account dashboard, recharge now so you
 						customers can experience seamless experience while transacting.
-						<a href="">Click here</a> to go to API dashboard
+						<a href="https://dashboard.reloadly.com/">Click here</a> to go to API dashboard
 					</p>
 				</div>`,
 				},

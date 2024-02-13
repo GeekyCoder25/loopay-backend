@@ -13,7 +13,7 @@ const sendMail = (mailOptions, res, email, customFunc, errorFunc) => {
 		} else
 			return {
 				host: '127.0.0.1',
-				port: 2526,
+				port: 1025,
 			};
 	};
 

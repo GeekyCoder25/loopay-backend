@@ -299,7 +299,8 @@ const reverseTransaction = async (req, res) => {
 			transactionType: 'debit',
 		});
 
-		if (!sender) throw new Error("Can't trace account");
+		if (!sender)
+			throw new Error("Can't find transaction with this reference ID");
 
 		const selectWallet = currency => {
 			switch (currency) {

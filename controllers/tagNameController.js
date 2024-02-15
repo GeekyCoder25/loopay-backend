@@ -29,7 +29,6 @@ const getTagName = async (req, res) => {
 				});
 			}
 		}
-		console.log(result);
 		if (!result) throw new Error('No user found with this tag name');
 		if (type === 'requestFund') {
 			const blockedUsers = result.blockedUsers;

@@ -67,6 +67,9 @@ const verifyEmailHTML = async (email, res) => {
 
 const registerAccount = async (req, res) => {
 	try {
+		if (req.body.formData.email) {
+			req.body.formData.email = req.body.formData.email.toLowerCase();
+		}
 		const formData = req.body;
 		const {email, password, referralCode} = formData;
 
@@ -114,6 +117,9 @@ const registerAccount = async (req, res) => {
 const verifyEmail = async (req, res) => {
 	const {_id} = await unverifiedUser.findOne({email: req.body.email});
 	try {
+		if (req.body.email) {
+			req.body.email = req.body.email.toLowerCase();
+		}
 		const {email, otp, session} = req.body;
 		const unverified = await unverifiedUser.findOne({email});
 		const decoded = jwt.verify(unverified.emailOtpCode, process.env.JWT_SECRET);
@@ -235,6 +241,9 @@ const verifyEmail = async (req, res) => {
 
 const loginAccount = async (req, res) => {
 	try {
+		if (req.body.email) {
+			req.body.email = req.body.email.toLowerCase();
+		}
 		const {email, password} = req.body;
 		if (!email || !password) {
 			throw new Error('Please provide your email and password');
@@ -274,6 +283,9 @@ const loginAccount = async (req, res) => {
 
 const forgetPassword = async (req, res) => {
 	try {
+		if (req.body.email) {
+			req.body.email = req.body.email.toLowerCase();
+		}
 		const otpCodeLength = req.body.otpCodeLength || 4;
 		let otpCode = '';
 		const {email} = req.body;
@@ -324,6 +336,9 @@ const forgetPassword = async (req, res) => {
 
 const confirmOTP = async (req, res) => {
 	try {
+		if (req.body.email) {
+			req.body.email = req.body.email.toLowerCase();
+		}
 		const {otp} = req.params;
 		const {email} = req.body;
 		const result = await User.findOne({email});

@@ -67,20 +67,25 @@ const verifyEmailHTML = async (email, res) => {
 
 const registerAccount = async (req, res) => {
 	try {
-		if (req.body.formData.email) {
-			req.body.formData.email = req.body.formData.email.toLowerCase();
+		// await User.findOneAndRemove({email: 'toyibe2333@gmail.com'});
+		// await UserDataModel.findOneAndRemove({email: 'toyibe2333@gmail.com'});
+		// await SessionModel.findOneAndRemove({email: 'toyibe2333@gmail.com'});
+		// await LocalWallet.findOneAndRemove({email: 'toyibe2333@gmail.com'});
+		// await DollarWallet.findOneAndRemove({email: 'toyibe2333@gmail.com'});
+		// await EuroWallet.findOneAndRemove({email: 'toyibe2333@gmail.com'});
+		// return await PoundWallet.findOneAndRemove({email: 'toyibe2333@gmail.com'});
+		if (req.body.email) {
+			req.body.email = req.body.email.toLowerCase();
 		}
 		const formData = req.body;
 		const {email, password, referralCode} = formData;
-
 		const unverified = await unverifiedUser.findOne({
-			email: formData.email,
+			email,
 		});
 
 		if (unverified) {
-			const {email} = formData;
 			const result = Object.assign(unverified);
-			verifyEmailHTML(email, res);
+			await verifyEmailHTML(email);
 			return res.status(200).json(result);
 		}
 		const user = await User.create(formData);
@@ -104,6 +109,7 @@ const registerAccount = async (req, res) => {
 				});
 			}
 		}
+		formData.referrerCode = formData.referralCode;
 		await unverifiedUser.create(formData);
 		await User.findByIdAndRemove(user._id);
 
@@ -115,11 +121,11 @@ const registerAccount = async (req, res) => {
 };
 
 const verifyEmail = async (req, res) => {
+	if (req.body.email) {
+		req.body.email = req.body.email.toLowerCase();
+	}
 	const {_id} = await unverifiedUser.findOne({email: req.body.email});
 	try {
-		if (req.body.email) {
-			req.body.email = req.body.email.toLowerCase();
-		}
 		const {email, otp, session} = req.body;
 		const unverified = await unverifiedUser.findOne({email});
 		const decoded = jwt.verify(unverified.emailOtpCode, process.env.JWT_SECRET);
@@ -149,6 +155,7 @@ const verifyEmail = async (req, res) => {
 			phoneNumber,
 			password,
 		};
+
 		const userData = {
 			_id,
 			email,

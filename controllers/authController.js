@@ -67,13 +67,6 @@ const verifyEmailHTML = async (email, res) => {
 
 const registerAccount = async (req, res) => {
 	try {
-		// await User.findOneAndRemove({email: 'toyibe2333@gmail.com'});
-		// await UserDataModel.findOneAndRemove({email: 'toyibe2333@gmail.com'});
-		// await SessionModel.findOneAndRemove({email: 'toyibe2333@gmail.com'});
-		// await LocalWallet.findOneAndRemove({email: 'toyibe2333@gmail.com'});
-		// await DollarWallet.findOneAndRemove({email: 'toyibe2333@gmail.com'});
-		// await EuroWallet.findOneAndRemove({email: 'toyibe2333@gmail.com'});
-		// return await PoundWallet.findOneAndRemove({email: 'toyibe2333@gmail.com'});
 		if (req.body.email) {
 			req.body.email = req.body.email.toLowerCase();
 		}
@@ -89,7 +82,14 @@ const registerAccount = async (req, res) => {
 			return res.status(200).json(result);
 		}
 		const user = await User.create(formData);
-
+		if (user) {
+			await UserDataModel.findOneAndRemove({email});
+			await SessionModel.findOneAndRemove({email});
+			await LocalWallet.findOneAndRemove({email});
+			await DollarWallet.findOneAndRemove({email});
+			await EuroWallet.findOneAndRemove({email});
+			await PoundWallet.findOneAndRemove({email});
+		}
 		if (!isStrongPassword(password, passwordSecurityOptions)) {
 			await User.findByIdAndRemove(user._id);
 			return res.status(400).json({
@@ -112,7 +112,6 @@ const registerAccount = async (req, res) => {
 		formData.referrerCode = formData.referralCode;
 		await unverifiedUser.create(formData);
 		await User.findByIdAndRemove(user._id);
-
 		await verifyEmailHTML(email, res);
 	} catch (err) {
 		console.log(err.message);
@@ -124,12 +123,16 @@ const verifyEmail = async (req, res) => {
 	if (req.body.email) {
 		req.body.email = req.body.email.toLowerCase();
 	}
-	const {_id} = await unverifiedUser.findOne({email: req.body.email});
+	const unverified = await unverifiedUser.findOne({email: req.body.email});
+	if (!unverified) {
+		return res.status(400).json({error: "Can't find user, re-register"});
+	}
 	try {
 		const {email, otp, session} = req.body;
-		const unverified = await unverifiedUser.findOne({email});
 		const decoded = jwt.verify(unverified.emailOtpCode, process.env.JWT_SECRET);
-		if (decoded.id !== otp) throw new Error('Invalid OTP Code');
+		if (decoded.id !== otp) {
+			return res.status(401).json({error: 'Invalid OTP Code'});
+		}
 
 		const {
 			_id,
@@ -235,13 +238,13 @@ const verifyEmail = async (req, res) => {
 		});
 	} catch (err) {
 		console.log(err.message.red);
-		await User.findByIdAndRemove(_id);
-		await UserDataModel.findByIdAndRemove(_id);
-		await SessionModel.findByIdAndRemove(_id);
-		await LocalWallet.findByIdAndRemove(_id);
-		await DollarWallet.findByIdAndRemove(_id);
-		await EuroWallet.findByIdAndRemove(_id);
-		await PoundWallet.findByIdAndRemove(_id);
+		await User.findByIdAndRemove(unverified._id);
+		await UserDataModel.findByIdAndRemove(unverified._id);
+		await SessionModel.findByIdAndRemove(unverified._id);
+		await LocalWallet.findByIdAndRemove(unverified._id);
+		await DollarWallet.findByIdAndRemove(unverified._id);
+		await EuroWallet.findByIdAndRemove(unverified._id);
+		await PoundWallet.findByIdAndRemove(unverified._id);
 		res.status(401).json({error: err.message});
 	}
 };

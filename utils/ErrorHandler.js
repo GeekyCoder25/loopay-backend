@@ -7,7 +7,6 @@ const handleErrors = (err, res) => {
 				: Object.keys(err.keyPattern)[0];
 
 		const errorValue = errorKey => {
-			console.log(errorKey);
 			if (errorKey === 'email')
 				return 'Email has already been used with another account';
 			else if (errorKey === 'phoneNo' || errorKey === 'phoneNumber')
@@ -19,7 +18,6 @@ const handleErrors = (err, res) => {
 			[errorKey()]: errorValue(errorKey()),
 		});
 	} else if (err.message.includes('validation failed')) {
-		console.log(err.message);
 		Object.values(err.errors).forEach(({properties}) => {
 			if (properties) errors[properties.path] = properties.message;
 		});

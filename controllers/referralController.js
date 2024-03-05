@@ -3,7 +3,6 @@ const UserDataModel = require('../models/userData');
 const walletDollar = require('../models/walletDollar');
 const TransactionModel = require('../models/transaction');
 const Notification = require('../models/notification');
-const User = require('../models/user');
 const unverifiedUser = require('../models/unverifiedUser');
 const uuid = require('uuid').v4;
 

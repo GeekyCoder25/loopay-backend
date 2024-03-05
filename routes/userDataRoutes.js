@@ -77,6 +77,13 @@ const {
 	referralWithdraw,
 } = require('../controllers/referralController');
 const {postPaymentProof} = require('../controllers/paymentController');
+const {
+	PagaGetBills,
+	PagaGetMerchantsServices,
+	PagaValidateCustomer,
+	PagaPayBill,
+} = require('../controllers/paga/billController');
+const {generateReference} = require('../middleware/pagaMiddleWare');
 
 const router = express.Router();
 
@@ -106,10 +113,20 @@ router.route('/get-network').get(airtimeAPIToken, getNetwork);
 router.route('/airtime').post(airtimeAPIToken, accountStatus, buyAirtime);
 router.route('/data-plans').get(airtimeAPIToken, getDataPlans);
 router.route('/data').post(airtimeAPIToken, accountStatus, buyData);
+
+if (true) {
+	router.route('/bill-merchants').post(generateReference, PagaGetBills);
+	router.route('/bill-pay').post(accountStatus, generateReference, PagaPayBill);
+} else {
+	router
+		.route('/bill')
+		.get(billAPIToken, getBills)
+		.post(billAPIToken, accountStatus, payABill);
+}
 router
-	.route('/bill')
-	.get(billAPIToken, getBills)
-	.post(billAPIToken, accountStatus, payABill);
+	.route('/bill-services')
+	.post(generateReference, PagaGetMerchantsServices);
+router.route('/bill-validate').post(generateReference, PagaValidateCustomer);
 router.route('/bill/status').get(billAPIToken, getBillsTransactions);
 router.route('/bill/status/:id').get(billAPIToken, getBillsTransactions);
 router.route('/swap').post(accountStatus, swapCurrency);

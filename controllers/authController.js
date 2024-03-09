@@ -352,7 +352,7 @@ const confirmOTP = async (req, res) => {
 		const {otp} = req.params;
 		const {email} = req.body;
 		const result = await User.findOne({email});
-		const userData = await UserDataModel.findOne({email: req.body.email});
+		const userData = await UserDataModel.findOne({email});
 		if (!result) throw new Error('No account is associated with this email');
 		else {
 			const decoded = jwt.verify(result.otpCode, process.env.JWT_SECRET);

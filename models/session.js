@@ -36,6 +36,11 @@ const SessionSchema = new Schema(
 					type: Date,
 					required: [true, 'Please provide last seen'],
 				},
+				status: {
+					type: 'string',
+					required: [true, 'Pleas provide session status'],
+					enum: ['active', 'inactive'],
+				},
 			},
 		},
 	},

@@ -246,8 +246,8 @@ const getDataPlans = async (req, res) => {
 			)
 			.map(index => {
 				return Object.entries({
-					...index.fixedAmountsDescriptions,
 					...index.localFixedAmountsDescriptions,
+					...index.fixedAmountsDescriptions,
 				}).map(plan => {
 					const [key, value] = plan;
 					return {

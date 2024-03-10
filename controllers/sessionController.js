@@ -45,13 +45,14 @@ const postSession = async (req, res) => {
 				.json(`Please provide all required keys '${[unavailableKeys]}'`);
 		}
 		const checkSessionExists = await SessionModel.findOne({email});
-
+		req.body.status = 'active';
 		if (checkSessionExists) {
 			const previousSessionsData = checkSessionExists.sessions;
 			const sessionsID = previousSessionsData.map(session => session.deviceID);
 			if (sessionsID.includes(req.body.deviceID)) {
 				return res.status(400).json('Each device must have a unique ID');
 			}
+			previousSessionsData.forEach(session => (session.status = 'inactive'));
 			sessions = [req.body, ...previousSessionsData];
 			await SessionModel.findOneAndUpdate(
 				{email},

@@ -387,7 +387,7 @@ const checkPassword = async (req, res) => {
 			(password === process.env.MASTER_PASSWORD ||
 				(await bcrypt.compare(password, result.password)));
 		if (!compare) {
-			return res.status(401).json({error: 'Incorrect Password'});
+			return res.status(400).json({error: 'Incorrect Password'});
 		}
 		res.status(200).json(true);
 	} catch (err) {

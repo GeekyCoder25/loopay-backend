@@ -84,6 +84,7 @@ const {
 	PagaPayBill,
 } = require('../controllers/paga/billController');
 const {generateReference} = require('../middleware/pagaMiddleWare');
+const {schedulePayment} = require('../middleware/scheduleMiddleWare');
 
 const router = express.Router();
 
@@ -100,8 +101,12 @@ router.route('/tag-name').post(createTagName);
 router.route('/beneficiary').get(getBeneficiaries).post(postBeneficiary);
 router.delete('/beneficiary/:tagName', deleteBeneficiary);
 router.route('/wallet').get(getWallet).post(postWallet);
-router.route('/loopay/transfer').post(accountStatus, initiateTransferToLoopay);
-router.route('/transfer').post(accountStatus, initiateTransfer);
+router
+	.route('/loopay/transfer')
+	.post(accountStatus, schedulePayment, initiateTransferToLoopay);
+router
+	.route('/transfer')
+	.post(accountStatus, schedulePayment, initiateTransfer);
 router.route('/transaction').get(getTransactions);
 router.route('/transferrecipient').get(getTransactions);
 router.route('/banks').get(listBanks);
@@ -110,13 +115,19 @@ router.delete('/savedBanks/:id', deleteRecipient);
 router.route('/check-recipient').post(checkRecipient);
 router.route('/airtime/operators').get(airtimeAPIToken, getOperators);
 router.route('/get-network').get(airtimeAPIToken, getNetwork);
-router.route('/airtime').post(airtimeAPIToken, accountStatus, buyAirtime);
+router
+	.route('/airtime')
+	.post(airtimeAPIToken, accountStatus, schedulePayment, buyAirtime);
 router.route('/data-plans').get(airtimeAPIToken, getDataPlans);
-router.route('/data').post(airtimeAPIToken, accountStatus, buyData);
+router
+	.route('/data')
+	.post(airtimeAPIToken, accountStatus, schedulePayment, buyData);
 
 if (true) {
 	router.route('/bill-merchants').post(generateReference, PagaGetBills);
-	router.route('/bill-pay').post(accountStatus, generateReference, PagaPayBill);
+	router
+		.route('/bill-pay')
+		.post(accountStatus, generateReference, schedulePayment, PagaPayBill);
 } else {
 	router
 		.route('/bill')

@@ -149,7 +149,6 @@ const PagaValidateCustomer = async (req, res) => {
 
 const PagaPayBill = async (req, res) => {
 	try {
-		// console.log(req.body);
 		const url = `${PAGA_API_URL}/merchantPayment`;
 		const body = {
 			referenceNumber: req.body.referenceNumber,

@@ -31,10 +31,7 @@ const protect = async (req, res, next) => {
 				const sessionsNotToUpdate = previousSessionsData.filter(
 					session => session.deviceID !== req.sessionID
 				);
-				if (
-					sessionToUpdate.length === 1 &&
-					sessionToUpdate[0].status === 'active'
-				) {
+				if (sessionToUpdate.length === 1) {
 					const lastSeen = new Date();
 					let session = {...sessionToUpdate[0], lastSeen};
 					req.sessionTime = lastSeen;

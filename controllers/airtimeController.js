@@ -179,6 +179,7 @@ const buyAirtime = async (req, res) => {
 				savedTransaction = await AirtimeTransaction.create(transaction);
 				await Notification.create(notification);
 			}
+			req.schedule && (await req.schedule(req));
 			res.status(200).json({
 				status: 'success',
 				message: 'Airtime purchase successful',
@@ -213,7 +214,7 @@ const buyAirtime = async (req, res) => {
 				},
 				'',
 				'',
-				res.status(400).json({message: 'Server error'})
+				() => res.status(400).json({message: 'Server error'})
 			);
 		} else {
 			throw new Error(apiData.message);
@@ -388,6 +389,7 @@ const buyData = async (req, res) => {
 				savedTransaction = await AirtimeTransaction.create(transaction);
 				await Notification.create(notification);
 			}
+			req.schedule && (await req.schedule(req));
 			res.status(200).json({
 				status: 'success',
 				message: 'Data purchase successful',

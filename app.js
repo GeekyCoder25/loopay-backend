@@ -13,7 +13,7 @@ const {protect} = require('./middleware/authMiddleware');
 const {uploadPhoto} = require('./controllers/uploadPhoto');
 const {webhookHandler} = require('./controllers/webhookController');
 const morgan = require('morgan');
-const {env} = require('./utils/environments');
+const agenda = require('./middleware/agenda');
 require('colors');
 dotEnv.config();
 // eslint-disable-next-line no-undef
@@ -53,6 +53,7 @@ cloudinary.config({
 if (process.env.NODE_ENV === 'development') {
 	app.use(morgan('dev'));
 }
+// app.use();
 app.post('/api/upload', protect, uploadPhoto);
 app.use('/api/auth', authRoutes);
 app.use('/api/user', protect, userDataRoutes);
@@ -63,7 +64,7 @@ app.get('/api/network', (req, res) => {
 	res.send({network: true});
 });
 app.get('/api', (req, res) => {
-	console.log('Lopay Backend');
+	console.log('Loopay Backend');
 	res.send({app: 'Loopay'});
 });
 app.all('*', (req, res) => {

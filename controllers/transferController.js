@@ -125,7 +125,7 @@ const initiateTransfer = async (req, res) => {
 
 					await Notification.create(notification);
 				}
-
+				req.schedule && (await req.schedule(req));
 				return res.status(200).json({
 					...response.data.data,
 					amount: response.data.data.amount / 100,
@@ -274,6 +274,8 @@ const initiateTransferToLoopay = async (req, res) => {
 		sendeeWallet.balance += amountInUnits;
 		await senderWallet.save();
 		await sendeeWallet.save();
+		req.schedule && (await req.schedule(req));
+
 		res.status(200).json({
 			message: 'Transfer Successful',
 			...req.body,

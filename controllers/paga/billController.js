@@ -149,23 +149,6 @@ const PagaValidateCustomer = async (req, res) => {
 
 const PagaPayBill = async (req, res) => {
 	try {
-		const url = `${PAGA_API_URL}/merchantPayment`;
-		const body = {
-			referenceNumber: req.body.referenceNumber,
-			amount: Number(req.body.amount),
-			merchantAccount: req.body.billerId,
-			merchantReferenceNumber: req.body.meterNo,
-		};
-
-		const config = {
-			headers: {
-				'Content-Type': 'application/json',
-				principal,
-				credentials,
-				hash: pagaHash(body, hashKey),
-			},
-		};
-
 		const query = Object.keys(req.query)[0];
 		const {email, phoneNumber} = req.user;
 		const {
@@ -228,9 +211,26 @@ const PagaPayBill = async (req, res) => {
 			}
 		}
 
+		const url = `${PAGA_API_URL}/merchantPayment`;
+		const body = {
+			referenceNumber: req.body.referenceNumber,
+			amount: nairaAmount,
+			merchantAccount: req.body.billerId,
+			merchantReferenceNumber: req.body.meterNo,
+		};
+
+		const config = {
+			headers: {
+				'Content-Type': 'application/json',
+				principal,
+				credentials,
+				hash: pagaHash(body, hashKey),
+			},
+		};
+
 		const apiBody = {
 			referenceNumber: req.body.referenceNumber,
-			amount: Number(req.body.amount),
+			amount: nairaAmount,
 			currency: 'NGN',
 			merchantAccount: req.body.billerId,
 			merchantReferenceNumber: req.body.meterNo,
@@ -283,7 +283,7 @@ const PagaPayBill = async (req, res) => {
 		}
 
 		response.data.token = token;
-
+		req.schedule && (await req.schedule(req));
 		return res
 			.status(200)
 			.json({...response.data, transaction: savedTransaction});

@@ -39,6 +39,7 @@ const UserDataSchema = new Schema(
 		verificationStatus: {
 			type: String,
 			enum: ['verified', 'pending', 'unVerified'],
+			// required: [true, 'Please provide verification status'],
 		},
 		photo: String,
 		photoURL: String,
@@ -74,6 +75,7 @@ UserDataSchema.pre('save', function (next) {
 	if (!this.referralCode)
 		this.referralCode = Math.random().toString(36).substring(2, 8);
 	if (!this.limit) this.limit = 1;
+	if (!this.verificationStatus) this.verificationStatus = 'unVerified';
 	next();
 });
 

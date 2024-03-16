@@ -85,6 +85,11 @@ const {
 } = require('../controllers/paga/billController');
 const {generateReference} = require('../middleware/pagaMiddleWare');
 const {schedulePayment} = require('../middleware/scheduleMiddleWare');
+const {
+	getSchedules,
+	deleteSchedule,
+	updateSchedule,
+} = require('../controllers/scheduleController');
 
 const router = express.Router();
 
@@ -154,8 +159,11 @@ router.route('/rate/:currency').get(getRate);
 router.route('/splash').get(getFundRequest);
 router.route('/fees').get(getFees);
 router.route('/statement').get(getStatements);
+router.route('/schedule').get(getSchedules);
+router.route('/schedule/:id').put(updateSchedule).delete(deleteSchedule);
 router.route('/verify').post(postVerificationData);
 router.route('/popup/:popUpID').delete(deletePopUp);
+
 router.route('/referral').get(getReferrals).post(postReferral);
 router.route('/withdraw-referral').get(referralWithdraw);
 router.route('/payment-proof').post(postPaymentProof);

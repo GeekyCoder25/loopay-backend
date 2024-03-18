@@ -239,7 +239,12 @@ const PagaPayBill = async (req, res) => {
 
 		const response = await axios.post(url, apiBody, config);
 		if (response.data.integrationStatus !== 'SUCCESSFUL') {
-			throw new Error(response.data.message);
+			console.log(response.data);
+			throw new Error(
+				response.data.message.includes('insufficient balance')
+					? 'Server error'
+					: response.data.message
+			);
 		}
 		const token = response.data.additionalProperties?.token?.split(': ')[1];
 		wallet.balance -= amount * 100;

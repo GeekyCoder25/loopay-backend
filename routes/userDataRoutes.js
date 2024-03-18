@@ -90,6 +90,11 @@ const {
 	deleteSchedule,
 	updateSchedule,
 } = require('../controllers/scheduleController');
+const {
+	PagaGetOperators,
+	PagaBuyAirtime,
+} = require('../controllers/paga/airtimeController');
+const serverAPIs = require('../models/serverAPIs');
 
 const router = express.Router();
 
@@ -121,28 +126,109 @@ router.route('/check-recipient').post(checkRecipient);
 router.route('/airtime/operators').get(airtimeAPIToken, getOperators);
 router.route('/get-network').get(airtimeAPIToken, getNetwork);
 router
-	.route('/airtime')
-	.post(airtimeAPIToken, accountStatus, schedulePayment, buyAirtime);
-router.route('/data-plans').get(airtimeAPIToken, getDataPlans);
-router
 	.route('/data')
 	.post(airtimeAPIToken, accountStatus, schedulePayment, buyData);
 
-if (true) {
-	router.route('/bill-merchants').post(generateReference, PagaGetBills);
-	router
-		.route('/bill-pay')
-		.post(accountStatus, generateReference, schedulePayment, PagaPayBill);
-} else {
-	router
-		.route('/bill')
-		.get(billAPIToken, getBills)
-		.post(billAPIToken, accountStatus, payABill);
-}
-router
-	.route('/bill-services')
-	.post(generateReference, PagaGetMerchantsServices);
-router.route('/bill-validate').post(generateReference, PagaValidateCustomer);
+const setupRouter = async () => {
+	let apiType;
+
+	const selectAPI = async () => {
+		apiType = await serverAPIs.findOne({});
+		if (!apiType) {
+			apiType = await serverAPIs.create({
+				airtime: 'reloadly',
+				data: 'reloadly',
+				bill: 'paga',
+			});
+		}
+	};
+	await selectAPI();
+
+	switch (apiType.bill) {
+		case 'paga':
+			router.route('/bill-merchants').post(generateReference, PagaGetBills);
+			router
+				.route('/bill-services')
+				.post(generateReference, PagaGetMerchantsServices);
+
+			router
+				.route('/bill-validate')
+				.post(generateReference, PagaValidateCustomer);
+
+			router
+				.route('/bill-pay')
+				.post(accountStatus, generateReference, schedulePayment, PagaPayBill);
+			break;
+		case 'reloadly':
+			router.route('/bill-merchants').post(billAPIToken, getBills);
+			router
+				.route('/bill-services')
+				.post(billAPIToken, (req, res) =>
+					res.status(200).json([{name: 'Post Paid'}, {name: 'Pre Paid'}])
+				);
+			router.route('/bill').post(billAPIToken, accountStatus, payABill);
+			break;
+		default:
+			router.route('/bill-merchants').post(generateReference, PagaGetBills);
+			router
+				.route('/bill-services')
+				.post(generateReference, PagaGetMerchantsServices);
+			router
+				.route('/bill-validate')
+				.post(generateReference, PagaValidateCustomer);
+			router
+				.route('/bill-pay')
+				.post(accountStatus, generateReference, schedulePayment, PagaPayBill);
+			break;
+	}
+
+	switch (apiType.airtime) {
+		case 'paga':
+			router
+				.route('/airtime')
+				.post(
+					accountStatus,
+					generateReference,
+					schedulePayment,
+					PagaBuyAirtime
+				);
+			break;
+		case 'reloadly':
+			router
+				.route('/airtime')
+				.post(airtimeAPIToken, accountStatus, schedulePayment, buyAirtime);
+			break;
+		default:
+			router
+				.route('/airtime')
+				.post(airtimeAPIToken, accountStatus, schedulePayment, buyAirtime);
+			break;
+	}
+
+	switch (apiType.data) {
+		case 'paga':
+			router
+				.route('/airtime')
+				.post(
+					accountStatus,
+					generateReference,
+					schedulePayment,
+					PagaBuyAirtime
+				);
+			break;
+		case 'reloadly':
+			router
+				.route('/airtime')
+				.post(airtimeAPIToken, accountStatus, schedulePayment, buyAirtime);
+			break;
+		default:
+			router.route('/data-plans').get(airtimeAPIToken, getDataPlans);
+
+			break;
+	}
+};
+
+setupRouter();
 router.route('/bill/status').get(billAPIToken, getBillsTransactions);
 router.route('/bill/status/:id').get(billAPIToken, getBillsTransactions);
 router.route('/swap').post(accountStatus, swapCurrency);

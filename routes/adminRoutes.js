@@ -34,6 +34,7 @@ const {
 	updatePopUp,
 } = require('../controllers/popUpController');
 const {reverseTransaction} = require('../controllers/transferController');
+const {getAPIs, updateAPIs} = require('../controllers/serverAPIS');
 
 const router = express.Router();
 
@@ -65,5 +66,6 @@ router.route('/proof').get(getPaymentProofs);
 router.route('/approve').post(approveProof);
 router.route('/decline/:id').delete(declineProof);
 router.route('/media-resource').delete(deleteResources);
+router.route('/apis').get(getAPIs).put(updateAPIs);
 
 module.exports = router;

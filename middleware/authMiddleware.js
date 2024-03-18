@@ -59,7 +59,6 @@ const protect = async (req, res, next) => {
 							runValidators: true,
 						}
 					);
-					console.log(req.sessionID);
 					throw new Error();
 				}
 			}

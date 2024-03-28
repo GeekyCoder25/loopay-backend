@@ -10,6 +10,10 @@ const swapCurrency = async (req, res) => {
 		const {email, phoneNumber} = req.user;
 		const {fromCurrency, toCurrency, toSwap, toReceive, id, swapRate} =
 			req.body;
+
+		if (!swapRate) {
+			throw new Error('Swap rate not provided');
+		}
 		const user = await UserData.findOne({email});
 
 		const selectWallet = currency => {

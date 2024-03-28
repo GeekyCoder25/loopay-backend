@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 
-const sendMail = (mailOptions, res, email, customFunc, errorFunc) => {
+const sendMail = async (mailOptions, res, email, customFunc, errorFunc) => {
 	const transport = () => {
 		if (process.env.NODE_ENV === 'production') {
 			return {
@@ -19,12 +19,13 @@ const sendMail = (mailOptions, res, email, customFunc, errorFunc) => {
 
 	const transporter = nodemailer.createTransport(transport());
 
-	transporter.sendMail(mailOptions, (err, info) => {
+	transporter.sendMail(mailOptions, async (err, info) => {
 		if (err) {
 			if (res) {
 				console.log(err.message);
 				return res.status(500).json({error: 'Server Error'});
 			}
+			``;
 			if (errorFunc) errorFunc();
 			return console.log(err.message);
 		}
@@ -33,7 +34,7 @@ const sendMail = (mailOptions, res, email, customFunc, errorFunc) => {
 				email,
 			});
 		}
-		if (customFunc) customFunc();
+		if (customFunc) await customFunc();
 		console.log('Message Sent: %s', info.messageId);
 	});
 };

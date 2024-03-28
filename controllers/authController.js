@@ -25,11 +25,12 @@ const passwordSecurityOptions = {
 };
 
 const verifyEmailHTML = async (email, res) => {
-	let otpCode = '';
-	for (let i = 0; i < 4; i++) {
-		otpCode += _.random(9);
-	}
-	const html = String.raw`<div
+	try {
+		let otpCode = '';
+		for (let i = 0; i < 4; i++) {
+			otpCode += _.random(9);
+		}
+		const html = String.raw`<div
 			style="line-height: 30px; font-family: Arial, Helvetica, sans-serif"
 		>
 			<div style="text-align: center">
@@ -53,20 +54,31 @@ const verifyEmailHTML = async (email, res) => {
 			</p>
 		</div>`;
 
-	const mailOptions = {
-		from: process.env.EMAIL,
-		to: email,
-		subject: 'Email Verification',
-		html,
-	};
+		const mailOptions = {
+			from: process.env.EMAIL,
+			to: email,
+			subject: 'Email Verification',
+			html,
+		};
 
-	const otpToken = generateTokenForOTP(otpCode);
-	await unverifiedUser.findOneAndUpdate({email}, {emailOtpCode: otpToken});
-	sendMail(mailOptions, res, email);
+		const otpToken = generateTokenForOTP(otpCode);
+		await unverifiedUser.findOneAndUpdate({email}, {emailOtpCode: otpToken});
+		await sendMail(mailOptions, res, email);
+	} catch (error) {
+		return res.status(500).json({error: 'Server Error'});
+	}
 };
 
 const registerAccount = async (req, res) => {
 	try {
+		// await User.findOneAndRemove({email: req.body.email});
+		// await UserDataModel.findOneAndRemove({email: req.body.email});
+		// await SessionModel.findOneAndRemove({email: req.body.email});
+		// await LocalWallet.findOneAndRemove({email: req.body.email});
+		// await DollarWallet.findOneAndRemove({email: req.body.email});
+		// await EuroWallet.findOneAndRemove({email: req.body.email});
+		// await PoundWallet.findOneAndRemove({email: req.body.email});
+		// return;
 		if (req.body.email) {
 			req.body.email = req.body.email.toLowerCase();
 		}
@@ -77,11 +89,10 @@ const registerAccount = async (req, res) => {
 		});
 
 		if (unverified) {
-			const result = Object.assign(unverified);
-			await verifyEmailHTML(email);
-			return res.status(200).json(result);
+			return await verifyEmailHTML(email, res);
 		}
 		const user = await User.create(formData);
+
 		if (user) {
 			await UserDataModel.findOneAndRemove({email});
 			await SessionModel.findOneAndRemove({email});
@@ -222,6 +233,8 @@ const verifyEmail = async (req, res) => {
 			});
 		}
 		await unverifiedUser.findByIdAndRemove(_id);
+		console.log(session);
+		session.status = 'active';
 		await SessionModel.create({_id, email, sessions: [session]});
 		return res.status(201).json({
 			success: 'Account Created Successfully',
@@ -245,6 +258,9 @@ const verifyEmail = async (req, res) => {
 		await DollarWallet.findByIdAndRemove(unverified._id);
 		await EuroWallet.findByIdAndRemove(unverified._id);
 		await PoundWallet.findByIdAndRemove(unverified._id);
+		if (err.message === 'jwt expired') {
+			return res.status(400).json({error: 'OTP code has expired'});
+		}
 		res.status(401).json({error: err.message});
 	}
 };
@@ -373,7 +389,10 @@ const confirmOTP = async (req, res) => {
 		}
 	} catch (err) {
 		console.log(err.message);
-		res.status(400).json({error: 'Invalid OTP Code'});
+		if (err.message === 'jwt expired') {
+			return res.status(400).json({error: 'OTP code has expired'});
+		}
+		res.status(400).json({error: 'OTP code has expired'});
 	}
 };
 

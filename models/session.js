@@ -25,7 +25,7 @@ const SessionSchema = new Schema(
 				},
 				deviceID: {
 					type: String,
-					required: [true, 'Please provide the device unque ID'],
+					required: [true, 'Please provide the device unique ID'],
 					unique: true,
 				},
 				firstSignIn: {

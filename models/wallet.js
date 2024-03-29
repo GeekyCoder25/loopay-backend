@@ -28,6 +28,10 @@ const Wallet = new Schema({
 		required: [true, 'please provide your account number'],
 		unique: true,
 	},
+	accName: {
+		type: String,
+		required: [true, 'please provide your account name'],
+	},
 	bank: {
 		type: String,
 		required: [true, 'please provide your bank name'],

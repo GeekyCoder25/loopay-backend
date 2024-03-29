@@ -201,7 +201,7 @@ const verifyEmail = async (req, res) => {
 			await UserDataModel.findByIdAndRemove(_id);
 			return res.status(500).json(paystack);
 		}
-		const {id, account_number, bank} = paystack.data;
+		const {id, account_number, account_name, bank} = paystack.data;
 		delete paystack.data.assignment;
 		const apiData = paystack.data;
 		const allWalletData = {
@@ -217,6 +217,7 @@ const verifyEmail = async (req, res) => {
 			walletID: Number(id),
 			accNo: account_number,
 			bank: bank.name,
+			accName: account_name,
 			apiData,
 		};
 		await LocalWallet.create({...allWalletData, ...paystackData});

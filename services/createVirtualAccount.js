@@ -13,7 +13,7 @@ const createVirtualAccount = async data => {
 			const response = await axios.post(url, id, {headers});
 			return response.data;
 		} catch (error) {
-			console.error(`PayStackError:${error.response.data}`);
+			console.log(error.response.data);
 		}
 	};
 	const url = 'https://api.paystack.co/customer';

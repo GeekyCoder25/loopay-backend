@@ -217,9 +217,8 @@ const setupRouter = async () => {
 				);
 			break;
 		case 'reloadly':
-			router
-				.route('/airtime')
-				.post(airtimeAPIToken, accountStatus, schedulePayment, buyAirtime);
+			router.route('/data-plans').get(airtimeAPIToken, getDataPlans);
+
 			break;
 		default:
 			router.route('/data-plans').get(airtimeAPIToken, getDataPlans);

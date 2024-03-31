@@ -86,7 +86,7 @@ const registerAccount = async (req, res) => {
 		const {email, password, referralCode, userName, phoneNumber} = formData;
 		const unverified = await unverifiedUser.findOne({
 			email,
-			userName,
+			userName: userName.toLowerCase(),
 			phoneNumber,
 		});
 		console.log(unverified);

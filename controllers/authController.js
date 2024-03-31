@@ -89,7 +89,6 @@ const registerAccount = async (req, res) => {
 			userName: userName.toLowerCase(),
 			phoneNumber,
 		});
-		console.log(unverified);
 
 		if (unverified) {
 			return await verifyEmailHTML(email, res);

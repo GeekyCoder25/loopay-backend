@@ -83,14 +83,18 @@ const registerAccount = async (req, res) => {
 			req.body.email = req.body.email.toLowerCase();
 		}
 		const formData = req.body;
-		const {email, password, referralCode} = formData;
+		const {email, password, referralCode, userName, phoneNumber} = formData;
 		const unverified = await unverifiedUser.findOne({
 			email,
+			userName,
+			phoneNumber,
 		});
 
 		if (unverified) {
 			return await verifyEmailHTML(email, res);
 		}
+		await unverifiedUser.create(formData);
+		await unverifiedUser.findOneAndRemove({email});
 		const user = await User.create(formData);
 
 		if (user) {
@@ -126,6 +130,7 @@ const registerAccount = async (req, res) => {
 		await verifyEmailHTML(email, res);
 	} catch (err) {
 		console.log(err.message);
+		await unverifiedUser.findOneAndRemove({email: req.body.email});
 		handleErrors(err, res);
 	}
 };

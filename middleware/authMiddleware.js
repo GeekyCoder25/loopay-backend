@@ -32,8 +32,8 @@ const protect = async (req, res, next) => {
 					session => session.deviceID !== req.sessionID
 				);
 				if (
-					sessionToUpdate.length === 1 &&
-					sessionToUpdate[0].status === 'active'
+					sessionToUpdate.length === 1
+					// && sessionToUpdate[0].status === 'active'
 				) {
 					const lastSeen = new Date();
 					let session = {...sessionToUpdate[0], lastSeen};
@@ -63,11 +63,11 @@ const protect = async (req, res, next) => {
 				}
 			}
 		} catch (err) {
-			return res.status(401).json('Not authorised, Invalid token');
+			return res.status(401).json('Not authorized, Invalid token');
 		}
 	}
 	if (!token) {
-		return res.status(401).json('Not authorised, no token');
+		return res.status(401).json('Not authorized, no token');
 	}
 	next();
 };

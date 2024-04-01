@@ -92,7 +92,6 @@ const registerAccount = async (req, res) => {
 			await unverifiedUser.findOneAndRemove({email});
 		}
 
-		console.log(formData);
 		await unverifiedUser.create(formData);
 		await unverifiedUser.findOneAndRemove({email});
 		const user = await User.create(formData);

@@ -83,16 +83,16 @@ const registerAccount = async (req, res) => {
 			req.body.email = req.body.email.toLowerCase();
 		}
 		const formData = req.body;
-		const {email, password, referralCode, userName, phoneNumber} = formData;
+		const {email, password, referralCode} = formData;
 		const unverified = await unverifiedUser.findOne({
 			email,
-			userName: userName.toLowerCase(),
-			phoneNumber,
 		});
 
 		if (unverified) {
-			return await verifyEmailHTML(email, res);
+			await unverifiedUser.findOneAndRemove({email});
 		}
+
+		console.log(formData);
 		await unverifiedUser.create(formData);
 		await unverifiedUser.findOneAndRemove({email});
 		const user = await User.create(formData);
@@ -209,11 +209,25 @@ const verifyEmail = async (req, res) => {
 		const {id, account_number, account_name, bank} = paystack.data;
 		delete paystack.data.assignment;
 		const apiData = paystack.data;
+
+		const generateAccNo = () => {
+			let accNo;
+			if (phoneNumber.slice(4) === 10) {
+				accNo = phoneNumber.slice(4);
+			} else {
+				for (let i = 0; i < 10; i++) {
+					accNo += _.random(9);
+				}
+			}
+
+			return accNo;
+		};
+
 		const allWalletData = {
 			_id,
 			tagName: userName,
 			phoneNumber,
-			loopayAccNo: phoneNumber.slice(4),
+			loopayAccNo: generateAccNo(),
 			firstName,
 			lastName,
 			email,

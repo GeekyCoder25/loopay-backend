@@ -30,12 +30,12 @@ const UserSchema = new Schema(
 				16,
 				'Your username should not be more than 16 characters long',
 			],
-			unique: true,
+			// unique: true,
 		},
 		phoneNumber: {
 			type: String,
 			required: [true, 'Please input your phone number'],
-			unique: true,
+			// unique: true,
 			validate: [isMobilePhone, 'Invalid phone number'],
 		},
 		password: {

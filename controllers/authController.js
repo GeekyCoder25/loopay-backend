@@ -211,9 +211,10 @@ const verifyEmail = async (req, res) => {
 
 		const generateAccNo = () => {
 			let accNo;
-			if (phoneNumber.slice(4) === 10) {
+			if (phoneNumber.slice(4).length === 10) {
 				accNo = phoneNumber.slice(4);
 			} else {
+				accNo = '';
 				for (let i = 0; i < 10; i++) {
 					accNo += _.random(9);
 				}
@@ -252,7 +253,6 @@ const verifyEmail = async (req, res) => {
 			});
 		}
 		await unverifiedUser.findByIdAndRemove(_id);
-		console.log(session);
 		session.status = 'active';
 		await SessionModel.create({_id, email, sessions: [session]});
 		return res.status(201).json({

@@ -7,6 +7,7 @@ const TransactionModel = require('../models/transaction');
 const Notification = require('../models/notification');
 const {requiredKeys} = require('../utils/requiredKeys');
 const {addingDecimal} = require('../utils/addingDecimal');
+const {sendMail} = require('../utils/sendEmail');
 
 const initiateTransfer = async (req, res) => {
 	try {
@@ -131,9 +132,37 @@ const initiateTransfer = async (req, res) => {
 					amount: response.data.data.amount / 100,
 					transaction: savedTransaction,
 				});
+			} else if (response.data.message.includes('insufficient')) {
+				console.log('Insufficient balance');
+				return sendMail(
+					{
+						from: process.env.ADMIN_EMAIL,
+						to: process.env.ADMIN_EMAIL,
+						subject: 'Insufficient balance',
+						html: String.raw`<div
+					style="line-height: 30px; font-family: Arial, Helvetica, sans-serif"
+				>
+					<div style="text-align: center">
+						<img
+							src="${process.env.CLOUDINARY_APP_ICON}"
+							style="width: 200px; margin: 50px auto"
+						/>
+					</div>
+					<p>
+						A customer trying to send ₦${Number(
+							amount
+						).toLocaleString()} to other local banks just experienced a <b>server error</b>  due to insufficient funds
+						in your Paystack account dashboard, recharge now so you
+						customers can experience seamless experience while transacting.
+						<a href="https://dashboard.paystack.com/">Click here</a> to go to API dashboard
+					</p>
+				</div>`,
+					},
+					'',
+					'',
+					() => res.status(400).json({message: 'Server error'})
+				);
 			} else {
-				if (response.data.message.includes('insufficient')) {
-				}
 				throw new Error(response.data.message);
 			}
 		} catch (err) {

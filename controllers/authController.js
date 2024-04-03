@@ -411,7 +411,7 @@ const confirmOTP = async (req, res) => {
 		if (err.message === 'jwt expired') {
 			return res.status(400).json({error: 'OTP code has expired'});
 		}
-		res.status(400).json({error: 'OTP code has expired'});
+		res.status(400).json({error: err.message});
 	}
 };
 

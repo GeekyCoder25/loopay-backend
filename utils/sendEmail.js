@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 
 const sendMail = async (mailOptions, res, email, customFunc, errorFunc) => {
 	const transport = () => {
-		if (process.env.NODE_ENV === 'production') {
+		if (process.env.NODE_ENV !== 'production') {
 			return {
 				service: 'gmail',
 				auth: {

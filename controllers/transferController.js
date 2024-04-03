@@ -55,6 +55,7 @@ const initiateTransfer = async (req, res) => {
 			throw new Error('Insufficient funds');
 		try {
 			const response = await axios.post(url, data, config);
+
 			if (response.data.status) {
 				wallet.balance -= convertToKoboWithFee();
 				await wallet.save();
@@ -131,6 +132,8 @@ const initiateTransfer = async (req, res) => {
 					transaction: savedTransaction,
 				});
 			} else {
+				if (response.data.message.includes('insufficient')) {
+				}
 				throw new Error(response.data.message);
 			}
 		} catch (err) {

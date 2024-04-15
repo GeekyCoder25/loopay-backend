@@ -78,7 +78,6 @@ const registerAccount = async (req, res) => {
 		// await DollarWallet.findOneAndRemove({email: req.body.email});
 		// await EuroWallet.findOneAndRemove({email: req.body.email});
 		// await PoundWallet.findOneAndRemove({email: req.body.email});
-		// return;
 		if (req.body.email) {
 			req.body.email = req.body.email.toLowerCase();
 		}

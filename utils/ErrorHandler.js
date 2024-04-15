@@ -11,6 +11,8 @@ const handleErrors = (err, res) => {
 				return 'Email has already been used with another account';
 			else if (errorKey === 'phoneNo' || errorKey === 'phoneNumber')
 				return 'Phone number has already been used with another account';
+			else if (errorKey === 'userName')
+				return 'Username has already been used with another account';
 			else
 				return `${errorKey} value has already been used with another account`;
 		};

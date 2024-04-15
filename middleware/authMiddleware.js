@@ -60,7 +60,9 @@ const protect = async (req, res, next) => {
 							runValidators: true,
 						}
 					);
-					throw new Error();
+					return res
+						.status(401)
+						.json('Your account has been logged in on another device');
 				}
 			}
 		} catch (err) {

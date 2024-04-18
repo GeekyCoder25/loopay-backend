@@ -71,6 +71,10 @@ const verifyEmailHTML = async (email, res) => {
 
 const registerAccount = async (req, res) => {
 	try {
+		if (req.body.email) {
+			req.body.email = req.body.email.toLowerCase();
+		}
+
 		// await User.findOneAndRemove({email: req.body.email});
 		// await UserDataModel.findOneAndRemove({email: req.body.email});
 		// await SessionModel.findOneAndRemove({email: req.body.email});
@@ -78,9 +82,7 @@ const registerAccount = async (req, res) => {
 		// await DollarWallet.findOneAndRemove({email: req.body.email});
 		// await EuroWallet.findOneAndRemove({email: req.body.email});
 		// await PoundWallet.findOneAndRemove({email: req.body.email});
-		if (req.body.email) {
-			req.body.email = req.body.email.toLowerCase();
-		}
+
 		const formData = req.body;
 		const {email, password, referralCode} = formData;
 		const unverified = await unverifiedUser.findOne({

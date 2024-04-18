@@ -95,6 +95,7 @@ const {
 	PagaBuyAirtime,
 } = require('../controllers/paga/airtimeController');
 const serverAPIs = require('../models/serverAPIs');
+const {postReport} = require('../controllers/reportController');
 
 const router = express.Router();
 
@@ -252,6 +253,7 @@ router.route('/popup/:popUpID').delete(deletePopUp);
 router.route('/referral').get(getReferrals).post(postReferral);
 router.route('/withdraw-referral').get(referralWithdraw);
 router.route('/payment-proof').post(postPaymentProof);
+router.route('/report').post(postReport);
 router.route('/delete-account/:email').delete(deleteAccount);
 
 module.exports = router;

@@ -12,9 +12,10 @@ const axios = require('axios');
 const Notification = require('../models/notification');
 const VerificationModel = require('../models/verification');
 const {sendMail} = require('../utils/sendEmail');
+const Wallet = require('../models/wallet');
 const PaymentProof = require('../models/paymentproof');
 const {addingDecimal} = require('../utils/addingDecimal');
-const Wallet = require('../models/wallet');
+const ReportModel = require('../models/report');
 const PopUp = require('../models/popUp');
 const cloudinary = require('cloudinary').v2;
 
@@ -234,6 +235,7 @@ const getAllAdminInfo = async (req, res) => {
 			{doc: PaymentProof, label: 'proofs'},
 			{doc: PopUp, label: 'announcements'},
 			{doc: VerificationModel, label: 'verifications'},
+			{doc: ReportModel, label: 'reports'},
 		];
 
 		for (const index of documentsToCount) {

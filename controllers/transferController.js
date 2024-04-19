@@ -76,7 +76,7 @@ const initiateTransfer = async (req, res) => {
 				const {email, phoneNumber} = req.user;
 				const transaction = {
 					id,
-					status: 'pending',
+					status: 'success',
 					type: 'inter',
 					method: 'inter',
 					transactionType: 'debit',

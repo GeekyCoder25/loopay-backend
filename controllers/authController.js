@@ -318,6 +318,7 @@ const loginAccount = async (req, res) => {
 					fullName: result.fullName,
 					token: generateToken(result._id),
 					localCurrencyCode: userData.localCurrencyCode,
+					verificationStatus: userData.verificationStatus,
 				},
 			});
 		}

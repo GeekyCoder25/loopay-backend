@@ -357,23 +357,46 @@ const reverseTransaction = async (req, res) => {
 		const receiverWallet = await currencyWallet.findOne({
 			email: receiver.email,
 		});
-		const amount = await receiver.amount;
+		const amount = receiver.amount;
 		const amountInUnits = amount * 100;
-		await TransactionModel.findOneAndUpdate(
-			{reference, transactionType: 'credit'},
-			{status: 'refunded'}
-		);
-		await TransactionModel.findOneAndUpdate(
-			{reference, transactionType: 'debit'},
-			{status: 'reversed'}
-		);
+		const transaction = await TransactionModel.findOne({reference});
 
-		senderWallet.balance -= amountInUnits;
-		receiverWallet.balance += amountInUnits;
-		await senderWallet.save();
-		await receiverWallet.save();
+		if (
+			transaction.status === 'refunded' ||
+			transaction.status === 'reversed'
+		) {
+			await TransactionModel.findOneAndUpdate(
+				{reference, transactionType: 'credit'},
+				{status: 'success'}
+			);
+			await TransactionModel.findOneAndUpdate(
+				{reference, transactionType: 'debit'},
+				{status: 'success'}
+			);
+			senderWallet.balance -= amountInUnits;
+			receiverWallet.balance += amountInUnits;
 
-		res.status(200).json({status: true, message: 'Transaction reversed'});
+			await senderWallet.save();
+			await receiverWallet.save();
+
+			res.status(200).json({status: true, message: 'Transaction unreversed'});
+		} else {
+			await TransactionModel.findOneAndUpdate(
+				{reference, transactionType: 'credit'},
+				{status: 'refunded'}
+			);
+			await TransactionModel.findOneAndUpdate(
+				{reference, transactionType: 'debit'},
+				{status: 'reversed'}
+			);
+			senderWallet.balance += amountInUnits;
+			receiverWallet.balance -= amountInUnits;
+
+			await senderWallet.save();
+			await receiverWallet.save();
+
+			res.status(200).json({status: true, message: 'Transaction reversed'});
+		}
 	} catch (err) {
 		console.log(err.message);
 		res.status(400).json({status: false, message: err.message});

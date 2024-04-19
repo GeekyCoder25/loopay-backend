@@ -1,19 +1,11 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
-const fs = require('fs');
-const puppeteer = require('puppeteer');
 const TransactionModel = require('../models/transaction');
 const {addingDecimal} = require('../utils/addingDecimal');
+const pdf = require('html-pdf');
 
 const generateReceipt = async (req, res) => {
 	try {
 		const {allCurrencies, id, type} = req.body;
-		const generatePDF = async (htmlContent, outputPath) => {
-			const browser = await puppeteer.launch();
-			const page = await browser.newPage();
-			await page.setContent(htmlContent);
-			await page.pdf({path: outputPath, format: 'A4'});
-			await browser.close();
-		};
 
 		const history = await TransactionModel.findOne({
 			reference: id,
@@ -310,30 +302,29 @@ const generateReceipt = async (req, res) => {
 		</html>
 	`;
 
-		const outputPath = 'receipt.pdf';
-		await generatePDF(htmlContent, outputPath)
-			.then(() => console.log('PDF generated successfully!'))
-			.catch(error => console.error('Error generating PDF:', error));
+		const options = {format: 'Letter'};
 
-		const pdfFile = fs.readFileSync(outputPath);
+		// Generate PDF
+		pdf.create(htmlContent).toBuffer((err, buffer) => {
+			if (err) {
+				console.error(err);
+				return res.status(500).send('Error generating PDF');
+			}
+			// Set response headers
+			res.setHeader('Content-Type', 'application/pdf');
+			res.setHeader('Content-Disposition', 'inline; filename=generated.pdf');
 
-		const additionalData = {
-			message: 'PDF download successful',
-			timestamp: Date.now(),
-		};
+			// Send the PDF buffer as response
+			const responseData = {
+				pdf: buffer.toString('base64'), // Convert PDF buffer to base64 string
+				additionalData: {
+					message: 'PDF download successful',
+					timestamp: Date.now(),
+				},
+			};
 
-		res.setHeader('Content-Type', 'application/json');
-		res.setHeader(
-			'Content-Disposition',
-			'attachment; filename=download-data.json'
-		);
-
-		const responseData = {
-			pdf: pdfFile.toString('base64'), // Convert PDF buffer to base64 string
-			additionalData: additionalData,
-		};
-
-		res.status(200).json(responseData);
+			res.status(200).json(responseData);
+		});
 	} catch (error) {
 		console.log(error);
 		res.status(400).json({error: error.message, success: false});

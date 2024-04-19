@@ -311,10 +311,9 @@ const generateReceipt = async (req, res) => {
 	`;
 
 		const outputPath = 'receipt.pdf';
-		await generatePDF(htmlContent, outputPath).then(() =>
-			console.log('PDF generated successfully!')
-		);
-		// .catch(error => console.error('Error generating PDF:', error));
+		await generatePDF(htmlContent, outputPath)
+			.then(() => console.log('PDF generated successfully!'))
+			.catch(error => console.error('Error generating PDF:', error));
 
 		const pdfFile = fs.readFileSync(outputPath);
 

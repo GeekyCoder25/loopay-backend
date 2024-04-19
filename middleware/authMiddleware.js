@@ -18,7 +18,7 @@ const protect = async (req, res, next) => {
 			const decoded = jwt.verify(token, process.env.JWT_SECRET);
 			req.user = await User.findById(decoded.id).select('-password');
 			req.sessionID = req.headers.authorization.split(' ')[1].split('...')[1];
-			if (!req.user) throw new Error();
+			if (!req.user) throw new Error('Invalid user account');
 			const checkSessionsExist = await SessionModel.findOne({
 				email: req.user.email,
 			});

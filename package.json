@@ -26,7 +26,6 @@
 		"morgan": "^1.10.0",
 		"node-cron": "^3.0.3",
 		"nodemailer": "^6.9.3",
-		"pdf-creator-node": "^2.3.5",
 		"puppeteer": "^22.6.5",
 		"uuid": "^9.0.0",
 		"validator": "^13.9.0"

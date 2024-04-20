@@ -74,6 +74,17 @@ const Wallet = new Schema({
 
 Wallet.pre('save', async function (next) {
 	this.isLocal = true;
+	if (!this.currencyCode) this.currencyCode = 'NGN';
+	if (!this.currencyDetails)
+		this.currencyDetails = {
+			symbol: '₦',
+			name: 'Nigerian Naira',
+			symbol_native: '₦',
+			decimal_digits: 2,
+			rounding: 0,
+			code: 'NGN',
+			name_plural: 'Nigerian nairas',
+		};
 	if (!this.balance) this.balance = 0;
 	if (!this.tagName) this.tagName = this.userName || this.phoneNumber;
 	next();

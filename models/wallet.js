@@ -12,11 +12,11 @@ const Wallet = new Schema({
 	currency: String,
 	currencyCode: {
 		type: String,
-		required: [true, 'please provide currency code'],
+		// required: [true, 'please provide currency code'],
 	},
 	currencyDetails: {
 		type: Object,
-		required: [true, 'please provide currency details'],
+		// required: [true, 'please provide currency details'],
 	},
 	email: {
 		type: String,

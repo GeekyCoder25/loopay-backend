@@ -5,7 +5,8 @@
 	"main": "app.js",
 	"scripts": {
 		"start": "node app",
-		"dev": "nodemon app"
+		"dev": "nodemon app",
+		"postinstall": "node node_modules/puppeteer/install.js"
 	},
 	"author": "",
 	"license": "ISC",

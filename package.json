@@ -6,7 +6,7 @@
 	"scripts": {
 		"start": "node app",
 		"dev": "nodemon app",
-		"postinstall": "node node_modules/puppeteer/install.js"
+		"postinstall": "node node_modules/puppeteer/install.mjs"
 	},
 	"author": "",
 	"license": "ISC",

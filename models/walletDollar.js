@@ -10,6 +10,10 @@ const DollarWallet = new Schema({
 		// unique: true,
 	},
 	currency: String,
+	currencyCode: String,
+	currencyDetails: {
+		type: Object,
+	},
 	email: {
 		type: String,
 		required: [true, 'Please input your email address'],
@@ -59,7 +63,18 @@ const DollarWallet = new Schema({
 });
 
 DollarWallet.pre('save', async function (next) {
-	this.currency = 'dollar';
+	if (!this.currency) this.currency = 'dollar';
+	if (!this.currencyCode) this.currencyCode = 'USD';
+	if (!this.currencyDetails)
+		this.currencyDetails = {
+			symbol: '$',
+			name: 'US Dollar',
+			symbol_native: '$',
+			decimal_digits: 2,
+			rounding: 0,
+			code: 'USD',
+			name_plural: 'US dollars',
+		};
 	if (!this.balance) this.balance = 0;
 	if (!this.tagName) this.tagName = this.userName || this.phoneNumber;
 	next();

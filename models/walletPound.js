@@ -10,6 +10,10 @@ const PoundWallet = new Schema({
 		// unique: true,
 	},
 	currency: String,
+	currencyCode: String,
+	currencyDetails: {
+		type: Object,
+	},
 	email: {
 		type: String,
 		required: [true, 'Please input your email address'],
@@ -59,7 +63,18 @@ const PoundWallet = new Schema({
 });
 
 PoundWallet.pre('save', async function (next) {
-	this.currency = 'pound';
+	if (!this.currency) this.currency = 'pound';
+	if (!this.currencyCode) this.currencyCode = 'GBP';
+	if (!this.currencyDetails)
+		this.currencyDetails = {
+			symbol: '£',
+			name: 'British Pound Sterling',
+			symbol_native: '£',
+			decimal_digits: 2,
+			rounding: 0,
+			code: 'GBP',
+			name_plural: 'British pounds sterling',
+		};
 	if (!this.balance) this.balance = 0;
 	if (!this.tagName) this.tagName = this.userName || this.phoneNumber;
 	next();

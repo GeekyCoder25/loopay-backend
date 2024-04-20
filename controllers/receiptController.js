@@ -304,9 +304,9 @@ const generateReceipt = async (req, res) => {
 		</html>
 	`;
 
-		const browser = await puppeteer.launch({
-			executablePath: '../node_modules/.cache/puppeteer/chrome',
-		});
+		return res.status(200).json({html: htmlContent});
+
+		const browser = await puppeteer.launch();
 		const page = await browser.newPage();
 		await page.setContent(htmlContent);
 		const pdfFile = await page.pdf({format: 'A4'});

@@ -10,6 +10,10 @@ const EuroWallet = new Schema({
 		// unique: true,
 	},
 	currency: String,
+	currencyCode: String,
+	currencyDetails: {
+		type: Object,
+	},
 	email: {
 		type: String,
 		required: [true, 'Please input your email address'],
@@ -59,7 +63,18 @@ const EuroWallet = new Schema({
 });
 
 EuroWallet.pre('save', async function (next) {
-	this.currency = 'euro';
+	if (!this.currency) this.currency = 'euro';
+	if (!this.currencyCode) this.currencyCode = 'EUR';
+	if (!this.currencyDetails)
+		this.currencyDetails = {
+			symbol: '€',
+			name: 'Euro',
+			symbol_native: '€',
+			decimal_digits: 2,
+			rounding: 0,
+			code: 'EUR',
+			name_plural: 'euros',
+		};
 	if (!this.balance) this.balance = 0;
 	if (!this.tagName) this.tagName = this.userName || this.phoneNumber;
 	next();

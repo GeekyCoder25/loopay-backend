@@ -423,10 +423,16 @@ const getUser = async (req, res) => {
 			if (user) {
 				const userData = await UserData.findOne({email: user.email});
 				const wallet = await Wallet.findOne({email: user.email});
+				const dollarWallet = await DollarWallet.findOne({email: user.email});
+				const euroWallet = await EuroWallet.findOne({email: user.email});
+				const poundWallet = await PoundWallet.findOne({email: user.email});
 				return {
 					...user.toObject(),
 					...userData.toObject(),
 					wallet: {...wallet.toObject()},
+					dollarWallet: {...dollarWallet.toObject()},
+					euroWallet: {...euroWallet.toObject()},
+					poundWallet: {...poundWallet.toObject()},
 				};
 			}
 			return null;

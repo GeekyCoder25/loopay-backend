@@ -10,6 +10,14 @@ const Wallet = new Schema({
 		unique: true,
 	},
 	currency: String,
+	currencyCode: {
+		type: String,
+		required: [true, 'please provide currency code'],
+	},
+	currencyDetails: {
+		type: Object,
+		required: [true, 'please provide currency details'],
+	},
 	email: {
 		type: String,
 		required: [true, 'Please input your email address'],
@@ -65,7 +73,6 @@ const Wallet = new Schema({
 });
 
 Wallet.pre('save', async function (next) {
-	if (!this.currency) this.currency = 'naira';
 	this.isLocal = true;
 	if (!this.balance) this.balance = 0;
 	if (!this.tagName) this.tagName = this.userName || this.phoneNumber;

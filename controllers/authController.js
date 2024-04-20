@@ -74,7 +74,31 @@ const registerAccount = async (req, res) => {
 		if (req.body.email) {
 			req.body.email = req.body.email.toLowerCase();
 		}
+		// const paystack = await createVirtualAccount({
+		// 	email: req.body.email,
+		// 	first_name: req.body.firstName,
+		// 	middle_name: req.body.middleName,
+		// 	last_name: req.body.lastName,
+		// 	phone: req.body.phoneNumber,
+		// 	preferred_bank: process.env.PREFERRED_BANK,
+		// 	country: 'NG',
+		// });
+		// console.log(paystack);
+		// const {id, account_number, account_name, bank} = paystack.data;
+		// delete paystack.data.assignment;
+		// const apiData = paystack.data;
+		// await UserDataModel.findOneAndUpdate(
+		// 	{email: req.body.email},
+		// 	{
+		// 		walletID: Number(id),
+		// 		accNo: account_number,
+		// 		bank: bank.name,
+		// 		accName: account_name,
+		// 		apiData,
+		// 	}
+		// );
 
+		// return;
 		// await User.findOneAndRemove({email: req.body.email});
 		// await UserDataModel.findOneAndRemove({email: req.body.email});
 		// await SessionModel.findOneAndRemove({email: req.body.email});
@@ -139,6 +163,7 @@ const verifyEmail = async (req, res) => {
 	if (req.body.email) {
 		req.body.email = req.body.email.toLowerCase();
 	}
+
 	const unverified = await unverifiedUser.findOne({email: req.body.email});
 	if (!unverified) {
 		return res.status(400).json({error: "Can't find user, re-register"});
@@ -159,6 +184,7 @@ const verifyEmail = async (req, res) => {
 			phoneNumber,
 			localCurrencyCode,
 			country,
+			currencyDetails,
 			role,
 			referrerCode,
 			password,
@@ -240,7 +266,12 @@ const verifyEmail = async (req, res) => {
 			accName: account_name,
 			apiData,
 		};
-		await LocalWallet.create({...allWalletData, ...paystackData});
+		await LocalWallet.create({
+			...allWalletData,
+			currencyCode: localCurrencyCode,
+			currencyDetails,
+			...paystackData,
+		});
 		await DollarWallet.create({...allWalletData});
 		await EuroWallet.create({...allWalletData});
 		await PoundWallet.create({...allWalletData});

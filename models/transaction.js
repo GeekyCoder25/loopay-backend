@@ -32,7 +32,7 @@ const TransactionModel = new Schema(
 		},
 		method: {
 			type: String,
-			enum: ['intra', 'inter', 'card', 'deposit', 'transfer'],
+			enum: ['intra', 'inter', 'card', 'deposit', 'transfer', 'fee'],
 		},
 		senderAccount: {
 			type: String,
@@ -83,6 +83,8 @@ const TransactionModel = new Schema(
 			type: String,
 			required: [true, "Please provide transaction's currency"],
 		},
+		fromBalance: String,
+		toBalance: String,
 		networkProvider: {
 			type: String,
 			// enum: ['mtn', 'airtel', 'glo', '9mobile'],

@@ -149,6 +149,8 @@ const buyAirtime = async (req, res) => {
 				amount,
 				reference: apiData.transactionId,
 				currency,
+				fromBalance: wallet.balance,
+				toBalance: wallet.balance - amount * 100,
 				metadata: apiData,
 			};
 			if (rate) {
@@ -365,6 +367,8 @@ const buyData = async (req, res) => {
 				reference: id,
 				currency,
 				dataPlan: plan,
+				fromBalance: wallet.balance,
+				toBalance: wallet.balance - amount * 100,
 				metadata: metadata || null,
 			};
 			if (rate) {

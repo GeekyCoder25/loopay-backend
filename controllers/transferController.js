@@ -51,14 +51,14 @@ const initiateTransfer = async (req, res) => {
 			recipient,
 		};
 
-		const convertToKoboWithFee = () => (Number(amount) + Number(fee)) * 100;
-		if (wallet.balance < convertToKoboWithFee())
+		const convertToKoboWithFee = (Number(amount) + Number(fee)) * 100;
+		if (wallet.balance < convertToKoboWithFee)
 			throw new Error('Insufficient funds');
 		try {
 			const response = await axios.post(url, data, config);
 
 			if (response.data.status) {
-				wallet.balance -= convertToKoboWithFee();
+				wallet.balance -= convertToKoboWithFee;
 				await wallet.save();
 				const {
 					bankName,
@@ -94,6 +94,8 @@ const initiateTransfer = async (req, res) => {
 					reference: response.data.data.reference,
 					transferCode: response.data.data.transfer_code,
 					currency,
+					fromBalance: senderWallet.balance,
+					toBalance: senderWallet.balance - convertToKoboWithFee,
 					metadata: metadata || null,
 					createdAt: new Date(),
 				};
@@ -124,9 +126,62 @@ const initiateTransfer = async (req, res) => {
 						...transaction,
 					});
 
+					await TransactionModel.create({
+						email,
+						phoneNumber,
+						id,
+						status: 'success',
+						type: 'inter',
+						method: 'inter',
+						transactionType: 'debit',
+						senderAccount: senderWallet.loopayAccNo,
+						senderName: `${req.user.firstName} ${req.user.lastName}`,
+						senderPhoto: senderPhoto || '',
+						receiverAccount: accNo,
+						receiverName: name,
+						receiverPhoto: photo || '',
+						sourceBank: 'Loopay',
+						destinationBank: bankName,
+						destinationBankSlug: slug,
+						amount,
+						description: reason,
+						reference: response.data.data.reference,
+						transferCode: response.data.data.transfer_code,
+						currency,
+						fromBalance: senderWallet.balance,
+						toBalance: senderWallet.balance - convertToKoboWithFee,
+						metadata: metadata || null,
+						createdAt: new Date(),
+					});
 					await Notification.create(notification);
 				}
+
 				req.schedule && (await req.schedule(req));
+				await sendMail({
+					from: process.env.SUPPORT_EMAIL,
+					to: email,
+					subject: 'Loopay Debit Transaction Alert',
+					html: String.raw`
+				<main style="font-family: Arial, Helvetica, sans-serif">
+
+				<h1>Debit Transaction Alert - ₦${Number(amount).toLocaleString()}</h1>
+					<div style="text-align: center">
+						<img
+							src="${process.env.CLOUDINARY_APP_ICON}"
+							style="width: 200px; margin: 50px auto"
+						/>
+					</div>
+					<p>
+						A customer trying to send ₦${Number(
+							amount
+						).toLocaleString()} to other local banks just experienced a <b>server error</b>  due to insufficient funds
+						in your Paystack account dashboard, recharge now so you
+						customers can experience seamless experience while transacting.
+						<a href="https://dashboard.paystack.com/">Click here</a> to go to API dashboard
+					</p>
+				</main>
+				`,
+				});
 				return res.status(200).json({
 					...response.data.data,
 					amount: response.data.data.amount / 100,
@@ -136,7 +191,7 @@ const initiateTransfer = async (req, res) => {
 				console.log('Insufficient balance');
 				return sendMail(
 					{
-						from: process.env.ADMIN_EMAIL,
+						from: process.env.SUPPORT_EMAIL,
 						to: process.env.ADMIN_EMAIL,
 						subject: 'Insufficient balance',
 						html: String.raw`<div
@@ -253,6 +308,8 @@ const initiateTransferToLoopay = async (req, res) => {
 				email: senderWallet.email,
 				phoneNumber: req.user.phoneNumber,
 				transactionType: 'debit',
+				fromBalance: senderWallet.balance,
+				toBalance: senderWallet.balance - amountInUnits,
 				...transaction,
 			});
 			const notification = {
@@ -278,6 +335,8 @@ const initiateTransferToLoopay = async (req, res) => {
 				email: sendeeWallet.email,
 				phoneNumber: sendeeWallet.phoneNumber,
 				transactionType: 'credit',
+				fromBalance: sendeeWallet.balance,
+				toBalance: sendeeWallet.balance + amountInUnits,
 				...transaction,
 			});
 

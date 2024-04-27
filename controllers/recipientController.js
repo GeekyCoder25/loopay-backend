@@ -99,7 +99,6 @@ const getRecipients = async (req, res) => {
 
 const postRecipient = async (req, res) => {
 	try {
-		console.log(req.body);
 		if (requiredKeys(req, res, ['bank', 'accNo'])) return;
 		const {code, currency, slug, type} = req.body.bank;
 		const {email, phoneNumber} = req.user;

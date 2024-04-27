@@ -40,6 +40,23 @@ const initiateTransfer = async (req, res) => {
 			])
 		)
 			return;
+
+		const duplicateTransaction = TransactionModel.findOne({
+			recipient,
+			amount,
+			destinationBankSlug: req.body.slug,
+			destinationBank: req.body.bankName,
+		});
+		if (duplicateTransaction) {
+			const fiveMinutesAgo = new Date();
+			fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
+			const transactionTime = new Date(duplicateTransaction.createdAt);
+			if (transactionTime > fiveMinutesAgo) {
+				throw new Error(
+					'Duplicate transfer suspected, if this is deliberate kindly wait for five minutes before trying again'
+				);
+			}
+		}
 		const wallet = await LocalWallet.findOne({phoneNumber});
 		const senderWallet = wallet;
 		if (!wallet) throw new Error('wallet not found');
@@ -231,6 +248,22 @@ const initiateTransferToLoopay = async (req, res) => {
 			phoneNumber: req.user.phoneNumber,
 		});
 		const sendeeWallet = await currencyWallet.findOne({phoneNumber});
+
+		const duplicateTransaction = TransactionModel.findOne({
+			currency,
+			amount,
+			receiverAccount: sendeeWallet.loopayAccNo,
+		});
+		if (duplicateTransaction) {
+			const fiveMinutesAgo = new Date();
+			fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
+			const transactionTime = new Date(duplicateTransaction.createdAt);
+			if (transactionTime > fiveMinutesAgo) {
+				throw new Error(
+					'Duplicate transfer suspected, if this is deliberate kindly wait for five minutes before trying again'
+				);
+			}
+		}
 		if (phoneNumber === req.user.phoneNumber)
 			throw new Error("You can't send to yourself");
 		if (!sendeeWallet) throw new Error('User not found');

@@ -20,7 +20,9 @@ const listBanks = async (req, res) => {
 		}
 		throw new Error(`No supported banks for ${currency} at the moment`);
 	} catch (err) {
-		res.status(400).json(err.message);
+		res
+			.status(400)
+			.json(err.message.includes('paystack') ? 'Server error' : err.message);
 		console.error(err.message);
 	}
 };

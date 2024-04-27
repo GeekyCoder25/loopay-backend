@@ -11,12 +11,12 @@ const accountStatus = async (req, res, next) => {
 				return next();
 			}
 			return res
-				.status(401)
+				.status(400)
 				.json(
 					`Your account has been suspended from performing transactions till ${user.blockedAt.toLocaleDateString()}`
 				);
 		} else if (user.status === 'blocked') {
-			return res.status(401).json(`Your account has been blocked`);
+			return res.status(400).json(`Your account has been blocked`);
 		}
 	} else {
 		return res.status(400).json('User account not found');

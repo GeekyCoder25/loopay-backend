@@ -55,10 +55,10 @@ const UserSchema = new Schema(
 				code: String,
 			},
 		},
-		// currencyDetails: {
-		// 	type: Object,
-		// 	required: [true, 'Currently not supported for this country'],
-		// },
+		currencyDetails: {
+			type: Object,
+			required: [true, 'Currently not supported for this country'],
+		},
 		referrerCode: String,
 	},
 	{timestamps: true}

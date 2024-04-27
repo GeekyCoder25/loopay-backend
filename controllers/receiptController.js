@@ -1,13 +1,10 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
-const fs = require('fs');
-const puppeteer = require('puppeteer');
 const TransactionModel = require('../models/transaction');
 const {addingDecimal} = require('../utils/addingDecimal');
 
 const generateReceipt = async (req, res) => {
 	try {
 		const {allCurrencies, id, type} = req.body;
-		const generatePDF = async htmlContent => {};
 
 		const history = await TransactionModel.findOne({
 			reference: id,
@@ -305,30 +302,6 @@ const generateReceipt = async (req, res) => {
 	`;
 
 		return res.status(200).json({html: htmlContent});
-
-		const browser = await puppeteer.launch();
-		const page = await browser.newPage();
-		await page.setContent(htmlContent);
-		const pdfFile = await page.pdf({format: 'A4'});
-		await browser.close();
-
-		const additionalData = {
-			message: 'PDF download successful',
-			timestamp: Date.now(),
-		};
-
-		res.setHeader('Content-Type', 'application/json');
-		res.setHeader(
-			'Content-Disposition',
-			'attachment; filename=download-data.json'
-		);
-
-		const responseData = {
-			pdf: pdfFile.toString('base64'), // Convert PDF buffer to base64 string
-			additionalData: additionalData,
-		};
-
-		res.status(200).json(responseData);
 	} catch (error) {
 		console.log(error);
 		res.status(400).json({error: error.message, success: false});

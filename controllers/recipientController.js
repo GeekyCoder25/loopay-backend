@@ -22,6 +22,29 @@ const createRecipient = async recipientData => {
 const checkRecipient = async (req, res) => {
 	try {
 		if (requiredKeys(req, res, ['bank', 'accNo'])) return;
+		if (typeof req.body.bank === 'string') {
+			const {currency} = req.body;
+
+			if (!currency) throw new Error('No currency provided in query');
+
+			if (currency === 'naira' || currency === 'NGN') {
+				const SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+				const config = {
+					headers: {
+						Authorization: `Bearer ${SECRET_KEY}`,
+						'Content-Type': 'application/json',
+					},
+				};
+				const url = 'https://api.paystack.co/bank';
+				const response = await axios.get(url, config);
+				const foundBank = response.data.data.find(
+					banks => banks.code === req.body.bank
+				);
+				if (!foundBank) throw new Error('No bank found');
+				req.body.bank = foundBank;
+			}
+		}
+
 		const {code, currency, slug, type} = req.body.bank;
 		const {email, phoneNumber} = req.user;
 		const transferRecipientData = {
@@ -47,7 +70,7 @@ const checkRecipient = async (req, res) => {
 			slug,
 			recipientCode: transferRecipient.data.recipient_code,
 		};
-		res.status(200).json(recipient);
+		res.status(200).json({...recipient, bankData: req.body.bank});
 	} catch (err) {
 		res.status(400).json(err.message);
 		console.log(err.message);
@@ -64,15 +87,19 @@ const getRecipients = async (req, res) => {
 		}
 		query.email = email;
 		query.currency = currency.split(',');
-		const recipient = await RecipientModel.find(query).limit(limit);
+		const recipient = await RecipientModel.find(query)
+			.limit(limit)
+			.sort('-updatedAt');
 		res.status(200).json(recipient);
 	} catch (err) {
 		res.status(400).json(err.message);
 		console.log(err.message);
 	}
 };
+
 const postRecipient = async (req, res) => {
 	try {
+		console.log(req.body);
 		if (requiredKeys(req, res, ['bank', 'accNo'])) return;
 		const {code, currency, slug, type} = req.body.bank;
 		const {email, phoneNumber} = req.user;
@@ -90,7 +117,16 @@ const postRecipient = async (req, res) => {
 			email,
 			recipientCode: transferRecipient.data.recipient_code,
 		});
-		if (checkRecipientExists) return res.status(200).json(checkRecipientExists);
+		if (checkRecipientExists) {
+			await RecipientModel.findOneAndUpdate(
+				{
+					email,
+					recipientCode: transferRecipient.data.recipient_code,
+				},
+				{updatedAt: Date.now()}
+			);
+			return res.status(200).json(checkRecipientExists);
+		}
 		const recipient = await RecipientModel.create({
 			email,
 			phoneNumber,

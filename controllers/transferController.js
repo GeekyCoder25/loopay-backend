@@ -41,19 +41,21 @@ const initiateTransfer = async (req, res) => {
 		)
 			return;
 
-		const duplicateTransaction = TransactionModel.findOne({
+		const twoMinutesAgo = new Date();
+		twoMinutesAgo.setMinutes(twoMinutesAgo.getMinutes() - 2);
+
+		const duplicateTransaction = await TransactionModel.findOne({
 			recipient,
 			amount,
 			destinationBankSlug: req.body.slug,
 			destinationBank: req.body.bankName,
+			createdAt: {$gt: twoMinutesAgo},
 		});
 		if (duplicateTransaction) {
-			const fiveMinutesAgo = new Date();
-			fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
 			const transactionTime = new Date(duplicateTransaction.createdAt);
-			if (transactionTime > fiveMinutesAgo) {
+			if (transactionTime > twoMinutesAgo) {
 				throw new Error(
-					'Duplicate transfer suspected, if this is deliberate kindly wait for five minutes before trying again'
+					'Duplicate transfer suspected, if this is deliberate kindly wait for two minutes before trying again'
 				);
 			}
 		}
@@ -249,18 +251,19 @@ const initiateTransferToLoopay = async (req, res) => {
 		});
 		const sendeeWallet = await currencyWallet.findOne({phoneNumber});
 
-		const duplicateTransaction = TransactionModel.findOne({
+		const twoMinutesAgo = new Date();
+		twoMinutesAgo.setMinutes(twoMinutesAgo.getMinutes() - 2);
+		const duplicateTransaction = await TransactionModel.findOne({
 			currency,
 			amount,
 			receiverAccount: sendeeWallet.loopayAccNo,
+			createdAt: {$gt: twoMinutesAgo},
 		});
 		if (duplicateTransaction) {
-			const fiveMinutesAgo = new Date();
-			fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
 			const transactionTime = new Date(duplicateTransaction.createdAt);
-			if (transactionTime > fiveMinutesAgo) {
+			if (transactionTime > twoMinutesAgo) {
 				throw new Error(
-					'Duplicate transfer suspected, if this is deliberate kindly wait for five minutes before trying again'
+					'Duplicate transfer suspected, if this is deliberate kindly wait for two minutes before trying again'
 				);
 			}
 		}

@@ -593,62 +593,28 @@ const sendReceipt = async receiptData => {
 						padding: 0;
 						margin: 0;
 					}
-					body{
-						font-family: 'Inter', sans-serif;
-						padding: 20px;
-					}
-					h1{
-						text-transform: capitalize
+					h1 {
+						text-transform: capitalize;
 					}
 					main {
-						max-width: 800px;
-						margin-top: 50px;
 					}
 					.container {
-						width: 100%;
-						height: 100%;
-						display: flex;
-						flex-direction: column;
 					}
 					.logo {
-						width: 150px;
-						height: 100px;
-						object-fit: contain;
 					}
 					header {
-						display: flex;
-						align-items: center;
-						justify-content: space-between;
-						gap: 20px;
-						width: 100%;
-						margin-bottom: 50px;
 					}
 					header span {
-						display: inline-block;
-						padding-top: 6px;
 					}
 					.title {
-						font-size: 2rem;
 					}
 					.amount {
-						display: flex;
-						align-items: flex-end;
 					}
 					.amount h4 {
-						margin-right: 5px;
-						margin-bottom: 2px;
-						font-size: 1.3rem;
 					}
 					.amount h5 {
-						margin-right: 10px;
-						margin-bottom: 2px;
-						font-size: 1.5rem;
 					}
 					.statusHeader {
-						font-weight: 600;
-						margin-top: 20px;
-						display: inline-block;
-						text-transform: capitalize;
 					}
 					.success {
 						color: #0fb52d;
@@ -662,56 +628,73 @@ const sendReceipt = async receiptData => {
 						color: #ed4c5c;
 					}
 					section {
-						margin-top: 30px;
 					}
 					section div {
-						display: flex;
-						align-items: center;
-						justify-content: space-between;
-						border-bottom: 1px solid #000;
-						padding: 10px 2px;
 					}
 					section .value {
 						text-transform: capitalize;
 					}
 					footer {
-						padding: 50px 20px 10px;
-						text-align: justify;
-						margin-top: auto;
-						line-height: 25px;
-						display: flex;
-						flex-direction: column;
-						gap: 10px;
 					}
 					footer h3 {
-						display: inline-block;
 					}
 					footer img {
-						width: 200px;
-						height: 200px;
-						margin-left: auto;
 					}
 				</style>
 			</head>
-			<body>
-				<h1>${transactionType} Transaction Alert - [₦${Number(
-			amount
-		).toLocaleString()}]</h1>
-				<main>
-					<div class="container">
-						<header>
+			<body
+				style="	font-family: 'Inter', sans-serif;
+						padding: 20px;"
+			>
+				<h1>
+					${transactionType} Transaction Alert -
+					[₦${Number(amount).toLocaleString()}]
+				</h1>
+				<main
+					style="			max-width: 800px;
+						margin-top: 50px;"
+				>
+					<div
+						style="width: 100%;
+						height: 100%;
+						display: flex;
+						flex-direction: column;"
+					>
+						<header
+							style="display: flex;
+						align-items: center;
+						justify-content: space-between;
+						gap: 20px;
+						width: 100%;
+						margin-bottom: 50px;"
+						>
 							<div>
-								<h2 class="title">Receipt</h2>
-								<span>${new Date(createdAt).toString()}</span>
+								<h2 style="font-size: 2rem;">Receipt</h2>
+								<span
+									style="		display: inline-block;
+						padding-top: 6px;"
+									>${new Date(createdAt).toString()}</span
+								>
 							</div>
 							<img
 								src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
 								alt=""
-								class="logo"
+								style="	width: 150px;
+						height: 100px;
+						object-fit: contain;"
 							/>
 						</header>
-						<div class="amount">
-							<h4>${currencySymbol}</h4>
+						<div
+							style="display: flex;
+						align-items: flex-end;"
+						>
+							<h4
+								style="margin-right: 5px;
+						margin-bottom: 2px;
+						font-size: 1.3rem;"
+							>
+								${currencySymbol}
+							</h4>
 							<h1>
 								${
 									Number(amount || swapToAmount)
@@ -719,15 +702,34 @@ const sendReceipt = async receiptData => {
 										.split('.')[0]
 								}
 							</h1>
-							<h5>.${Number(amount).toLocaleString().split('.')[1] || '00'}</h5>
+							<h5
+								style="margin-right: 10px;
+						margin-bottom: 2px;
+						font-size: 1.5rem;"
+							>
+								.${Number(amount).toLocaleString().split('.')[1] || '00'}
+							</h5>
 						</div>
-						<span class="statusHeader ${status}">${status}</span>
-						<section>
+						<span
+							class="statusHeader ${status}"
+							style="font-weight: 600;
+						margin-top: 20px;
+						display: inline-block;
+						text-transform: capitalize;"
+							>${status}</span
+						>
+						<section style="margin-top: 30px;">
 							${shareReceiptData()
 								.map(
 									index =>
 										String.raw`
-											<div>
+											<div
+												style="	display: flex;
+						align-items: center;
+						justify-content: space-between;
+						border-bottom: 1px solid #000;
+						padding: 10px 2px;"
+											>
 												<h3>${index.key}</h3>
 												<p
 													class="status"
@@ -741,9 +743,17 @@ const sendReceipt = async receiptData => {
 								.join('')}
 						</section>
 
-						<footer>
+						<footer
+							style="	padding: 50px 20px 10px;
+						text-align: justify;
+						margin-top: auto;
+						line-height: 25px;
+						display: flex;
+						flex-direction: column;
+						gap: 10px;"
+						>
 							<div>
-								<h3>DISCLAIMER:</h3>
+								<h style="display: inline-block;">DISCLAIMER:</h>
 								Your transaction has been successfully processed. Note. however,
 								that completion of any transfer may be affected by other factors
 								including but not limited to transmission errors, incomplete
@@ -755,6 +765,9 @@ const sendReceipt = async receiptData => {
 							</div>
 							<img
 								src="https://res.cloudinary.com/geekycoder/image/upload/v1703481253/loopay/qrcode.png"
+								style="width: 200px;
+						height: 200px;
+						margin-left: auto;"
 							/>
 						</footer>
 					</div>

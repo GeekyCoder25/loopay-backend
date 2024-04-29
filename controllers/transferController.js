@@ -9,6 +9,7 @@ const Notification = require('../models/notification');
 const {requiredKeys} = require('../utils/requiredKeys');
 const {addingDecimal} = require('../utils/addingDecimal');
 const {sendMail} = require('../utils/sendEmail');
+// const htmlToImage = require('html-to-image');
 
 const initiateTransfer = async (req, res) => {
 	try {
@@ -41,16 +42,23 @@ const initiateTransfer = async (req, res) => {
 		)
 			return;
 
+		const wallet = await LocalWallet.findOne({phoneNumber});
+		const senderWallet = wallet;
+
 		const twoMinutesAgo = new Date();
 		twoMinutesAgo.setMinutes(twoMinutesAgo.getMinutes() - 2);
 
 		const duplicateTransaction = await TransactionModel.findOne({
-			recipient,
 			amount,
+			senderAccount: senderWallet.loopayAccNo,
+			receiverAccount: req.body.accNo,
 			destinationBankSlug: req.body.slug,
 			destinationBank: req.body.bankName,
+			type: 'inter',
+			method: 'inter',
 			createdAt: {$gt: twoMinutesAgo},
 		});
+
 		if (duplicateTransaction) {
 			const transactionTime = new Date(duplicateTransaction.createdAt);
 			if (transactionTime > twoMinutesAgo) {
@@ -59,8 +67,7 @@ const initiateTransfer = async (req, res) => {
 				);
 			}
 		}
-		const wallet = await LocalWallet.findOne({phoneNumber});
-		const senderWallet = wallet;
+
 		if (!wallet) throw new Error('wallet not found');
 
 		const convertToKobo = () => amount * 100;
@@ -164,6 +171,7 @@ const initiateTransfer = async (req, res) => {
 						transaction: savedTransaction,
 					});
 				} catch (err) {
+					console.log(err.message);
 					return res.status(200).json({
 						...response.data.data,
 						amount: response.data.data.amount / 100,
@@ -572,208 +580,265 @@ const sendReceipt = async receiptData => {
 		];
 	};
 
+	// const node = String.raw`<html lang="en">
+	// 		<head>
+	// 			<meta
+	// 				name="viewport"
+	// 				content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+	// 			/>
+	// 			<title>Loopay Receipt</title>
+	// 			<link
+	// 				rel="stylesheet"
+	// 				href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+	// 			/>
+	// 			<style>
+	// 				@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
+	// 				* {
+	// 					padding: 0;
+	// 					margin: 0;
+	// 				}
+	// 				body{
+	// 					font-family: 'Inter', sans-serif;
+	// 					padding: 20px;
+	// 				}
+	// 				h1{
+	// 					text-transform: capitalize
+	// 				}
+	// 				main {
+	// 					max-width: 800px;
+	// 					margin-top: 50px;
+	// 				}
+	// 				.container {
+	// 					width: 100%;
+	// 					height: 100%;
+	// 					display: flex;
+	// 					flex-direction: column;
+	// 				}
+	// 				.logo {
+	// 					width: 150px;
+	// 					height: 100px;
+	// 					object-fit: contain;
+	// 				}
+	// 				header {
+	// 					display: flex;
+	// 					align-items: center;
+	// 					justify-content: space-between;
+	// 					gap: 20px;
+	// 					width: 100%;
+	// 					margin-bottom: 50px;
+	// 				}
+	// 				header span {
+	// 					display: inline-block;
+	// 					padding-top: 6px;
+	// 				}
+	// 				.title {
+	// 					font-size: 2rem;
+	// 				}
+	// 				.amount {
+	// 					display: flex;
+	// 					align-items: flex-end;
+	// 				}
+	// 				.amount h4 {
+	// 					margin-right: 5px;
+	// 					margin-bottom: 2px;
+	// 					font-size: 1.3rem;
+	// 				}
+	// 				.amount h5 {
+	// 					margin-right: 10px;
+	// 					margin-bottom: 2px;
+	// 					font-size: 1.5rem;
+	// 				}
+	// 				.statusHeader {
+	// 					font-weight: 600;
+	// 					margin-top: 20px;
+	// 					display: inline-block;
+	// 					text-transform: capitalize;
+	// 				}
+	// 				.success {
+	// 					color: #0fb52d;
+	// 				}
+	// 				.pending {
+	// 					color: #ffa500;
+	// 				}
+	// 				.blocked,
+	// 				.declined,
+	// 				.abandoned {
+	// 					color: #ed4c5c;
+	// 				}
+	// 				section {
+	// 					margin-top: 30px;
+	// 				}
+	// 				section div {
+	// 					display: flex;
+	// 					align-items: center;
+	// 					justify-content: space-between;
+	// 					border-bottom: 1px solid #000;
+	// 					padding: 10px 2px;
+	// 				}
+	// 				section .value {
+	// 					text-transform: capitalize;
+	// 				}
+	// 				footer {
+	// 					padding: 50px 20px 10px;
+	// 					text-align: justify;
+	// 					margin-top: auto;
+	// 					line-height: 25px;
+	// 					display: flex;
+	// 					flex-direction: column;
+	// 					gap: 10px;
+	// 				}
+	// 				footer h3 {
+	// 					display: inline-block;
+	// 				}
+	// 				footer img {
+	// 					width: 200px;
+	// 					height: 200px;
+	// 					margin-left: auto;
+	// 				}
+	// 			</style>
+	// 		</head>
+	// 		<body>
+	// 			<h1>${transactionType} Transaction Alert - [₦${Number(
+	// 	amount
+	// ).toLocaleString()}]</h1>
+	// 			<main>
+	// 				<div class="container">
+	// 					<header>
+	// 						<div>
+	// 							<h2 class="title">Receipt</h2>
+	// 							<span>${new Date(createdAt).toString()}</span>
+	// 						</div>
+	// 						<img
+	// 							src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
+	// 							alt=""
+	// 							class="logo"
+	// 						/>
+	// 					</header>
+	// 					<div class="amount">
+	// 						<h4>${currencySymbol}</h4>
+	// 						<h1>
+	// 							${
+	// 								Number(amount || swapToAmount)
+	// 									.toLocaleString()
+	// 									.split('.')[0]
+	// 							}
+	// 						</h1>
+	// 						<h5>.${Number(amount).toLocaleString().split('.')[1] || '00'}</h5>
+	// 					</div>
+	// 					<span class="statusHeader ${status}">${status}</span>
+	// 					<section>
+	// 						${shareReceiptData()
+	// 							.map(
+	// 								index =>
+	// 									String.raw`
+	// 										<div>
+	// 											<h3>${index.key}</h3>
+	// 											<p
+	// 												class="status"
+	// 												style="${!index.noTransform && 'text-transform: capitalize;'}"
+	// 											>
+	// 												${index.value}
+	// 											</p>
+	// 										</div>
+	// 									`
+	// 							)
+	// 							.join('')}
+	// 					</section>
+
+	// 					<footer>
+	// 						<div>
+	// 							<h3>DISCLAIMER:</h3>
+	// 							Your transaction has been successfully processed. Note. however,
+	// 							that completion of any transfer may be affected by other factors
+	// 							including but not limited to transmission errors, incomplete
+	// 							information, fluctuations on the network/internet,
+	// 							interruptions, glitch, delayed information or other matters
+	// 							beyond the Bank's control which may impact on the transaction
+	// 							and for which the Bank will not be liable. All transactions are
+	// 							subject to Loopay confirmation and fraud proof verification.
+	// 						</div>
+	// 						<img
+	// 							src="https://res.cloudinary.com/geekycoder/image/upload/v1703481253/loopay/qrcode.png"
+	// 						/>
+	// 					</footer>
+	// 				</div>
+	// 			</main>
+	// 		</body>
+	// 	</html>`;
+	// const receiptImage = await htmlToImage.toPng(`<div
+	// 					>
+	// 					</div>`);
+	// console.log('receiptImage');
+	// console.log(receiptImage);
 	await sendMail({
 		from: process.env.SUPPORT_EMAIL,
 		to: email,
 		subject: 'Loopay Debit Transaction Alert',
-		html: String.raw` <html lang="en">
-			<head>
-				<meta
-					name="viewport"
-					content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
-				/>
-				<title>Loopay Receipt</title>
-				<link
-					rel="stylesheet"
-					href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
-				/>
-				<style>
-					@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
-					* {
-						padding: 0;
-						margin: 0;
-					}
-					h1 {
-						text-transform: capitalize;
-					}
-					main {
-					}
-					.container {
-					}
-					.logo {
-					}
-					header {
-					}
-					header span {
-					}
-					.title {
-					}
-					.amount {
-					}
-					.amount h4 {
-					}
-					.amount h5 {
-					}
-					.statusHeader {
-					}
-					.success {
-						color: #0fb52d;
-					}
-					.pending {
-						color: #ffa500;
-					}
-					.blocked,
-					.declined,
-					.abandoned {
-						color: #ed4c5c;
-					}
-					section {
-					}
-					section div {
-					}
-					section .value {
-						text-transform: capitalize;
-					}
-					footer {
-					}
-					footer h3 {
-					}
-					footer img {
-					}
-				</style>
-			</head>
-			<body
-				style="	font-family: 'Inter', sans-serif;
-						padding: 20px;"
-			>
-				<h1>
-					${transactionType} Transaction Alert -
-					[₦${Number(amount).toLocaleString()}]
-				</h1>
-				<main
-					style="			max-width: 800px;
-						margin-top: 50px;"
-				>
-					<div
-						style="width: 100%;
-						height: 100%;
-						display: flex;
-						flex-direction: column;"
-					>
-						<header
-							style="display: flex;
-						align-items: center;
-						justify-content: space-between;
-						gap: 20px;
-						width: 100%;
-						margin-bottom: 50px;"
-						>
-							<div>
-								<h2 style="font-size: 2rem;">Receipt</h2>
-								<span
-									style="		display: inline-block;
-						padding-top: 6px;"
-									>${new Date(createdAt).toString()}</span
-								>
-							</div>
-							<img
-								src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
-								alt=""
-								style="	width: 150px;
-						height: 100px;
-						object-fit: contain;"
-							/>
-						</header>
-						<div
-							style="display: flex;
-						align-items: flex-end;"
-						>
-							<h4
-								style="margin-right: 5px;
-						margin-bottom: 2px;
-						font-size: 1.3rem;"
-							>
-								${currencySymbol}
-							</h4>
-							<h1>
-								${
+		html: String.raw`<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+    <title>Loopay Receipt</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
+    <style>
+        /* CSS styles will be converted to inline styles */
+    </style>
+</head>
+<body style="font-family: 'Inter', sans-serif; padding: 20px; margin: 0;">
+    <h1 style="text-transform: capitalize;">${transactionType} Transaction Alert - [₦${Number(
+			amount
+		).toLocaleString()}]</h1>
+    <main style="max-width: 800px; margin-top: 50px;">
+        <div class="container" style="width: 100%; height: 100%; display: flex; flex-direction: column;">
+            <header style="display: flex; align-items: center; justify-content: space-between; gap: 20px; width: 100%; margin-bottom: 50px;">
+                <div>
+                    <h2 class="title" style="font-size: 2rem;">Receipt</h2>
+                    <span style="display: inline-block; padding-top: 6px;">${new Date(
+											createdAt
+										).toString()}</span>
+                </div>
+                <img src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png" alt="" class="logo" style="width: 150px; height: 100px; object-fit: contain;">
+            </header>
+            <div class="amount" style="display: flex; align-items: flex-end;">
+                <h4 style="margin-right: 5px; margin-bottom: 2px; font-size: 1.3rem;">${currencySymbol}</h4>
+                <h1 style="margin-right: 5px; margin-bottom: 2px; font-size: 1.5rem;">${
 									Number(amount || swapToAmount)
 										.toLocaleString()
 										.split('.')[0]
-								}
-							</h1>
-							<h5
-								style="margin-right: 10px;
-						margin-bottom: 2px;
-						font-size: 1.5rem;"
-							>
-								.${Number(amount).toLocaleString().split('.')[1] || '00'}
-							</h5>
-						</div>
-						<span
-							class="statusHeader ${status}"
-							style="font-weight: 600;
-						margin-top: 20px;
-						display: inline-block;
-						text-transform: capitalize;"
-							>${status}</span
-						>
-						<section style="margin-top: 30px;">
-							${shareReceiptData()
-								.map(
-									index =>
-										String.raw`
-											<div
-												style="	display: flex;
-						align-items: center;
-						justify-content: space-between;
-						border-bottom: 1px solid #000;
-						padding: 10px 2px;"
-											>
-												<h3>${index.key}</h3>
-												<p
-													class="status"
-													style="${!index.noTransform && 'text-transform: capitalize;'}"
-												>
-													${index.value}
-												</p>
-											</div>
-										`
-								)
-								.join('')}
-						</section>
-
-						<footer
-							style="	padding: 50px 20px 10px;
-						text-align: justify;
-						margin-top: auto;
-						line-height: 25px;
-						display: flex;
-						flex-direction: column;
-						gap: 10px;"
-						>
-							<div>
-								<h style="display: inline-block;">DISCLAIMER:</h>
-								Your transaction has been successfully processed. Note. however,
-								that completion of any transfer may be affected by other factors
-								including but not limited to transmission errors, incomplete
-								information, fluctuations on the network/internet,
-								interruptions, glitch, delayed information or other matters
-								beyond the Bank's control which may impact on the transaction
-								and for which the Bank will not be liable. All transactions are
-								subject to Loopay confirmation and fraud proof verification.
-							</div>
-							<img
-								src="https://res.cloudinary.com/geekycoder/image/upload/v1703481253/loopay/qrcode.png"
-								style="width: 200px;
-						height: 200px;
-						margin-left: auto;"
-							/>
-						</footer>
-					</div>
-				</main>
-			</body>
-		</html>`,
+								}</h1>
+                <h5 style="margin-right: 5px; margin-bottom: 2px; font-size: 1.3rem;">.${
+									Number(amount).toLocaleString().split('.')[1] || '00'
+								}</h5>
+            </div>
+            <span class="statusHeader ${status}" style="font-weight: 600; margin-top: 20px; display: inline-block; text-transform: capitalize; ">${status}</span>
+            <section style="margin-top: 30px;">
+                ${shareReceiptData()
+									.map(
+										index => String.raw`
+                    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #000; padding: 10px 2px;">
+                        <h3 style="text-transform: capitalize;">${
+													index.key
+												}</h3>
+                        <p class="status" style="${
+													!index.noTransform
+														? 'text-transform: capitalize;'
+														: ''
+												}">${index.value}</p>
+                    </div>
+                `
+									)
+									.join('')}
+            </section>
+            <footer style="padding: 50px 20px 10px; text-align: justify; margin-top: auto; line-height: 25px; display: flex; flex-direction: column; gap: 10px;">
+                <div>
+                    <h3 style="display: inline-block;">DISCLAIMER:</h3>
+                    Your transaction has been successfully processed. Note. however, that completion of any transfer may be affected by other factors including but not limited to transmission errors, incomplete information, fluctuations on the network/internet, interruptions, glitch, delayed information or other matters beyond the Bank's control which may impact on the transaction and for which the Bank will not be liable. All transactions are subject to Loopay confirmation and fraud proof verification.
+                </div>
+                <img src="https://res.cloudinary.com/geekycoder/image/upload/v1703481253/loopay/qrcode.png" style="width: 200px; height: 200px; margin-left: auto;" />
+            </footer>
+        </div>
+    </main>
+</body>
+</html>`,
 	});
 };
 

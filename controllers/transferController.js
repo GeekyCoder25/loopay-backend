@@ -788,7 +788,7 @@ const sendReceipt = async receiptData => {
 			amount
 		).toLocaleString()}]</h1>
     <main style="max-width: 800px; margin-top: 50px;">
-        <div class="container" style="width: 100%; height: 100%; display: flex; flex-direction: column;">
+        <div class="container" style="width: 100%; height: 100%;">
             <header style="display: flex; align-items: center; justify-content: space-between; gap: 20px; width: 100%; margin-bottom: 50px;">
                 <div>
                     <h2 class="title" style="font-size: 2rem;">Receipt</h2>
@@ -828,12 +828,12 @@ const sendReceipt = async receiptData => {
 									)
 									.join('')}
             </section>
-            <footer style="padding: 50px 20px 10px; text-align: justify; margin-top: auto; line-height: 25px; display: flex; flex-direction: column; gap: 10px;">
+            <footer style="padding: 50px 20px 10px; text-align: justify; margin-top: auto; line-height: 25px;">
                 <div>
                     <h3 style="display: inline-block;">DISCLAIMER:</h3>
                     Your transaction has been successfully processed. Note. however, that completion of any transfer may be affected by other factors including but not limited to transmission errors, incomplete information, fluctuations on the network/internet, interruptions, glitch, delayed information or other matters beyond the Bank's control which may impact on the transaction and for which the Bank will not be liable. All transactions are subject to Loopay confirmation and fraud proof verification.
                 </div>
-                <img src="https://res.cloudinary.com/geekycoder/image/upload/v1703481253/loopay/qrcode.png" style="width: 200px; height: 200px; margin-left: auto;" />
+                <img src="https://res.cloudinary.com/geekycoder/image/upload/v1703481253/loopay/qrcode.png" style="width: 200px; height: 200px; margin-left: auto; margin-top:10px;" />
             </footer>
         </div>
     </main>

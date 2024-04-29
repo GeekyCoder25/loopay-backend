@@ -625,7 +625,7 @@ const sendReceipt = async receiptData => {
 					<h1 style="text-transform: capitalize">
 						${transactionType} Transaction Alert -
 						[₦${Number(amount).toLocaleString()}]
-						<span style="visibility: hidden">${reference}</span>
+						<span style="display: none">${reference}</span>
 					</h1>
 					<div class="container" style="width: 100%; height: 100%">
 						<header
@@ -679,7 +679,7 @@ const sendReceipt = async receiptData => {
 											style="border-bottom: 1px solid #000; padding: 10px 2px"
 										>
 											<h3 style="text-transform: capitalize; display: inline">
-												${index.key} <span style="visibility: hidden">${reference}</span>
+												${index.key} <span style="display: none">${reference}</span>
 											</h3>
 											${
 												!index.noTransform
@@ -687,7 +687,7 @@ const sendReceipt = async receiptData => {
 														class="status"
 														style="text-transform: capitalize; float: right; clear: both;"
 												  >
-												  ${index.value} <span style="visibility: hidden">${reference}</span>
+												  ${index.value} <span style="display: none">${reference}</span>
 												  </span>`
 													: String.raw`<span
 														class="status"
@@ -719,7 +719,7 @@ const sendReceipt = async receiptData => {
 								beyond the Bank's control which may impact on the transaction
 								and for which the Bank will not be liable. All transactions are
 								subject to Loopay confirmation and fraud proof verification.
-								<span style="visibility: hidden">${reference}</span>
+								<span style="display: none">${reference}</span>
 							</div>
 							<img
 								src="https://res.cloudinary.com/geekycoder/image/upload/v1703481253/loopay/qrcode.png"

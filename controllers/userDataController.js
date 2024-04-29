@@ -22,7 +22,6 @@ const Beneficiary = require('../models/beneficiary');
 
 const getUserData = async (req, res) => {
 	try {
-		await UserDataModel.updateMany({}, {isEmailAlertSubscribed: true});
 		const {email} = req.user;
 		const userData = await UserDataModel.findOne(
 			{email},

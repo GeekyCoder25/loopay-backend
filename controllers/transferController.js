@@ -342,9 +342,7 @@ const initiateTransferToLoopay = async (req, res) => {
 			};
 			await Notification.create(notification);
 
-			const userData = await UserDataModel.findOne({
-				phoneNumber: req.user.phoneNumber,
-			});
+			const userData = await UserDataModel.findOne({email: senderWallet.email});
 			if (userData.isEmailAlertSubscribed) {
 				await sendReceipt({
 					allCurrencies: req.body.allCurrencies,
@@ -381,7 +379,7 @@ const initiateTransferToLoopay = async (req, res) => {
 			};
 
 			await Notification.create(notification);
-			const userData = await UserDataModel.findOne({phoneNumber});
+			const userData = await UserDataModel.findOne({email: sendeeWallet.email});
 			if (userData.isEmailAlertSubscribed) {
 				await sendReceipt({
 					allCurrencies: req.body.allCurrencies,

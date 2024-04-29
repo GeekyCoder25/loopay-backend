@@ -585,35 +585,51 @@ const sendReceipt = async receiptData => {
 		to: email,
 		subject: 'Loopay Debit Transaction Alert',
 		html: String.raw`<html lang="en">
-	<head>
-		<meta
-			name="viewport"
-			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
-		/>
-		<title>Loopay Receipt</title>
-		<link
-			rel="stylesheet"
-			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
-		/>
-		<style>
-			/* CSS styles will be converted to inline styles */
-		</style>
-	</head>
-	<body
-		style="
+			<head>
+				<meta
+					name="viewport"
+					content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+				/>
+				<title>Loopay Receipt</title>
+				<link
+					rel="stylesheet"
+					href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+				/>
+				<style>
+					* {
+						padding: 0;
+						margin: 0;
+						box-sizing: border-box;
+					}
+					.success {
+						color: #0fb52d;
+					}
+					.pending {
+						color: #ffa500;
+					}
+					.blocked,
+					.declined,
+					.abandoned {
+						color: #ed4c5c;
+					}
+				</style>
+			</head>
+			<body
+				style="
 			font-family: 'Inter', sans-serif;
 			padding: 20px;
 			margin: 0;
 			color: #fff !important;
 		"
-	>
-		<h1 style="text-transform: capitalize">
-			${transactionType} Transaction Alert - [₦${Number(amount).toLocaleString()}]
-		</h1>
-		<main style="max-width: 800px; margin-top: 50px">
-			<div class="container" style="width: 100%; height: 100%">
-				<header
-					style="
+			>
+				<h1 style="text-transform: capitalize">
+					${transactionType} Transaction Alert -
+					[₦${Number(amount).toLocaleString()}]
+				</h1>
+				<main style="max-width: 800px; margin-top: 50px">
+					<div class="container" style="width: 100%; height: 100%">
+						<header
+							style="
 						display: flex;
 						align-items: center;
 						justify-content: space-between;
@@ -621,92 +637,99 @@ const sendReceipt = async receiptData => {
 						width: 100%;
 						margin-bottom: 50px;
 					"
-				>
-					<div>
-						<h2 class="title" style="font-size: 2rem">Receipt</h2>
-						<span style="display: inline-block; padding-top: 6px"
-							>${new Date(createdAt).toString()}</span
 						>
-					</div>
-					<img
-						src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
-						alt=""
-						class="logo"
-						style="width: 150px; height: 100px; object-fit: contain"
-					/>
-				</header>
-				<div class="amount" style="display: flex; align-items: flex-end">
-					<h4 style="margin-right: 5px; margin-bottom: 2px; font-size: 1.3rem">
-						${currencySymbol}
-					</h4>
-					<h1 style="margin-right: 5px; margin-bottom: 2px; font-size: 2rem">
-						${
-							Number(amount || swapToAmount)
-								.toLocaleString()
-								.split('.')[0]
-						}
-					</h1>
-					<h5 style="margin-right: 5px; margin-bottom: 2px; font-size: 1.3rem">
-						.${Number(amount).toLocaleString().split('.')[1] || '00'}
-					</h5>
-				</div>
-				<span
-					class="statusHeader ${status}"
-					style="
+							<div>
+								<h2 class="title" style="font-size: 2rem">Receipt</h2>
+								<span style="display: inline-block; padding-top: 6px"
+									>${new Date(createdAt).toString()}</span
+								>
+							</div>
+							<img
+								src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
+								alt=""
+								class="logo"
+								style="width: 150px; height: 100px; object-fit: contain"
+							/>
+						</header>
+						<div class="amount" style="display: flex; align-items: flex-end">
+							<h4 style="margin-right: 5px; font-size: 1.3rem">
+								${currencySymbol}
+							</h4>
+							<h1 style="margin-right: 5px; font-size: 2.5rem">
+								${
+									Number(amount || swapToAmount)
+										.toLocaleString()
+										.split('.')[0]
+								}
+							</h1>
+							<h5
+								style="margin-right: 5px; margin-bottom: 2px; font-size: 1.3rem"
+							>
+								.${Number(amount).toLocaleString().split('.')[1] || '00'}
+							</h5>
+						</div>
+						<span
+							class="statusHeader ${status}"
+							style="
 						font-weight: 600;
 						margin-top: 20px;
 						display: inline-block;
 						text-transform: capitalize;
 					"
-					>${status}</span
-				>
-				<section style="margin-top: 30px">
-					${shareReceiptData()
-						.map(
-							index => String.raw`
-					<div style="border-bottom: 1px solid #000; padding: 10px 2px">
-						<h3 style="text-transform: capitalize; display: inline">
-							${index.key}
-						</h3>
-						${
-							!index.noTransform
-								? String.raw`<span
-							class="status"
-							style="text-transform: capitalize; float: right; clear: both;">
-							${index.value}
-						</span>`
-								: String.raw`<span
-							class="status"
-							style="float: right; clear: both;"
-						>${index.value}</span>`
-						}
-					</div>
-					`
-						)
-						.join('')}
-				</section>
-				<aside
-					style="
-						padding: 50px 0px 10px;
+							>${status}</span
+						>
+						<section style="margin-top: 30px">
+							${shareReceiptData()
+								.map(
+									index => String.raw`
+										<div
+											style="border-bottom: 1px solid #000; padding: 10px 2px"
+										>
+											<h3 style="text-transform: capitalize; display: inline">
+												${index.key}
+											</h3>
+											${
+												!index.noTransform
+													? String.raw`<span
+														class="status"
+														style="text-transform: capitalize; float: right; clear: both;"
+												  >
+														${index.value}
+												  </span>`
+													: String.raw`<span
+														class="status"
+														style="float: right; clear: both;"
+														>${index.value}</span
+												  >`
+											}
+										</div>
+									`
+								)
+								.join('')}
+						</section>
+						<aside
+							style="
+						padding: 30px 0px 10px;
 						text-align: justify;
-						margin-top: auto;
 						line-height: 25px;
 					"
-				>
-					<div>
-						<h3 style="display: inline-block">DISCLAIMER:</h3>
-						Your transaction has been successfully processed. Note. however,
-						that completion of any transfer may be affected by other factors
-						including but not limited to transmission errors, incomplete
-						information, fluctuations on the network/internet, interruptions,
-						glitch, delayed information or other matters beyond the Bank's
-						control which may impact on the transaction and for which the Bank
-						will not be liable. All transactions are subject to Loopay
-						confirmation and fraud proof verification.
-					</div>
-					<img
-						src="https://res.cloudinary.com/geekycoder/image/upload/v1703481253/loopay/qrcode.png"
-						style="
+						>
+							<div>
+								<span style="display: inline-block; font-weight: 600;"
+									>DISCLAIMER:</span
+								>
+								Your transaction has been successfully processed. Note. however,
+								that completion of any transfer may be affected by other factors
+								including but not limited to transmission errors, incomplete
+								information, fluctuations on the network/internet,
+								interruptions, glitch, delayed information or other matters
+								beyond the Bank's control which may impact on the transaction
+								and for which the Bank will not be liable. All transactions are
+								subject to Loopay confirmation and fraud proof verification.
+							</div>
+							<img
+								src="https://res.cloudinary.com/geekycoder/image/upload/v1703481253/loopay/qrcode.png"
+								style="
 							width: 200px;
 							height: 200px;
 							margin-left: auto;
@@ -714,12 +737,12 @@ const sendReceipt = async receiptData => {
 							float: right;
 							clear: right;
 						"
-					/>
-				</aside>
-			</div>
-		</main>
-	</body>
-</html>`,
+							/>
+						</aside>
+					</div>
+				</main>
+			</body>
+		</html>`,
 	});
 };
 

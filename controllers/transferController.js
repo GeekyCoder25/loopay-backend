@@ -732,6 +732,9 @@ const sendReceipt = async receiptData => {
 							clear: right;
 						"
 							/>
+							<span>Click <a href="${
+								process.env.BASE_URL
+							}/email/unsubscribe">here</a>to unsubscribe</span>
 						</aside>
 					</div>
 				</main>

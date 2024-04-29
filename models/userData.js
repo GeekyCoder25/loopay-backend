@@ -59,6 +59,10 @@ const UserDataSchema = new Schema(
 		bvn: String,
 		referralCode: String,
 		referrerCode: String,
+		isEmailAlertSubscribed: {
+			type: String,
+			required: [true, 'Please provide email alert subscription status'],
+		},
 		sessionTime: Date,
 		blockedUsers: [String],
 		popUps: [],

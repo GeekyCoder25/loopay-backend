@@ -214,6 +214,7 @@ const verifyEmail = async (req, res) => {
 			localCurrencyCode,
 			country,
 			level: 1,
+			isEmailAlertSubscribed: true,
 		};
 
 		await User.create(formData);

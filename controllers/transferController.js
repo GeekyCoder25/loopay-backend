@@ -630,9 +630,6 @@ const sendReceipt = async receiptData => {
 					<div class="container" style="width: 100%; height: 100%">
 						<header
 							style="
-						display: flex;
-						align-items: center;
-						justify-content: space-between;
 						gap: 20px;
 						width: 100%;
 						margin-bottom: 50px;
@@ -648,14 +645,14 @@ const sendReceipt = async receiptData => {
 								src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
 								alt=""
 								class="logo"
-								style="width: 150px; height: 100px; object-fit: contain"
+								style="width: 150px; height: 100px; object-fit: contain; float: right; margin-top: -80px;"
 							/>
 						</header>
 						<div class="amount" style="display: flex; align-items: flex-end">
 							<h4 style="margin-right: 5px; font-size: 1.3rem">
 								${currencySymbol}
 							</h4>
-							<h1 style="margin-right: 5px; font-size: 2.5rem">
+							<h1 style="margin-right: 5px; margin-top: -3px; font-size: 2.5rem">
 								${
 									Number(amount || swapToAmount)
 										.toLocaleString()
@@ -663,7 +660,7 @@ const sendReceipt = async receiptData => {
 								}
 							</h1>
 							<h5
-								style="margin-right: 5px; margin-bottom: 2px; font-size: 1.3rem"
+								style="margin-right: 5px; font-size: 1.3rem"
 							>
 								.${Number(amount).toLocaleString().split('.')[1] || '00'}
 							</h5>

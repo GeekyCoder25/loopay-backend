@@ -635,7 +635,7 @@ const sendReceipt = async receiptData => {
 						style="
 						gap: 20px;
 						width: 100%;
-						margin: 30px 0px;
+						margin-bottom: 30px;
 					"
 						>
 						<div>

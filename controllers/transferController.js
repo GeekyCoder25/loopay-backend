@@ -9,7 +9,7 @@ const Notification = require('../models/notification');
 const {requiredKeys} = require('../utils/requiredKeys');
 const {addingDecimal} = require('../utils/addingDecimal');
 const {sendMail} = require('../utils/sendEmail');
-// const htmlToImage = require('html-to-image');
+const UserDataModel = require('../models/userData');
 
 const initiateTransfer = async (req, res) => {
 	try {
@@ -159,11 +159,14 @@ const initiateTransfer = async (req, res) => {
 
 					req.schedule && (await req.schedule(req));
 
-					await sendReceipt({
-						allCurrencies: req.body.allCurrencies,
-						email,
-						transaction: savedTransaction,
-					});
+					const userData = await UserDataModel.findOne({email});
+					if (userData.isEmailAlertSubscribed) {
+						await sendReceipt({
+							allCurrencies: req.body.allCurrencies,
+							email,
+							transaction: savedTransaction,
+						});
+					}
 
 					return res.status(200).json({
 						...response.data.data,

@@ -97,6 +97,7 @@ const {
 const serverAPIs = require('../models/serverAPIs');
 const {postReport} = require('../controllers/reportController');
 const {generateReceipt} = require('../controllers/receiptController');
+const {unsubscribeEmailAlerts} = require('../controllers/emailAlertController');
 
 const router = express.Router();
 
@@ -127,6 +128,7 @@ router.delete('/savedBanks/:id', deleteRecipient);
 router.route('/check-recipient').post(checkRecipient);
 router.route('/airtime/operators').get(airtimeAPIToken, getOperators);
 router.route('/get-network').get(airtimeAPIToken, getNetwork);
+router.route('/email/unsubscribe').get(unsubscribeEmailAlerts);
 router
 	.route('/data')
 	.post(airtimeAPIToken, accountStatus, schedulePayment, buyData);

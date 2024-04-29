@@ -13,6 +13,7 @@ const {protect} = require('./middleware/authMiddleware');
 const {uploadPhoto} = require('./controllers/uploadPhoto');
 const {webhookHandler} = require('./controllers/webhookController');
 const morgan = require('morgan');
+const {unsubscribeEmailAlerts} = require('./controllers/emailAlertController');
 require('colors');
 dotEnv.config();
 // eslint-disable-next-line no-undef
@@ -53,6 +54,7 @@ if (process.env.NODE_ENV === 'development') {
 	app.use(morgan('dev'));
 }
 // app.use();
+app.get('/api/email/unsubscribe/:token', unsubscribeEmailAlerts);
 app.post('/api/upload', protect, uploadPhoto);
 app.use('/api/auth', authRoutes);
 app.use('/api/user', protect, userDataRoutes);

@@ -1,5 +1,6 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const axios = require('axios');
+const jwt = require('jsonwebtoken');
 const LocalWallet = require('../models/wallet');
 const DollarWallet = require('../models/walletDollar');
 const EuroWallet = require('../models/walletEuro');
@@ -600,10 +601,14 @@ const sendReceipt = async receiptData => {
 		];
 	};
 
+	const hashedEmail = jwt.sign(email, process.env.JWT_SECRET);
+
 	await sendMail({
 		from: process.env.SUPPORT_EMAIL,
 		to: email,
-		subject: 'Loopay Debit Transaction Alert',
+		subject: `Loopay ${
+			transactionType[0].toUpperCase() + transactionType.slice(1)
+		} Transaction Alert`,
 		html: String.raw`<html lang="en">
 			<head>
 				<meta
@@ -754,7 +759,7 @@ const sendReceipt = async receiptData => {
 							/>
 							<span>Click <a href="${
 								process.env.BASE_URL
-							}/api/user/email/unsubscribe">here</a> to unsubscribe <span style="display: none">${reference}</span></span>
+							}/api/email/unsubscribe/${hashedEmail}">here</a> to unsubscribe <span style="display: none">${reference}</span></span>
 						</aside>
 					</div>
 				</main>

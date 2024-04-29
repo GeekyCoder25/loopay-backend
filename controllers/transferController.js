@@ -618,7 +618,7 @@ const sendReceipt = async receiptData => {
 				</style>
 			</head>
 			<body style="font-family: 'Inter', sans-serif;">
-				<main style="max-width: 800px; margin-top: 50px; padding: 20px; position: relative">
+				<main style="max-width: 800px; margin-top: 50px; padding: 20px;">
 					<h1 style="text-transform: capitalize">
 						${transactionType} Transaction Alert -
 						[₦${Number(amount).toLocaleString()}]
@@ -628,9 +628,9 @@ const sendReceipt = async receiptData => {
 								src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
 								alt=""
 								class="logo"
-								style="width: 150px; height: 100px; object-fit: contain; position: absolute; right: 0; top: 0;"
+								style="width: 150px; height: 100px; object-fit: contain; float: right"
 							/>
-					<div class="container" style="width: 100%; height: 100%">
+					<div class="container" style="width: 100%; height: 100%; clear: right;">
 						<header
 						style="
 						gap: 20px;
@@ -644,9 +644,8 @@ const sendReceipt = async receiptData => {
 									>${new Date(createdAt).toString()}</span
 								>
 							</div>
-							 <div style="clear: right;"></div>
 						</header>
-						<div class="amount" style="float">
+						<div class="amount">
 							<h4 style="font-size: 1.3rem; display: inline-block;">
 								${currencySymbol}
 							</h4>

@@ -60,7 +60,7 @@ const UserDataSchema = new Schema(
 		referralCode: String,
 		referrerCode: String,
 		isEmailAlertSubscribed: {
-			type: String,
+			type: Boolean,
 			required: [true, 'Please provide email alert subscription status'],
 		},
 		sessionTime: Date,

@@ -635,18 +635,18 @@ const sendReceipt = async receiptData => {
 						margin-bottom: 50px;
 					"
 						>
-							<div>
+						<div>
+								<img
+									src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
+									alt=""
+									class="logo"
+									style="width: 150px; height: 100px; object-fit: contain;"
+								/>
 								<h2 class="title" style="font-size: 2rem">Receipt</h2>
 								<span style="display: inline-block; padding-top: 6px"
 									>${new Date(createdAt).toString()}</span
 								>
 							</div>
-							<img
-								src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
-								alt=""
-								class="logo"
-								style="width: 150px; height: 100px; object-fit: contain; float: right; margin-top: -80px;"
-							/>
 						</header>
 						<div class="amount" style="float">
 							<h4 style="font-size: 1.3rem; display: inline-block;">

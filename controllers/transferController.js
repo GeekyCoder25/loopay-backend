@@ -341,9 +341,20 @@ const initiateTransferToLoopay = async (req, res) => {
 				metadata: {...transaction, transactionType: 'credit'},
 			};
 			await Notification.create(notification);
+
+			const userData = await UserDataModel.findOne({
+				phoneNumber: req.user.phoneNumber,
+			});
+			if (userData.isEmailAlertSubscribed) {
+				await sendReceipt({
+					allCurrencies: req.body.allCurrencies,
+					email: userData.email,
+					transaction: savedTransaction,
+				});
+			}
 		}
 		if (!sendeeTransactionExists) {
-			await TransactionModel.create({
+			const sendeeTransaction = await TransactionModel.create({
 				email: sendeeWallet.email,
 				phoneNumber: sendeeWallet.phoneNumber,
 				transactionType: 'credit',
@@ -370,6 +381,14 @@ const initiateTransferToLoopay = async (req, res) => {
 			};
 
 			await Notification.create(notification);
+			const userData = await UserDataModel.findOne({phoneNumber});
+			if (userData.isEmailAlertSubscribed) {
+				await sendReceipt({
+					allCurrencies: req.body.allCurrencies,
+					email: userData.email,
+					transaction: sendeeTransaction,
+				});
+			}
 		}
 
 		senderWallet.balance -= amountInUnits;

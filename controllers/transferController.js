@@ -618,12 +618,6 @@ const sendReceipt = async receiptData => {
 				</style>
 			</head>
 			<body style="font-family: 'Inter', sans-serif;">
-				<img
-					src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
-					alt=""
-					class="logo"
-					style="width: 150px; height: 100px; object-fit: contain;"
-				/>
 				<main style="max-width: 800px; margin-top: 50px; padding: 20px;">
 					<h1 style="text-transform: capitalize">
 						${transactionType} Transaction Alert -
@@ -632,18 +626,25 @@ const sendReceipt = async receiptData => {
 					</h1>
 					<div class="container" style="width: 100%; height: 100%">
 						<header
-							style="
+						style="
 						gap: 20px;
 						width: 100%;
 						margin-bottom: 50px;
 					"
 						>
+						<img
+							src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
+							alt=""
+							class="logo"
+							style="width: 150px; height: 100px; object-fit: contain; float: right;"
+						/>
 							<div>
 								<h2 class="title" style="font-size: 2rem">Receipt</h2>
 								<span style="display: inline-block; padding-top: 6px"
 									>${new Date(createdAt).toString()}</span
 								>
 							</div>
+							 <div style="clear: right;"></div>
 						</header>
 						<div class="amount" style="float">
 							<h4 style="font-size: 1.3rem; display: inline-block;">
@@ -737,7 +738,7 @@ const sendReceipt = async receiptData => {
 							/>
 							<span>Click <a href="${
 								process.env.BASE_URL
-							}/email/unsubscribe">here</a>to unsubscribe</span>
+							}/email/unsubscribe">here</a> to unsubscribe</span>
 						</aside>
 					</div>
 				</main>

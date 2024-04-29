@@ -648,11 +648,11 @@ const sendReceipt = async receiptData => {
 								style="width: 150px; height: 100px; object-fit: contain; float: right; margin-top: -80px;"
 							/>
 						</header>
-						<div class="amount" style="display: flex; align-items: flex-end">
-							<h4 style="margin-right: 5px; font-size: 1.3rem">
+						<div class="amount" style="float">
+							<h4 style="font-size: 1.3rem; display: inline-block;">
 								${currencySymbol}
 							</h4>
-							<h1 style="margin-right: 5px; margin-top: -3px; font-size: 2.5rem">
+							<h1 style="margin-top: -20px; font-size: 2.5rem; display: inline-block">
 								${
 									Number(amount || swapToAmount)
 										.toLocaleString()
@@ -660,7 +660,7 @@ const sendReceipt = async receiptData => {
 								}
 							</h1>
 							<h5
-								style="margin-right: 5px; font-size: 1.3rem"
+								style="margin-right: 5px; font-size: 1.3rem; display: inline-block"
 							>
 								.${Number(amount).toLocaleString().split('.')[1] || '00'}
 							</h5>

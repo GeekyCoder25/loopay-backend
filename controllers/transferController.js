@@ -614,19 +614,19 @@ const sendReceipt = async receiptData => {
 					}
 				</style>
 			</head>
-			<body
-				style="
-			font-family: 'Inter', sans-serif;
-			padding: 20px;
-			margin: 0;
-			color: #fff !important;
-		"
-			>
-				<h1 style="text-transform: capitalize">
-					${transactionType} Transaction Alert -
-					[₦${Number(amount).toLocaleString()}]
-				</h1>
-				<main style="max-width: 800px; margin-top: 50px">
+			<body style="font-family: 'Inter', sans-serif;">
+				<img
+					src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
+					alt=""
+					class="logo"
+					style="width: 150px; height: 100px; object-fit: contain;"
+				/>
+				<main style="max-width: 800px; margin-top: 50px; padding: 20px;">
+					<h1 style="text-transform: capitalize">
+						${transactionType} Transaction Alert -
+						[₦${Number(amount).toLocaleString()}]
+						<span style="visibility: hidden">${reference}</span>
+					</h1>
 					<div class="container" style="width: 100%; height: 100%">
 						<header
 							style="
@@ -635,13 +635,7 @@ const sendReceipt = async receiptData => {
 						margin-bottom: 50px;
 					"
 						>
-						<div>
-								<img
-									src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
-									alt=""
-									class="logo"
-									style="width: 150px; height: 100px; object-fit: contain;"
-								/>
+							<div>
 								<h2 class="title" style="font-size: 2rem">Receipt</h2>
 								<span style="display: inline-block; padding-top: 6px"
 									>${new Date(createdAt).toString()}</span
@@ -652,7 +646,9 @@ const sendReceipt = async receiptData => {
 							<h4 style="font-size: 1.3rem; display: inline-block;">
 								${currencySymbol}
 							</h4>
-							<h1 style="margin-top: -20px; font-size: 2.5rem; display: inline-block">
+							<h1
+								style="margin-top: -20px; font-size: 2.5rem; display: inline-block"
+							>
 								${
 									Number(amount || swapToAmount)
 										.toLocaleString()
@@ -683,7 +679,7 @@ const sendReceipt = async receiptData => {
 											style="border-bottom: 1px solid #000; padding: 10px 2px"
 										>
 											<h3 style="text-transform: capitalize; display: inline">
-												${index.key}
+												${index.key} <span style="visibility: hidden">${reference}</span>
 											</h3>
 											${
 												!index.noTransform
@@ -691,7 +687,7 @@ const sendReceipt = async receiptData => {
 														class="status"
 														style="text-transform: capitalize; float: right; clear: both;"
 												  >
-														${index.value}
+												  ${index.value} <span style="visibility: hidden">${reference}</span>
 												  </span>`
 													: String.raw`<span
 														class="status"
@@ -723,6 +719,7 @@ const sendReceipt = async receiptData => {
 								beyond the Bank's control which may impact on the transaction
 								and for which the Bank will not be liable. All transactions are
 								subject to Loopay confirmation and fraud proof verification.
+								<span style="visibility: hidden">${reference}</span>
 							</div>
 							<img
 								src="https://res.cloudinary.com/geekycoder/image/upload/v1703481253/loopay/qrcode.png"

@@ -123,8 +123,8 @@ const initiateTransfer = async (req, res) => {
 						reference: response.data.data.reference,
 						transferCode: response.data.data.transfer_code,
 						currency,
-						fromBalance: senderWallet.balance,
-						toBalance: senderWallet.balance - convertToKoboWithFee,
+						fromBalance: senderWallet.balance + convertToKoboWithFee,
+						toBalance: senderWallet.balance,
 						metadata: metadata || null,
 						createdAt: new Date(),
 					};
@@ -321,8 +321,8 @@ const initiateTransferToLoopay = async (req, res) => {
 				email: senderWallet.email,
 				phoneNumber: req.user.phoneNumber,
 				transactionType: 'debit',
-				fromBalance: senderWallet.balance,
-				toBalance: senderWallet.balance - amountInUnits,
+				fromBalance: senderWallet.balance + amountInUnits,
+				toBalance: senderWallet.balance,
 				...transaction,
 			});
 			const notification = {
@@ -357,8 +357,8 @@ const initiateTransferToLoopay = async (req, res) => {
 				email: sendeeWallet.email,
 				phoneNumber: sendeeWallet.phoneNumber,
 				transactionType: 'credit',
-				fromBalance: sendeeWallet.balance,
-				toBalance: sendeeWallet.balance + amountInUnits,
+				fromBalance: sendeeWallet.balance - amountInUnits,
+				toBalance: sendeeWallet.balance,
 				...transaction,
 			});
 

@@ -93,6 +93,16 @@ const getAllAdminInfo = async (req, res) => {
 			)
 		);
 
+		const reversedTransactionsAmount = reduceFunc(
+			await Promise.all(
+				currencies.map(async currency => {
+					return (await totalTransactionStatusBalance(currency, 'reversed'))[0]
+						? (await totalTransactionStatusBalance(currency, 'reversed'))[0]
+						: {[currency]: 0};
+				})
+			)
+		);
+
 		const blockedTransactionsAmount = reduceFunc(
 			await Promise.all(
 				currencies.map(async currency => {
@@ -132,6 +142,20 @@ const getAllAdminInfo = async (req, res) => {
 				})
 			)
 		);
+		const reversedTransactionsLength = reduceFunc(
+			await Promise.all(
+				currencies.map(async currency => {
+					return (await totalTransactionStatusLength(currency, 'reversed'))
+						? {
+								[currency]: await totalTransactionStatusLength(
+									currency,
+									'pending'
+								),
+						  }
+						: {[currency]: 0};
+				})
+			)
+		);
 		const blockedTransactionsLength = reduceFunc(
 			await Promise.all(
 				currencies.map(async currency => {
@@ -150,11 +174,13 @@ const getAllAdminInfo = async (req, res) => {
 		const statusTransactionsAmount = {
 			success: successTransactionsAmount,
 			pending: pendingTransactionsAmount,
+			reversed: reversedTransactionsAmount,
 			blocked: blockedTransactionsAmount,
 		};
 		const statusTransactionsLength = {
 			success: successTransactionsLength,
 			pending: pendingTransactionsLength,
+			reversed: reversedTransactionsLength,
 			blocked: blockedTransactionsLength,
 		};
 
@@ -355,6 +381,7 @@ const getTransactions = async (req, res) => {
 		start,
 		end,
 		userId,
+		swap,
 	} = req.query;
 	const roundedLimit = Math.round(Number(limit) || 25);
 	const skip = (page - 1 >= 0 ? page - 1 : 0) * roundedLimit;
@@ -372,6 +399,9 @@ const getTransactions = async (req, res) => {
 		}
 		if (status) {
 			query.status = status.split(',');
+		}
+		if (swap && JSON.parse(swap) === false) {
+			query.transactionType = {$ne: 'swap'};
 		}
 		if (start) {
 			const date = new Date(start);

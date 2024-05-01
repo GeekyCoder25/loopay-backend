@@ -4,6 +4,8 @@ const UserDataModel = require('../models/userData');
 const LocalWallet = require('../models/wallet');
 const {addingDecimal} = require('../utils/addingDecimal');
 const Notification = require('../models/notification');
+const jwt = require('jsonwebtoken');
+const {sendMail} = require('../utils/sendEmail');
 
 const webhookHandler = async (req, res) => {
 	try {
@@ -23,8 +25,12 @@ const webhookHandler = async (req, res) => {
 				narration,
 			} = event.data.authorization;
 
+			const {id, amount, customer} = event.data;
+			const {email, phone} = customer;
+			const wallet = await LocalWallet.findOne({email});
+
 			const transaction = {
-				id: event.data.id,
+				id,
 				status: event.data.status,
 				type: 'inter',
 				transactionType: 'credit',
@@ -33,21 +39,20 @@ const webhookHandler = async (req, res) => {
 				senderName: account_name || sender_name || 'An external user',
 				receiverAccount: receiver_bank_account_number,
 				receiverName: userData.userProfile.fullName,
-				sourceBank: sender_bank || 'external bank',
+				sourceBank: sender_bank || 'External bank',
+				fromBalance: wallet.balance,
+				toBalance: wallet.balance + amount,
 				destinationBank: receiver_bank,
 				amount: addingDecimal(`${event.data.amount / 100}`),
 				description: narration || '',
-				reference: `TR${event.data.id}`,
+				reference: `TR${id}`,
 				paystackReference: event.data.reference,
 				currency: event.data.currency,
 				metadata: event.data.metadata || null,
 				createdAt: event.data.paidAt,
 			};
-			const {id, amount, customer} = event.data;
-			const {email, phone} = customer;
 
 			const transactionsExists = await TransactionModel.findOne({id});
-			const wallet = await LocalWallet.findOne({email});
 
 			if (!transactionsExists) {
 				await TransactionModel.create({
@@ -78,6 +83,10 @@ const webhookHandler = async (req, res) => {
 				};
 
 				await Notification.create(notification);
+				await sendReceipt({
+					email,
+					transaction,
+				});
 				wallet.balance += amount;
 				await wallet.save();
 			}
@@ -87,6 +96,199 @@ const webhookHandler = async (req, res) => {
 	} catch (err) {
 		console.log(err.message);
 	}
+};
+
+const sendReceipt = async receiptData => {
+	const {email, transaction} = receiptData;
+	const {
+		status,
+		receiverName,
+		amount,
+		transactionType,
+		createdAt,
+		sourceBank,
+		senderAccount,
+		receiverAccount,
+		description,
+		reference,
+	} = transaction;
+
+	const currencySymbol = '₦';
+
+	const shareReceiptData = () => {
+		return [
+			{key: 'Receiver Account', value: receiverAccount},
+			{key: 'Sender Account', value: senderAccount},
+			{key: 'Receiver Name', value: receiverName},
+			{key: 'Transaction type', value: transactionType},
+			{key: 'Sender Bank', value: sourceBank},
+			{key: 'Reference Id', value: reference},
+			{key: 'Narration', value: description, noTransform: true},
+			{key: 'Status', value: status},
+		];
+	};
+
+	const hashedEmail = jwt.sign(email, process.env.JWT_SECRET);
+
+	await sendMail({
+		from: process.env.SUPPORT_EMAIL,
+		to: email,
+		subject: `Loopay ${
+			transactionType[0].toUpperCase() + transactionType.slice(1)
+		} Transaction Alert`,
+		html: String.raw`<html lang="en">
+			<head>
+				<meta
+					name="viewport"
+					content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+				/>
+				<title>Loopay Receipt</title>
+				<link
+					rel="stylesheet"
+					href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+				/>
+				<style>
+					* {
+						padding: 0;
+						margin: 0;
+						box-sizing: border-box;
+					}
+					.success {
+						color: #0fb52d;
+					}
+					.pending {
+						color: #ffa500;
+					}
+					.blocked,
+					.declined,
+					.abandoned {
+						color: #ed4c5c;
+					}
+				</style>
+			</head>
+			<body style="font-family: 'Inter', sans-serif;">
+				<main style="max-width: 800px; margin-top: 50px; padding: 20px;">
+					<h1 style="text-transform: capitalize">
+						${transactionType} Transaction Alert -
+						[₦${Number(amount).toLocaleString()}]
+						<span style="display: none">${reference}</span>
+					</h1>
+					<img
+								src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
+								alt=""
+								class="logo"
+								style="width: 150px; height: 100px; object-fit: contain; float: right"
+							/>
+					<div class="container" style="width: 100%; height: 100%; clear: right;">
+						<header
+						style="
+						gap: 20px;
+						width: 100%;
+						margin-bottom: 30px;
+					"
+						>
+						<div>
+							<h2 class="title" style="font-size: 2rem">Receipt</h2>
+								<span style="display: inline-block; padding-top: 6px"
+									>${new Date(createdAt).toString()}</span
+								>
+							</div>
+						</header>
+						<div class="amount">
+							<h4 style="font-size: 1.3rem; display: inline-block;">
+								${currencySymbol}
+							</h4>
+							<h1
+								style="margin-top: -20px; font-size: 2.5rem; display: inline-block"
+							>
+								${Number(amount).toLocaleString().split('.')[0]}
+							</h1>
+							<h5
+								style="margin-right: 5px; font-size: 1.3rem; display: inline-block"
+							>
+								.${Number(amount).toLocaleString().split('.')[1] || '00'}
+							</h5>
+						</div>
+						<span
+							class="statusHeader ${status}"
+							style="
+						font-weight: 600;
+						margin-top: 20px;
+						display: inline-block;
+						text-transform: capitalize;
+					"
+							>${status}</span
+						>
+						<section style="margin-top: 30px">
+							${shareReceiptData()
+								.map(
+									index => String.raw`
+										<div
+											style="border-bottom: 1px solid #000; padding: 10px 2px"
+										>
+											<h3 style="text-transform: capitalize; display: inline">
+												${index.key} <span style="display: none">${reference}</span>
+											</h3>
+											${
+												!index.noTransform
+													? String.raw`<span
+														class="status"
+														style="text-transform: capitalize; float: right; clear: both;"
+												  >
+												  ${index.value} <span style="display: none">${reference}</span>
+												  </span>`
+													: String.raw`<span
+														class="status"
+														style="float: right; clear: both;"
+														>${index.value}</span
+												  >`
+											}
+										</div>
+									`
+								)
+								.join('')}
+						</section>
+						<aside
+							style="
+						padding: 30px 0px 10px;
+						text-align: justify;
+						line-height: 25px;
+					"
+						>
+							<div>
+								<span style="display: inline-block; font-weight: 600;"
+									>DISCLAIMER:</span
+								>
+								Your transaction has been successfully processed. Note. however,
+								that completion of any transfer may be affected by other factors
+								including but not limited to transmission errors, incomplete
+								information, fluctuations on the network/internet,
+								interruptions, glitch, delayed information or other matters
+								beyond the Bank's control which may impact on the transaction
+								and for which the Bank will not be liable. All transactions are
+								subject to Loopay confirmation and fraud proof verification.
+								<span style="display: none">${reference}</span>
+							</div>
+							<img
+								src="https://res.cloudinary.com/geekycoder/image/upload/v1703481253/loopay/qrcode.png"
+								style="
+							width: 200px;
+							height: 200px;
+							margin-left: auto;
+							margin-top: 10px;
+							float: right;
+							clear: right;
+						"
+							/>
+							<span>Click <a href="${
+								process.env.BASE_URL
+							}/api/email/unsubscribe/${hashedEmail}">here</a> to unsubscribe <span style="display: none">${reference}</span></span>
+						</aside>
+					</div>
+				</main>
+			</body>
+		</html>`,
+	});
 };
 
 module.exports = {

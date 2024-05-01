@@ -452,10 +452,7 @@ const reverseTransaction = async (req, res) => {
 		const amountInUnits = amount * 100;
 		const transaction = await TransactionModel.findOne({reference});
 
-		if (
-			transaction.status === 'refunded' ||
-			transaction.status === 'reversed'
-		) {
+		if (transaction.status === 'reversed') {
 			await TransactionModel.findOneAndUpdate(
 				{reference, transactionType: 'credit'},
 				{status: 'success'}
@@ -478,7 +475,7 @@ const reverseTransaction = async (req, res) => {
 			);
 			await TransactionModel.findOneAndUpdate(
 				{reference, transactionType: 'debit'},
-				{status: 'refunded'}
+				{status: 'reversed'}
 			);
 			senderWallet.balance += amountInUnits;
 			receiverWallet.balance -= amountInUnits;

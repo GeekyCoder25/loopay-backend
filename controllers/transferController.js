@@ -421,10 +421,10 @@ const reverseTransaction = async (req, res) => {
 			transactionType: 'credit',
 		});
 
-		if (!sender || !receiver)
-			throw new Error("Can't find transaction with this reference ID");
-		else if (sender.type !== 'intra')
+		if (sender.type !== 'intra')
 			throw new Error("Can't reverse inter-bank transactions");
+		else if (!sender || !receiver)
+			throw new Error("Can't find transaction with this reference ID");
 
 		const selectWallet = currency => {
 			switch (currency) {

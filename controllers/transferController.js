@@ -414,15 +414,17 @@ const reverseTransaction = async (req, res) => {
 
 		const sender = await TransactionModel.findOne({
 			reference,
-			transactionType: 'credit',
+			transactionType: 'debit',
 		});
 		const receiver = await TransactionModel.findOne({
 			reference,
-			transactionType: 'debit',
+			transactionType: 'credit',
 		});
 
-		if (!sender)
+		if (!sender || !receiver)
 			throw new Error("Can't find transaction with this reference ID");
+		else if (sender.type !== 'intra')
+			throw new Error("Can't reverse inter-bank transactions");
 
 		const selectWallet = currency => {
 			switch (currency) {
@@ -472,11 +474,11 @@ const reverseTransaction = async (req, res) => {
 		} else {
 			await TransactionModel.findOneAndUpdate(
 				{reference, transactionType: 'credit'},
-				{status: 'refunded'}
+				{status: 'reversed'}
 			);
 			await TransactionModel.findOneAndUpdate(
 				{reference, transactionType: 'debit'},
-				{status: 'reversed'}
+				{status: 'refunded'}
 			);
 			senderWallet.balance += amountInUnits;
 			receiverWallet.balance -= amountInUnits;

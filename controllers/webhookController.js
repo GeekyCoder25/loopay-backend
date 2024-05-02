@@ -83,10 +83,13 @@ const webhookHandler = async (req, res) => {
 				};
 
 				await Notification.create(notification);
-				await sendReceipt({
-					email,
-					transaction,
-				});
+
+				if (userData.isEmailAlertSubscribed) {
+					await sendReceipt({
+						email,
+						transaction,
+					});
+				}
 				wallet.balance += amount;
 				await wallet.save();
 			}
@@ -122,7 +125,7 @@ const sendReceipt = async receiptData => {
 			{key: 'Receiver Name', value: receiverName},
 			{key: 'Transaction type', value: transactionType},
 			{key: 'Sender Bank', value: sourceBank},
-			{key: 'Reference Id', value: reference},
+			{key: 'Reference ID', value: reference},
 			{key: 'Narration', value: description, noTransform: true},
 			{key: 'Status', value: status},
 		];

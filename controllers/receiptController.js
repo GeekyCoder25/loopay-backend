@@ -113,7 +113,7 @@ const generateReceipt = async (req, res) => {
 					key: [transactionType === 'credit' ? 'Sender Bank' : 'Receiver Bank'],
 					value: transactionType === 'credit' ? sourceBank : destinationBank,
 				},
-				{key: 'Reference Id', value: reference},
+				{key: 'Reference ID', value: reference},
 				{key: 'Narration', value: description, noTransform: true},
 				{key: 'Status', value: status},
 			];

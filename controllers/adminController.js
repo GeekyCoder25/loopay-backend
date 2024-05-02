@@ -149,7 +149,7 @@ const getAllAdminInfo = async (req, res) => {
 						? {
 								[currency]: await totalTransactionStatusLength(
 									currency,
-									'pending'
+									'reversed'
 								),
 						  }
 						: {[currency]: 0};

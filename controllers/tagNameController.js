@@ -99,9 +99,15 @@ const getPhone = async (req, res) => {
 		if (sendeePhoneNo.length < 10)
 			throw new Error('Please provide a valid account number');
 
-		const wallet = await LocalWallet.findOne({
+		let wallet;
+		wallet = await LocalWallet.findOne({
 			loopayAccNo: sendeePhoneNo,
 		});
+		if (!wallet) {
+			wallet = await LocalWallet.findOne({
+				accNo: sendeePhoneNo,
+			});
+		}
 		if (!wallet) throw new Error('No user found with this account number');
 		if (senderPhoneNo === wallet.loopayAccNo)
 			throw new Error('No user found with this account number');

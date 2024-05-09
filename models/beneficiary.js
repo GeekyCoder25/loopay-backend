@@ -15,6 +15,10 @@ const BeneficiarySchema = new Schema(
 			required: true,
 			beneficiary: {
 				required: true,
+				email: {
+					type: String,
+					required: [true, 'Please provide beneficiary email'],
+				},
 				fullName: {
 					type: String,
 					required: [true, "Please provide the user's name"],

@@ -61,7 +61,9 @@ const swapCurrency = async (req, res) => {
 			reference: `TR${id}`,
 		};
 		await Transaction.create(transaction);
-		res.status(200).json('Swap successful');
+		res
+			.status(200)
+			.json({status: true, message: 'Swap successful', data: transaction});
 	} catch (err) {
 		console.log(err.message);
 		res.status(400).json(err.message);

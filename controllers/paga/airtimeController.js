@@ -8,7 +8,7 @@ const LocalWallet = require('../../models/wallet');
 const DollarWallet = require('../../models/walletDollar');
 const EuroWallet = require('../../models/walletEuro');
 const PoundWallet = require('../../models/walletPound');
-const PAGA_API_URL =
+// const PAGA_API_URL =
 // 	'https://beta.mypaga.com/paga-webservices/business-rest/secured';
 // const credentials = 'xT3*wEXcDRy7Ry5';
 // const principal = '3D3A120F-498C-4688-AD1C-E6151900D974';

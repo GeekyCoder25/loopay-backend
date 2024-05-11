@@ -367,9 +367,9 @@ const PagaBuyData = async (req, res) => {
 				},
 			};
 
-			// const response = await axios.post(url, body, config);
+			const response = await axios.post(url, body, config);
 
-			// return response.data;
+			return response.data;
 		};
 		const apiData = await connectWithAPI();
 		if (apiData.transactionId) {

@@ -63,7 +63,6 @@ app.use('/api/user', protect, userDataRoutes);
 app.use('/api/admin', protect, adminRoutes);
 app.use('/api/webhook', webhookHandler);
 app.post('/api/test-update', async (req, res) => {
-	console.log(update);
 	await update.create(req.body);
 	res.send({network: true});
 });

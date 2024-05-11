@@ -202,7 +202,7 @@ const PagaBuyAirtime = async (req, res) => {
 						A customer trying to buy ₦${Number(
 							nairaAmount
 						).toLocaleString()} airtime recharge just experienced a <b>server error</b>  due to insufficient funds
-						in your airtime and data API account dashboard, recharge now so you
+						in your airtime API account dashboard, recharge now so you
 						customers can experience seamless experience while transacting.
 						<a href="https://www.mypaga.com/paga-business/">Click here</a> to go to API dashboard
 					</p>
@@ -444,7 +444,7 @@ const PagaBuyData = async (req, res) => {
 						A customer trying to buy ₦${Number(
 							nairaAmount
 						).toLocaleString()} data recharge just experienced a <b>server error</b>  due to insufficient funds
-						in your airtime and data API account dashboard, recharge now so you
+						in your data API account dashboard, recharge now so you
 						customers can experience seamless experience while transacting.
 						<a href="https://www.mypaga.com/paga-business/">Click here</a> to go to API dashboard
 					</p>

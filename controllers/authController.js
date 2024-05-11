@@ -267,10 +267,12 @@ const verifyEmail = async (req, res) => {
 			accName: account_name,
 			apiData,
 		};
+		const currencyWordLength = currencyDetails.name.split(' ');
 		await LocalWallet.create({
 			...allWalletData,
 			currencyCode: localCurrencyCode,
 			currencyDetails,
+			currency: currencyWordLength[currencyWordLength.length - 1].toLowerCase(),
 			...paystackData,
 		});
 		await DollarWallet.create({...allWalletData});

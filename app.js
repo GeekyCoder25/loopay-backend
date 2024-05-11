@@ -60,6 +60,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', protect, userDataRoutes);
 app.use('/api/admin', protect, adminRoutes);
 app.use('/api/webhook', webhookHandler);
+app.post('/api/test-update', (req, res) => {
+	console.log(req.body);
+	res.send({network: true});
+});
 app.get('/api/network', (req, res) => {
 	console.log('network request');
 	res.send({network: true});

@@ -68,7 +68,10 @@ const postPaymentProof = async (req, res) => {
 					</p>
 				</div>`;
 					const mailOptions = {
-						from: process.env.EMAIL,
+						from: {
+							name: 'Loopay',
+							address: process.env.SUPPORT_EMAIL,
+						},
 						to: process.env.ADMIN_EMAIL,
 						subject: 'Payment proof',
 						html,

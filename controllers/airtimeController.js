@@ -192,7 +192,10 @@ const buyAirtime = async (req, res) => {
 			console.log('Insufficient balance');
 			sendMail(
 				{
-					from: process.env.SUPPORT_EMAIL,
+					from: {
+						name: 'Loopay',
+						address: process.env.SUPPORT_EMAIL,
+					},
 					to: process.env.ADMIN_EMAIL,
 					subject: 'Insufficient balance',
 					html: String.raw`<div
@@ -403,7 +406,10 @@ const buyData = async (req, res) => {
 			console.log('Insufficient balance');
 			sendMail(
 				{
-					from: process.env.SUPPORT_EMAIL,
+					from: {
+						name: 'Loopay',
+						address: process.env.SUPPORT_EMAIL,
+					},
 					to: process.env.ADMIN_EMAIL,
 					subject: 'Insufficient balance',
 					html: String.raw`<div

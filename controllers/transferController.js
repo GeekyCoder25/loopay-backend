@@ -186,7 +186,10 @@ const initiateTransfer = async (req, res) => {
 				console.log('Insufficient balance');
 				return sendMail(
 					{
-						from: process.env.SUPPORT_EMAIL,
+						from: {
+							name: 'Loopay',
+							address: process.env.SUPPORT_EMAIL,
+						},
 						to: process.env.ADMIN_EMAIL,
 						subject: 'Insufficient balance',
 						html: String.raw`<div
@@ -407,6 +410,15 @@ const initiateTransferToLoopay = async (req, res) => {
 	}
 };
 
+const initiateTransferToInternational = async (req, res) => {
+	try {
+		throw new Error('Server error');
+	} catch (err) {
+		console.log(err.message);
+		res.status(400).json(err.message);
+	}
+};
+
 const reverseTransaction = async (req, res) => {
 	try {
 		const {reference} = req.body;
@@ -603,7 +615,10 @@ const sendReceipt = async receiptData => {
 	const hashedEmail = jwt.sign(email, process.env.JWT_SECRET);
 
 	await sendMail({
-		from: process.env.SUPPORT_EMAIL,
+		from: {
+			name: 'Loopay',
+			address: process.env.SUPPORT_EMAIL,
+		},
 		to: email,
 		subject: `Loopay ${
 			transactionType[0].toUpperCase() + transactionType.slice(1)
@@ -771,4 +786,5 @@ module.exports = {
 	initiateTransfer,
 	initiateTransferToLoopay,
 	reverseTransaction,
+	initiateTransferToInternational,
 };

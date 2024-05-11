@@ -134,7 +134,10 @@ const sendReceipt = async receiptData => {
 	const hashedEmail = jwt.sign(email, process.env.JWT_SECRET);
 
 	await sendMail({
-		from: process.env.SUPPORT_EMAIL,
+		from: {
+			name: 'Loopay',
+			address: process.env.SUPPORT_EMAIL,
+		},
 		to: email,
 		subject: `Loopay ${
 			transactionType[0].toUpperCase() + transactionType.slice(1)

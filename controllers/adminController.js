@@ -694,7 +694,10 @@ const updateVerification = async (req, res) => {
 			</div>`;
 
 			const mailOptions = {
-				from: process.env.EMAIL,
+				from: {
+					name: 'Loopay',
+					address: process.env.SUPPORT_EMAIL,
+				},
 				to: email,
 				subject: subject || 'Account Verification',
 				html,
@@ -775,7 +778,10 @@ const blockAccount = async (req, res) => {
 			</div>`;
 
 			const mailOptions = {
-				from: process.env.EMAIL,
+				from: {
+					name: 'Loopay',
+					address: process.env.SUPPORT_EMAIL,
+				},
 				to: email,
 				subject: mailData.subject || 'Account Deactivation',
 				html,
@@ -825,7 +831,10 @@ const suspendAccount = async (req, res) => {
 			</div>`;
 
 			const mailOptions = {
-				from: process.env.EMAIL,
+				from: {
+					name: 'Loopay',
+					address: process.env.SUPPORT_EMAIL,
+				},
 				to: email,
 				subject: mailData.subject || 'Account Suspension',
 				html,
@@ -873,7 +882,10 @@ const unblockAccount = async (req, res) => {
 			</div>`;
 
 			const mailOptions = {
-				from: process.env.EMAIL,
+				from: {
+					name: 'Loopay',
+					address: process.env.SUPPORT_EMAIL,
+				},
 				to: email,
 				subject: mailData.subject || 'Account Activation',
 				html,
@@ -924,7 +936,10 @@ const unsuspendAccount = async (req, res) => {
 			</div>`;
 
 			const mailOptions = {
-				from: process.env.EMAIL,
+				from: {
+					name: 'Loopay',
+					address: process.env.SUPPORT_EMAIL,
+				},
 				to: email,
 				subject: mailData.subject || 'Account Activation',
 				html,

@@ -78,7 +78,10 @@ const verifyEmailHTML = async email => {
 		</div>`;
 
 	const mailOptions = {
-		from: process.env.EMAIL,
+		from: {
+			name: 'Loopay',
+			address: process.env.SUPPORT_EMAIL,
+		},
 		to: email,
 		subject: 'Email Verification',
 		html,

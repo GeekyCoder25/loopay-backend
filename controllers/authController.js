@@ -55,7 +55,10 @@ const verifyEmailHTML = async (email, res) => {
 		</div>`;
 
 		const mailOptions = {
-			from: process.env.EMAIL,
+			from: {
+				name: 'Loopay',
+				address: process.env.SUPPORT_EMAIL,
+			},
 			to: email,
 			subject: 'Email Verification',
 			html,
@@ -401,7 +404,10 @@ const forgetPassword = async (req, res) => {
 		</div>`;
 
 			const mailOptions = {
-				from: process.env.EMAIL,
+				from: {
+					name: 'Loopay',
+					address: process.env.SUPPORT_EMAIL,
+				},
 				to: req.body.email,
 				subject: 'Loopay One-Time Password (OTP) for Account Verification',
 				html: message,

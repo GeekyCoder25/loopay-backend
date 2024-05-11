@@ -31,6 +31,7 @@ const {getWallet, postWallet} = require('../controllers/walletController');
 const {
 	initiateTransferToLoopay,
 	initiateTransfer,
+	initiateTransferToInternational,
 } = require('../controllers/transferController');
 const {getTransactions} = require('../controllers/transactionController');
 const {listBanks} = require('../controllers/listBank');
@@ -118,6 +119,9 @@ router.route('/wallet').get(getWallet).post(postWallet);
 router
 	.route('/loopay/transfer')
 	.post(accountStatus, schedulePayment, initiateTransferToLoopay);
+router
+	.route('/loopay/transfer/international')
+	.post(accountStatus, schedulePayment, initiateTransferToInternational);
 router
 	.route('/transfer')
 	.post(accountStatus, schedulePayment, initiateTransfer);

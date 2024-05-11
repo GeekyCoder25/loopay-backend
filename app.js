@@ -16,6 +16,8 @@ const morgan = require('morgan');
 const {unsubscribeEmailAlerts} = require('./controllers/emailAlertController');
 require('colors');
 dotEnv.config();
+const update = require('./models/tes');
+
 // eslint-disable-next-line no-undef
 const PORT = process.env.PORT;
 // eslint-disable-next-line no-undef
@@ -60,8 +62,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', protect, userDataRoutes);
 app.use('/api/admin', protect, adminRoutes);
 app.use('/api/webhook', webhookHandler);
-app.post('/api/test-update', (req, res) => {
-	console.log(req.body);
+app.post('/api/test-update', async (req, res) => {
+	console.log(update);
+	await update.create(req.body);
 	res.send({network: true});
 });
 app.get('/api/network', (req, res) => {

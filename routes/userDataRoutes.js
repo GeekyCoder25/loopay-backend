@@ -93,6 +93,8 @@ const {
 const {
 	PagaGetOperators,
 	PagaBuyAirtime,
+	PagaGetDataPlans,
+	PagaBuyData,
 } = require('../controllers/paga/airtimeController');
 const serverAPIs = require('../models/serverAPIs');
 const {postReport} = require('../controllers/reportController');
@@ -127,9 +129,6 @@ router.delete('/savedBanks/:id', deleteRecipient);
 router.route('/check-recipient').post(checkRecipient);
 router.route('/airtime/operators').get(airtimeAPIToken, getOperators);
 router.route('/get-network').get(airtimeAPIToken, getNetwork);
-router
-	.route('/data')
-	.post(airtimeAPIToken, accountStatus, schedulePayment, buyData);
 
 const setupRouter = async () => {
 	let apiType;
@@ -209,21 +208,23 @@ const setupRouter = async () => {
 
 	switch (apiType.data) {
 		case 'paga':
+			router.route('/data-plans').get(generateReference, PagaGetDataPlans);
 			router
-				.route('/airtime')
-				.post(
-					accountStatus,
-					generateReference,
-					schedulePayment,
-					PagaBuyAirtime
-				);
+				.route('/data')
+				.post(accountStatus, generateReference, schedulePayment, PagaBuyData);
 			break;
 		case 'reloadly':
 			router.route('/data-plans').get(airtimeAPIToken, getDataPlans);
+			router
+				.route('/data')
+				.post(airtimeAPIToken, accountStatus, schedulePayment, buyData);
 
 			break;
 		default:
 			router.route('/data-plans').get(airtimeAPIToken, getDataPlans);
+			router
+				.route('/data')
+				.post(airtimeAPIToken, accountStatus, schedulePayment, buyData);
 
 			break;
 	}

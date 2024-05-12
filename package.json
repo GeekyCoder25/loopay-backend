@@ -1,5 +1,5 @@
 {
-	"name": "lopay_backend",
+	"name": "loopay_backend",
 	"version": "1.0.0",
 	"description": "loopay backend app",
 	"main": "app.js",

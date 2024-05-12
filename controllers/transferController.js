@@ -715,7 +715,7 @@ const sendReceipt = async receiptData => {
 								.map(
 									index => String.raw`
 										<div
-											style="border-bottom: 1px solid #000; padding: 10px 2px"
+											style="padding: 10px 2px"
 										>
 											<h3 style="text-transform: capitalize; display: inline">
 												${index.key} <span style="display: none">${reference}</span>
@@ -734,6 +734,7 @@ const sendReceipt = async receiptData => {
 														>${index.value}</span
 												  >`
 											}
+										<hr />
 										</div>
 									`
 								)

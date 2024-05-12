@@ -120,11 +120,11 @@ router
 	.route('/loopay/transfer')
 	.post(accountStatus, schedulePayment, initiateTransferToLoopay);
 router
-	.route('/loopay/transfer/international')
-	.post(accountStatus, schedulePayment, initiateTransferToInternational);
-router
 	.route('/transfer')
 	.post(accountStatus, schedulePayment, initiateTransfer);
+router
+	.route('/transfer/international')
+	.post(accountStatus, schedulePayment, initiateTransferToInternational);
 router.route('/transaction').get(getTransactions);
 router.route('/transferrecipient').get(getTransactions);
 router.route('/banks').get(listBanks);

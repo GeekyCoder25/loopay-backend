@@ -10,7 +10,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const {isStrongPassword} = require('validator');
 const {sendMail} = require('../utils/sendEmail');
-const {createVirtualAccount} = require('../services/createVirtualAccount');
+const {
+	createVirtualAccount,
+	checkVirtualAccount,
+} = require('../services/createVirtualAccount');
 const {handleErrors} = require('../utils/ErrorHandler');
 const {postReferral} = require('./referralController');
 const unverifiedUser = require('../models/unverifiedUser');
@@ -77,6 +80,7 @@ const registerAccount = async (req, res) => {
 		if (req.body.email) {
 			req.body.email = req.body.email.toLowerCase();
 		}
+
 		// const paystack = await createVirtualAccount({
 		// 	email: req.body.email,
 		// 	first_name: req.body.firstName,
@@ -101,7 +105,6 @@ const registerAccount = async (req, res) => {
 		// 	}
 		// );
 
-		// return;
 		// await User.findOneAndRemove({email: req.body.email});
 		// await UserDataModel.findOneAndRemove({email: req.body.email});
 		// await SessionModel.findOneAndRemove({email: req.body.email});
@@ -109,6 +112,7 @@ const registerAccount = async (req, res) => {
 		// await DollarWallet.findOneAndRemove({email: req.body.email});
 		// await EuroWallet.findOneAndRemove({email: req.body.email});
 		// await PoundWallet.findOneAndRemove({email: req.body.email});
+		// return;
 
 		const formData = req.body;
 		const {email, password, referralCode} = formData;
@@ -222,7 +226,7 @@ const verifyEmail = async (req, res) => {
 
 		await User.create(formData);
 		await UserDataModel.create(userData);
-		const paystack = await createVirtualAccount({
+		let paystack = await createVirtualAccount({
 			email,
 			first_name: firstName,
 			middle_name: middleName,
@@ -231,10 +235,22 @@ const verifyEmail = async (req, res) => {
 			preferred_bank: process.env.PREFERRED_BANK,
 			country: 'NG',
 		});
+
 		if (typeof paystack === 'string') {
 			await User.findByIdAndRemove(_id);
 			await UserDataModel.findByIdAndRemove(_id);
 			return res.status(500).json(paystack);
+		} else if (paystack.status === false && paystack.type === 'api_error') {
+			const checkPaystack = await checkVirtualAccount();
+			if (checkPaystack.data) {
+				paystack = {
+					data: checkPaystack.data.find(
+						i => i.customer.email === req.body.email
+					),
+				};
+			} else {
+				throw new Error("Unknown error, couldn't create account");
+			}
 		}
 		const {id, account_number, account_name, bank} = paystack.data;
 		delete paystack.data.assignment;

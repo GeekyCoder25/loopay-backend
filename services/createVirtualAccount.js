@@ -14,6 +14,7 @@ const createVirtualAccount = async data => {
 			return response.data;
 		} catch (error) {
 			console.log(error.response.data);
+			return error.response.data;
 		}
 	};
 	const url = 'https://api.paystack.co/customer';
@@ -32,6 +33,28 @@ const createVirtualAccount = async data => {
 		return 'Server error';
 	}
 };
+
+const checkVirtualAccount = async () => {
+	const SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+	try {
+		const url = 'https://api.paystack.co/dedicated_account';
+		const headers = {
+			Authorization: `Bearer ${SECRET_KEY}`,
+			'Content-Type': 'application/json',
+		};
+		try {
+			const response = await axios.get(url, {headers});
+			return response.data;
+		} catch (error) {
+			console.log(error.response.data);
+		}
+	} catch (error) {
+		console.log(error.message);
+		return 'Server error';
+	}
+};
+
 module.exports = {
 	createVirtualAccount,
+	checkVirtualAccount,
 };

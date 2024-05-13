@@ -661,21 +661,24 @@ const sendReceipt = async receiptData => {
 						<!-- <span style="display: none">${reference}</span> -->
 					</h1>
 					<img
-								src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
-								alt=""
-								class="logo"
-								style="width: 150px; height: 100px; object-fit: contain; float: right"
-							/>
-					<div class="container" style="width: 100%; height: 100%; clear: right;">
+						src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
+						alt=""
+						class="logo"
+						style="width: 150px; height: 100px; object-fit: contain; float: right"
+					/>
+					<div
+						class="container"
+						style="width: 100%; height: 100%; clear: right;"
+					>
 						<header
-						style="
+							style="
 						gap: 20px;
 						width: 100%;
 						margin-bottom: 30px;
 					"
 						>
-						<div>
-							<h2 class="title" style="font-size: 2rem">Receipt</h2>
+							<div>
+								<h2 class="title" style="font-size: 2rem">Receipt</h2>
 								<span style="display: inline-block; padding-top: 6px"
 									>${new Date(createdAt).toString()}</span
 								>
@@ -714,35 +717,28 @@ const sendReceipt = async receiptData => {
 							${shareReceiptData()
 								.map(
 									index => String.raw`
-										<div
-											style="
-							padding: 10px 2px;
-							display: flex;
-							justify-content: space-between;
-							column-gap: 30px;
-						"
-										>
-											<h3 style="text-transform: capitalize; display: inline; 
-								white-space: nowrap; flex: 1;
-											">
-												${index.key} 
-												<!-- <span style="display: none">${reference}</span> -->
-											</h3>
-											${
-												!index.noTransform
-													? String.raw`<span
-														class="status"
-														style="text-transform: capitalize; text-align: right"
-												  >
-												  ${index.value}
-												   <!-- <span style="display: none">${reference}</span> -->
-												  </span>`
-													: String.raw`<span
-														class="status"
-														style="text-align: right"
-														>${index.value}</span
-												  >`
-											}
+										<div style="padding: 10px 2px;">
+											<div style="display: inline-block; width: 50%;">
+												<h3
+													style="text-transform: capitalize; white-space: nowrap;"
+												>
+													${index.key}
+												</h3>
+											</div>
+											<div
+												style="display: inline-block; width: 50%; text-align: right;"
+											>
+												${
+													!index.noTransform
+														? String.raw`<span
+															class="status"
+															style="text-transform: capitalize;"
+													  >
+															${index.value}
+													  </span>`
+														: String.raw`<span class="status">${index.value}</span>`
+												}
+											</div>
 										</div>
 										<hr />
 									`
@@ -781,10 +777,14 @@ const sendReceipt = async receiptData => {
 							clear: right;
 						"
 							/>
-							<span>Click <a href="${
-								process.env.BASE_URL
-							}/api/email/unsubscribe/${hashedEmail}">here</a> to unsubscribe 
-							<!-- <span style="display: none">${reference}</span> -->
+							<span
+								>Click
+								<a
+									href="${process.env.BASE_URL}/api/email/unsubscribe/${hashedEmail}"
+									>here</a
+								>
+								to unsubscribe
+								<!-- <span style="display: none">${reference}</span> -->
 							</span>
 						</aside>
 					</div>

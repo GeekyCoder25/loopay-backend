@@ -715,7 +715,12 @@ const sendReceipt = async receiptData => {
 								.map(
 									index => String.raw`
 										<div
-											style="padding: 10px 2px"
+											style="
+							padding: 10px 2px;
+							display: flex;
+							justify-content: space-between;
+							column-gap: 30px;
+						"
 										>
 											<h3 style="text-transform: capitalize; display: inline">
 												${index.key} 
@@ -725,14 +730,14 @@ const sendReceipt = async receiptData => {
 												!index.noTransform
 													? String.raw`<span
 														class="status"
-														style="text-transform: capitalize; float: right; clear: both;"
+														style="text-transform: capitalize; text-align: right"
 												  >
 												  ${index.value}
 												   <!-- <span style="display: none">${reference}</span> -->
 												  </span>`
 													: String.raw`<span
 														class="status"
-														style="float: right; clear: both;"
+														style="text-align: right"
 														>${index.value}</span
 												  >`
 											}

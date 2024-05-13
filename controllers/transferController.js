@@ -736,8 +736,8 @@ const sendReceipt = async receiptData => {
 														>${index.value}</span
 												  >`
 											}
-										<hr />
 										</div>
+										<hr />
 									`
 								)
 								.join('')}

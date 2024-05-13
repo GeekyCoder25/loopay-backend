@@ -177,7 +177,7 @@ const sendReceipt = async receiptData => {
 					<h1 style="text-transform: capitalize">
 						${transactionType} Transaction Alert -
 						[₦${Number(amount).toLocaleString()}]
-						<span style="display: none">${reference}</span>
+						<!-- <span style="display: none">${reference}</span> -->
 					</h1>
 					<img
 								src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
@@ -281,7 +281,7 @@ const sendReceipt = async receiptData => {
 								beyond the Bank's control which may impact on the transaction
 								and for which the Bank will not be liable. All transactions are
 								subject to Loopay confirmation and fraud proof verification.
-								<span style="display: none">${reference}</span>
+								<!-- <span style="display: none">${reference}</span> -->
 							</div>
 							<img
 								src="https://res.cloudinary.com/geekycoder/image/upload/v1703481253/loopay/qrcode.png"

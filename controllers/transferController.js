@@ -658,7 +658,7 @@ const sendReceipt = async receiptData => {
 					<h1 style="text-transform: capitalize">
 						${transactionType} Transaction Alert -
 						[₦${Number(amount).toLocaleString()}]
-						<span style="display: none">${reference}</span>
+						<!-- <span style="display: none">${reference}</span> -->
 					</h1>
 					<img
 								src="https://res.cloudinary.com/geekycoder/image/upload/v1688782340/loopay/appIcon.png"
@@ -718,7 +718,8 @@ const sendReceipt = async receiptData => {
 											style="padding: 10px 2px"
 										>
 											<h3 style="text-transform: capitalize; display: inline">
-												${index.key} <span style="display: none">${reference}</span>
+												${index.key} 
+												<!-- <span style="display: none">${reference}</span> -->
 											</h3>
 											${
 												!index.noTransform
@@ -726,7 +727,8 @@ const sendReceipt = async receiptData => {
 														class="status"
 														style="text-transform: capitalize; float: right; clear: both;"
 												  >
-												  ${index.value} <span style="display: none">${reference}</span>
+												  ${index.value}
+												   <!-- <span style="display: none">${reference}</span> -->
 												  </span>`
 													: String.raw`<span
 														class="status"
@@ -759,7 +761,7 @@ const sendReceipt = async receiptData => {
 								beyond the Bank's control which may impact on the transaction
 								and for which the Bank will not be liable. All transactions are
 								subject to Loopay confirmation and fraud proof verification.
-								<span style="display: none">${reference}</span>
+								<!-- <span style="display: none">${reference}</span> -->
 							</div>
 							<img
 								src="https://res.cloudinary.com/geekycoder/image/upload/v1703481253/loopay/qrcode.png"
@@ -774,7 +776,9 @@ const sendReceipt = async receiptData => {
 							/>
 							<span>Click <a href="${
 								process.env.BASE_URL
-							}/api/email/unsubscribe/${hashedEmail}">here</a> to unsubscribe <span style="display: none">${reference}</span></span>
+							}/api/email/unsubscribe/${hashedEmail}">here</a> to unsubscribe 
+							<!-- <span style="display: none">${reference}</span> -->
+							</span>
 						</aside>
 					</div>
 				</main>

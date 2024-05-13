@@ -230,22 +230,29 @@ const sendReceipt = async receiptData => {
 								.map(
 									index => String.raw`
 										<div
-											style="padding: 10px 2px"
+											style="padding: 10px 2px;
+							display: flex;
+							justify-content: space-between;
+							column-gap: 30px;"
 										>
-											<h3 style="text-transform: capitalize; display: inline">
-												${index.key} <span style="display: none">${reference}</span>
+												<h3 style="text-transform: capitalize; display: inline; 
+								white-space: nowrap;
+											">
+												${index.key} 
+												<!-- <span style="display: none">${reference}</span> -->
 											</h3>
 											${
 												!index.noTransform
 													? String.raw`<span
 														class="status"
-														style="text-transform: capitalize; float: right; clear: both;"
+														style="text-transform: capitalize; text-align: right"
 												  >
-												  ${index.value} <span style="display: none">${reference}</span>
+												  ${index.value} 
+												  <!-- <span style="display: none">${reference}</span> -->
 												  </span>`
 													: String.raw`<span
 														class="status"
-														style="float: right; clear: both;"
+														style="text-align: right"
 														>${index.value}</span
 												  >`
 											}
@@ -289,7 +296,9 @@ const sendReceipt = async receiptData => {
 							/>
 							<span>Click <a href="${
 								process.env.BASE_URL
-							}/api/email/unsubscribe/${hashedEmail}">here</a> to unsubscribe <span style="display: none">${reference}</span></span>
+							}/api/email/unsubscribe/${hashedEmail}">here</a> to unsubscribe 
+							<!-- <span style="display: none">${reference}</span> -->
+						</span>
 						</aside>
 					</div>
 				</main>

@@ -229,33 +229,31 @@ const sendReceipt = async receiptData => {
 							${shareReceiptData()
 								.map(
 									index => String.raw`
-										<div
-											style="padding: 10px 2px;
-							display: flex;
-							justify-content: space-between;
-							column-gap: 30px;"
-										>
-												<h3 style="text-transform: capitalize; display: inline; 
-								white-space: nowrap;
-											">
-												${index.key} 
-												<!-- <span style="display: none">${reference}</span> -->
-											</h3>
-											${
-												!index.noTransform
-													? String.raw`<span
-														class="status"
-														style="text-transform: capitalize; text-align: right"
-												  >
-												  ${index.value} 
-												  <!-- <span style="display: none">${reference}</span> -->
-												  </span>`
-													: String.raw`<span
-														class="status"
-														style="text-align: right"
-														>${index.value}</span
-												  >`
-											}
+										<div style="padding: 10px 2px;">
+											<div style="display: inline-block;
+								width: 49%;
+								vertical-align: top;
+								padding-right: 10px;">
+												<h3
+													style="text-transform: capitalize; white-space: nowrap;"
+												>
+													${index.key}
+												</h3>
+											</div>
+											<div
+												style="display: inline-block; width: 49%; text-align: right;"
+											>
+												${
+													!index.noTransform
+														? String.raw`<span
+															class="status"
+															style="text-transform: capitalize;"
+													  >
+															${index.value}
+													  </span>`
+														: String.raw`<span class="status">${index.value}</span>`
+												}
+											</div>
 										</div>
 										<hr />
 									`

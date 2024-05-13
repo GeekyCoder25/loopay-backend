@@ -723,7 +723,7 @@ const sendReceipt = async receiptData => {
 						"
 										>
 											<h3 style="text-transform: capitalize; display: inline; 
-								white-space: nowrap;
+								white-space: nowrap; flex: 1;
 											">
 												${index.key} 
 												<!-- <span style="display: none">${reference}</span> -->

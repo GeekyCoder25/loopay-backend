@@ -324,8 +324,8 @@ const initiateTransferToLoopay = async (req, res) => {
 				email: senderWallet.email,
 				phoneNumber: req.user.phoneNumber,
 				transactionType: 'debit',
-				fromBalance: senderWallet.balance + amountInUnits,
-				toBalance: senderWallet.balance,
+				fromBalance: senderWallet.balance,
+				toBalance: senderWallet.balance - amountInUnits,
 				...transaction,
 			});
 			const notification = {
@@ -360,8 +360,8 @@ const initiateTransferToLoopay = async (req, res) => {
 				email: sendeeWallet.email,
 				phoneNumber: sendeeWallet.phoneNumber,
 				transactionType: 'credit',
-				fromBalance: sendeeWallet.balance - amountInUnits,
-				toBalance: sendeeWallet.balance,
+				fromBalance: sendeeWallet.balance,
+				toBalance: sendeeWallet.balance + amountInUnits,
 				...transaction,
 			});
 
@@ -412,7 +412,68 @@ const initiateTransferToLoopay = async (req, res) => {
 
 const initiateTransferToInternational = async (req, res) => {
 	try {
-		throw new Error('Server error');
+		const {
+			amount,
+			description,
+			id,
+			receiverAccountNo,
+			receiverBank,
+			receiverName,
+			sendFromCurrency,
+		} = req.body;
+		const selectWallet = currency => {
+			switch (currency) {
+				case 'naira':
+					return LocalWallet;
+				case 'dollar':
+					return DollarWallet;
+				case 'euro':
+					return EuroWallet;
+				case 'pound':
+					return PoundWallet;
+				default:
+					return LocalWallet;
+			}
+		};
+		const currencyWallet = selectWallet(sendFromCurrency);
+		const wallet = await currencyWallet.findOne({
+			email: req.user.email,
+		});
+		const amountInUnits = Number(amount) * 100;
+		if (wallet.balance < amountInUnits) throw new Error('Insufficient funds');
+
+		const transaction = await TransactionModel.create({
+			email: wallet.email,
+			phoneNumber: req.user.phoneNumber,
+			transactionType: 'debit',
+			fromBalance: wallet.balance,
+			toBalance: wallet.balance - amountInUnits,
+			id,
+			status: 'pending',
+			type: 'inter',
+			method: 'inter',
+			senderAccount: wallet.loopayAccNo,
+			senderName: `${req.user.firstName} ${req.user.lastName}`,
+			senderPhoto: '',
+			receiverAccount: receiverAccountNo,
+			receiverName,
+			receiverPhoto: '',
+			sourceBank: 'Loopay',
+			destinationBank: receiverBank,
+			amount,
+			description,
+			reference: `TR${id}`,
+			currency: sendFromCurrency,
+		});
+
+		wallet.balance -= amountInUnits;
+		await wallet.save();
+
+		return res.status(200).json({
+			message: 'Transfer Successful',
+			...req.body,
+			transaction,
+		});
 	} catch (err) {
 		console.log(err.message);
 		res.status(400).json(err.message);
@@ -464,39 +525,39 @@ const reverseTransaction = async (req, res) => {
 		const amountInUnits = amount * 100;
 		const transaction = await TransactionModel.findOne({reference});
 
-		if (transaction.status === 'reversed') {
-			await TransactionModel.findOneAndUpdate(
-				{reference, transactionType: 'credit'},
-				{status: 'success'}
-			);
-			await TransactionModel.findOneAndUpdate(
-				{reference, transactionType: 'debit'},
-				{status: 'success'}
-			);
-			senderWallet.balance -= amountInUnits;
-			receiverWallet.balance += amountInUnits;
+		// if (transaction.status === 'reversed') {
+		// 	await TransactionModel.findOneAndUpdate(
+		// 		{reference, transactionType: 'credit'},
+		// 		{status: 'success'}
+		// 	);
+		// 	await TransactionModel.findOneAndUpdate(
+		// 		{reference, transactionType: 'debit'},
+		// 		{status: 'success'}
+		// 	);
+		// 	senderWallet.balance -= amountInUnits;
+		// 	receiverWallet.balance += amountInUnits;
 
-			await senderWallet.save();
-			await receiverWallet.save();
+		// 	await senderWallet.save();
+		// 	await receiverWallet.save();
 
-			res.status(200).json({status: true, message: 'Transaction unreversed'});
-		} else {
-			await TransactionModel.findOneAndUpdate(
-				{reference, transactionType: 'credit'},
-				{status: 'reversed'}
-			);
-			await TransactionModel.findOneAndUpdate(
-				{reference, transactionType: 'debit'},
-				{status: 'reversed'}
-			);
-			senderWallet.balance += amountInUnits;
-			receiverWallet.balance -= amountInUnits;
+		// 	res.status(200).json({status: true, message: 'Transaction unreversed'});
+		// } else {
+		// 	await TransactionModel.findOneAndUpdate(
+		// 		{reference, transactionType: 'credit'},
+		// 		{status: 'reversed'}
+		// 	);
+		// 	await TransactionModel.findOneAndUpdate(
+		// 		{reference, transactionType: 'debit'},
+		// 		{status: 'reversed'}
+		// 	);
+		// 	senderWallet.balance += amountInUnits;
+		// 	receiverWallet.balance -= amountInUnits;
 
-			await senderWallet.save();
-			await receiverWallet.save();
+		// 	await senderWallet.save();
+		// 	await receiverWallet.save();
 
-			res.status(200).json({status: true, message: 'Transaction reversed'});
-		}
+		// 	res.status(200).json({status: true, message: 'Transaction reversed'});
+		// }
 	} catch (err) {
 		console.log(err.message);
 		res.status(400).json({status: false, message: err.message});

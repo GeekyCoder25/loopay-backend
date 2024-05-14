@@ -64,7 +64,7 @@ app.use('/api/admin', protect, adminRoutes);
 app.use('/api/webhook', webhookHandler);
 app.post('/api/test-update', async (req, res) => {
 	await update.create(req.body);
-	res.send({network: true});
+	res.send({message: 'New update available'});
 });
 app.get('/api/network', (req, res) => {
 	console.log('network request');

@@ -55,7 +55,7 @@ cloudinary.config({
 if (process.env.NODE_ENV === 'development') {
 	app.use(morgan('dev'));
 }
-// app.use();
+
 app.get('/api/email/unsubscribe/:token', unsubscribeEmailAlerts);
 app.post('/api/upload', protect, uploadPhoto);
 app.use('/api/auth', authRoutes);

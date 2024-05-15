@@ -33,8 +33,8 @@ const protect = async (req, res, next) => {
 				);
 
 				if (
-					sessionToUpdate.length === 1
-					// && sessionToUpdate[0].status === 'active'
+					sessionToUpdate.length === 1 &&
+					sessionToUpdate[0].status === 'active'
 				) {
 					const lastSeen = new Date();
 					let session = {...sessionToUpdate[0], lastSeen};

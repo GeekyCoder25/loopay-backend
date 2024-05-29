@@ -6,6 +6,15 @@ const userData = require('../models/userData');
 
 const postVerificationData = async (req, res) => {
 	try {
+		const verification = await VerificationModel.findOne({
+			email: req.user.email,
+		});
+
+		if (verification)
+			await VerificationModel.deleteOne({
+				email: req.user.email,
+			});
+
 		if (Object.keys(req.query)[0] === 'image') {
 			if (!req.files) {
 				return res.status(400).json({message: 'No file uploaded'});
@@ -29,12 +38,6 @@ const postVerificationData = async (req, res) => {
 			) {
 				return res.status(400).json({message: 'File uploaded is not an image'});
 			}
-			const verification = await VerificationModel.findOne({
-				email: req.user.email,
-			});
-
-			if (verification)
-				throw new Error('Verification already submitted by this user');
 
 			front.name = `loopay_photo_${req.user.email}_${req.user._id}${
 				path.parse(front.name).ext
@@ -99,11 +102,6 @@ const postVerificationData = async (req, res) => {
 									back: backResult.secure_url,
 									status: 'pending',
 								});
-								await userData.updateOne(
-									{email: req.user.email},
-									{verificationStatus: 'pending'},
-									{new: true, runValidators: true}
-								);
 								res.status(200).json({
 									message: 'Files uploaded to Cloudinary successfully',
 									verificationStatus: true,
@@ -132,13 +130,7 @@ const postVerificationData = async (req, res) => {
 			) {
 				await userData.updateOne(
 					{email: req.user.email},
-					{verificationStatus: 'pending', bvn: idType.value},
-					{new: true, runValidators: true}
-				);
-			} else {
-				await userData.updateOne(
-					{email: req.user.email},
-					{verificationStatus: 'pending'},
+					{bvn: idType.value},
 					{new: true, runValidators: true}
 				);
 			}
@@ -154,6 +146,66 @@ const postVerificationData = async (req, res) => {
 	}
 };
 
+const postFaceVerification = async (req, res) => {
+	try {
+		if (!req.files) {
+			return res.status(400).json({message: 'No file uploaded'});
+		}
+		const {video} = req.files;
+
+		// Check if the uploaded file is an image
+		if (!video.mimetype.startsWith('video')) {
+			return res.status(400).json({message: 'File uploaded is not a video'});
+		}
+
+		const saveName = `${req.user.email}`;
+		const dataUri = new DataUriParser();
+
+		const formattedFile = dataUri.format(video.name, video.data);
+
+		cloudinary.uploader.upload(
+			formattedFile.content,
+			{
+				public_id: saveName,
+				folder: `loopay/verifications/face/${req.user.email}`,
+				resource_type: 'video',
+			},
+			async (error, result) => {
+				try {
+					if (error) {
+						console.error('error,', error);
+						return res
+							.status(500)
+							.json({message: 'Error uploading file to Cloudinary'});
+					}
+					await VerificationModel.findOneAndUpdate(
+						{email: req.user.email},
+						{faceVideo: result.secure_url, verificationStatus: 'pending'}
+					);
+
+					await userData.updateOne(
+						{email: req.user.email},
+						{verificationStatus: 'pending'},
+						{new: true, runValidators: true}
+					);
+
+					res.status(200).json({
+						message: 'Files uploaded to Cloudinary successfully',
+						verificationStatus: true,
+					});
+				} catch (err) {
+					res.status(400).json({message: err.message});
+				}
+			}
+		);
+	} catch (err) {
+		const error = err.response?.data || err.message;
+		console.log(error);
+		res.status(400).json({message: error});
+	}
+};
+
 module.exports = {
 	postVerificationData,
+	postFaceVerification,
 };

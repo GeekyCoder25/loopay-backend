@@ -17,6 +17,7 @@ const PaymentProof = require('../models/paymentproof');
 const {addingDecimal} = require('../utils/addingDecimal');
 const ReportModel = require('../models/report');
 const PopUp = require('../models/popUp');
+const international = require('../models/international');
 const cloudinary = require('cloudinary').v2;
 
 const getAllAdminInfo = async (req, res) => {
@@ -1218,6 +1219,11 @@ const declineProof = async (req, res) => {
 	}
 };
 
+const getInternational = async (req, res) => {
+	const result = await international.find({}).sort('-createdAt');
+	res.status(200).json({status: true, data: result});
+};
+
 const deleteResources = async (req, res) => {
 	const {prefix} = req.query;
 	if (!prefix) {
@@ -1250,5 +1256,6 @@ module.exports = {
 	getSummary,
 	getStatement,
 	getPaymentProofs,
+	getInternational,
 	deleteResources,
 };

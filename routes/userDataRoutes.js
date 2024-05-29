@@ -70,7 +70,10 @@ const {
 	getBills,
 	getBillsTransactions,
 } = require('../controllers/billController');
-const {postVerificationData} = require('../controllers/verificationController');
+const {
+	postVerificationData,
+	postFaceVerification,
+} = require('../controllers/verificationController');
 const {accountStatus} = require('../middleware/statusMiddleWare');
 const {
 	getReferrals,
@@ -254,6 +257,7 @@ router.route('/statement').get(getStatements);
 router.route('/schedule').get(getSchedules);
 router.route('/schedule/:id').put(updateSchedule).delete(deleteSchedule);
 router.route('/verify').post(postVerificationData);
+router.route('/verify/face').post(postFaceVerification);
 router.route('/popup/:popUpID').delete(deletePopUp);
 
 router.route('/referral').get(getReferrals).post(postReferral);

@@ -23,6 +23,7 @@ const {
 	getPaymentProofs,
 	approveProof,
 	declineProof,
+	getInternational,
 } = require('../controllers/adminController');
 const {updateNotifications} = require('../controllers/notificationController');
 const {getRate, updateRate} = require('../controllers/currencyController');
@@ -67,6 +68,7 @@ router.route('/proof').get(getPaymentProofs);
 router.route('/approve').post(approveProof);
 router.route('/decline/:id').delete(declineProof);
 router.route('/report').get(getReports);
+router.route('/international').get(getInternational);
 router.route('/media-resource').delete(deleteResources);
 router.route('/apis').get(getAPIs).put(updateAPIs);
 

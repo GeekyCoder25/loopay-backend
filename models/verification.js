@@ -26,6 +26,7 @@ const VerificationSchema = new Schema(
 			required: [true, 'Please provide verification status'],
 			enum: ['verified', 'pending', 'declined'],
 		},
+		faceVideo: String,
 	},
 	{timestamps: true}
 );

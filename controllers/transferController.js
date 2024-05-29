@@ -11,6 +11,7 @@ const {requiredKeys} = require('../utils/requiredKeys');
 const {addingDecimal} = require('../utils/addingDecimal');
 const {sendMail} = require('../utils/sendEmail');
 const UserDataModel = require('../models/userData');
+const international = require('../models/international');
 
 const initiateTransfer = async (req, res) => {
 	try {
@@ -414,12 +415,13 @@ const initiateTransferToInternational = async (req, res) => {
 	try {
 		const {
 			amount,
-			description,
+			description = '',
 			id,
 			receiverAccountNo,
 			receiverBank,
 			receiverName,
 			sendFromCurrency,
+			fee,
 		} = req.body;
 		const selectWallet = currency => {
 			switch (currency) {
@@ -439,8 +441,10 @@ const initiateTransferToInternational = async (req, res) => {
 		const wallet = await currencyWallet.findOne({
 			email: req.user.email,
 		});
-		const amountInUnits = Number(amount) * 100;
+		const amountInUnits = Number(amount) * 100 + Number(fee);
 		if (wallet.balance < amountInUnits) throw new Error('Insufficient funds');
+
+		await international.create(req.body);
 
 		const transaction = await TransactionModel.create({
 			email: wallet.email,
@@ -471,7 +475,6 @@ const initiateTransferToInternational = async (req, res) => {
 
 		return res.status(200).json({
 			message: 'Transfer Successful',
-			...req.body,
 			transaction,
 		});
 	} catch (err) {

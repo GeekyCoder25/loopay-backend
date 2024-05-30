@@ -441,10 +441,10 @@ const initiateTransferToInternational = async (req, res) => {
 		const wallet = await currencyWallet.findOne({
 			email: req.user.email,
 		});
-		const amountInUnits = Number(amount) * 100 + Number(fee);
+		const amountInUnits = Number(amount) * 100 + Number(fee) * 100;
 		if (wallet.balance < amountInUnits) throw new Error('Insufficient funds');
 
-		await international.create(req.body);
+		await international.create({email: req.user.email, ...req.body});
 
 		const transaction = await TransactionModel.create({
 			email: wallet.email,

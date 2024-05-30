@@ -1,8 +1,14 @@
 const mongoose = require('mongoose');
+const {default: isEmail} = require('validator/lib/isEmail');
 const Schema = mongoose.Schema;
 
 const InternationalModel = new Schema(
 	{
+		email: {
+			type: String,
+			required: [true, 'Please input your email address'],
+			validate: [isEmail, 'Invalid email address'],
+		},
 		amount: {
 			type: Number,
 			required: [true, 'Please provide fee name'],
@@ -44,6 +50,10 @@ const InternationalModel = new Schema(
 			from: String,
 			to: String,
 			rate: Number,
+		},
+		fee: {
+			type: Number,
+			required: [true, 'Please provide transaction amount'],
 		},
 	},
 	{timestamps: true}

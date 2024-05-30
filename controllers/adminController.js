@@ -1224,6 +1224,62 @@ const getInternational = async (req, res) => {
 	res.status(200).json({status: true, data: result});
 };
 
+const updateInternational = async (req, res) => {
+	try {
+		const {id} = req.params;
+		const internationalSend = await international.findById({_id: id});
+		const response = await Transaction.findOneAndUpdate(
+			{id: internationalSend.id},
+			{status: 'success'},
+			{new: true, runValidators: true}
+		);
+		await international.findByIdAndRemove({_id: id});
+		res.status(200).json({status: true, data: response});
+	} catch (err) {
+		console.log(err.message);
+		res.status(400).json(err.message);
+	}
+};
+
+const deleteInternational = async (req, res) => {
+	try {
+		const {id} = req.params;
+		const response = await international.findById(id);
+		const data = await Transaction.findOneAndUpdate(
+			{id: response.id},
+			{status: 'reversed'},
+			{new: true, runValidators: true}
+		);
+		await international.findByIdAndRemove(id);
+
+		const selectWallet = currency => {
+			switch (currency) {
+				case 'naira':
+					return LocalWallet;
+				case 'dollar':
+					return DollarWallet;
+				case 'euro':
+					return EuroWallet;
+				case 'pound':
+					return PoundWallet;
+				default:
+					return LocalWallet;
+			}
+		};
+
+		const {currency} = response;
+		const currencyWallet = selectWallet(currency);
+		const wallet = await currencyWallet.findOne({email: response.email});
+		const amountInUnits = response.amount * 100 + response.fee * 100;
+		wallet.balance += amountInUnits;
+		await wallet.save();
+		res.status(200).json({status: true, data});
+	} catch (err) {
+		console.log(err.message);
+		res.status(400).json(err.message);
+	}
+};
+
 const deleteResources = async (req, res) => {
 	const {prefix} = req.query;
 	if (!prefix) {
@@ -1257,5 +1313,7 @@ module.exports = {
 	getStatement,
 	getPaymentProofs,
 	getInternational,
+	updateInternational,
+	deleteInternational,
 	deleteResources,
 };

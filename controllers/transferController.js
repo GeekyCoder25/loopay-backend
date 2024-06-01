@@ -528,39 +528,39 @@ const reverseTransaction = async (req, res) => {
 		const amountInUnits = amount * 100;
 		const transaction = await TransactionModel.findOne({reference});
 
-		// if (transaction.status === 'reversed') {
-		// 	await TransactionModel.findOneAndUpdate(
-		// 		{reference, transactionType: 'credit'},
-		// 		{status: 'success'}
-		// 	);
-		// 	await TransactionModel.findOneAndUpdate(
-		// 		{reference, transactionType: 'debit'},
-		// 		{status: 'success'}
-		// 	);
-		// 	senderWallet.balance -= amountInUnits;
-		// 	receiverWallet.balance += amountInUnits;
+		if (transaction.status === 'reversed') {
+			await TransactionModel.findOneAndUpdate(
+				{reference, transactionType: 'credit'},
+				{status: 'success'}
+			);
+			await TransactionModel.findOneAndUpdate(
+				{reference, transactionType: 'debit'},
+				{status: 'success'}
+			);
+			senderWallet.balance -= amountInUnits;
+			receiverWallet.balance += amountInUnits;
 
-		// 	await senderWallet.save();
-		// 	await receiverWallet.save();
+			await senderWallet.save();
+			await receiverWallet.save();
 
-		// 	res.status(200).json({status: true, message: 'Transaction unreversed'});
-		// } else {
-		// 	await TransactionModel.findOneAndUpdate(
-		// 		{reference, transactionType: 'credit'},
-		// 		{status: 'reversed'}
-		// 	);
-		// 	await TransactionModel.findOneAndUpdate(
-		// 		{reference, transactionType: 'debit'},
-		// 		{status: 'reversed'}
-		// 	);
-		// 	senderWallet.balance += amountInUnits;
-		// 	receiverWallet.balance -= amountInUnits;
+			res.status(200).json({status: true, message: 'Transaction unreversed'});
+		} else {
+			await TransactionModel.findOneAndUpdate(
+				{reference, transactionType: 'credit'},
+				{status: 'reversed'}
+			);
+			await TransactionModel.findOneAndUpdate(
+				{reference, transactionType: 'debit'},
+				{status: 'reversed'}
+			);
+			senderWallet.balance += amountInUnits;
+			receiverWallet.balance -= amountInUnits;
 
-		// 	await senderWallet.save();
-		// 	await receiverWallet.save();
+			await senderWallet.save();
+			await receiverWallet.save();
 
-		// 	res.status(200).json({status: true, message: 'Transaction reversed'});
-		// }
+			res.status(200).json({status: true, message: 'Transaction reversed'});
+		}
 	} catch (err) {
 		console.log(err.message);
 		res.status(400).json({status: false, message: err.message});

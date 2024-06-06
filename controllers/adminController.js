@@ -650,8 +650,8 @@ const getVerifications = async (req, res) => {
 	try {
 		const query = Object.keys(req.query)[0];
 		const verifications = query
-			? await VerificationModel.find({status: query})
-			: await VerificationModel.find();
+			? await VerificationModel.find({status: query}).sort('-updatedAt')
+			: await VerificationModel.find().sort('-updatedAt');
 		res.status(200).json(verifications);
 	} catch (err) {
 		console.log(err.message);

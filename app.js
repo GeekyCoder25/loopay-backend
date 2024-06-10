@@ -21,7 +21,7 @@ const morgan = require('morgan');
 const {unsubscribeEmailAlerts} = require('./controllers/emailAlertController');
 require('colors');
 dotEnv.config();
-const update = require('./models/tes');
+const update = require('./models/test');
 
 // eslint-disable-next-line no-undef
 const PORT = process.env.PORT;

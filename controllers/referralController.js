@@ -84,7 +84,7 @@ const postReferral = async (req, res, {referrerEmail, refereeEmail}) => {
 			const {balance} = referralsExists;
 			await ReferralModel.findOneAndUpdate(
 				{email},
-				{referrals, balance: balance + 100},
+				{referrals, balance: balance + 20},
 				{
 					new: true,
 					runValidators: true,
@@ -103,7 +103,7 @@ const postReferral = async (req, res, {referrerEmail, refereeEmail}) => {
 			await ReferralModel.create({
 				email,
 				referrals: [bodyData],
-				balance: 100,
+				balance: 20,
 			});
 		}
 		if (res)

@@ -103,6 +103,8 @@ const {
 const serverAPIs = require('../models/serverAPIs');
 const {postReport} = require('../controllers/reportController');
 const {generateReceipt} = require('../controllers/receiptController');
+const LimitModel = require('../models/limit');
+const {addMoneyCard} = require('../controllers/addMoneyCard');
 
 const router = express.Router();
 
@@ -119,6 +121,7 @@ router.route('/tag-name').post(createTagName);
 router.route('/beneficiary').get(getBeneficiaries).post(postBeneficiary);
 router.delete('/beneficiary/:tagName', deleteBeneficiary);
 router.route('/wallet').get(getWallet).post(postWallet);
+router.route('/add-money/card').post(addMoneyCard);
 router
 	.route('/loopay/transfer')
 	.post(accountStatus, schedulePayment, initiateTransferToLoopay);
@@ -142,12 +145,17 @@ const setupRouter = async () => {
 
 	const selectAPI = async () => {
 		apiType = await serverAPIs.findOne({});
+		const limit = await LimitModel.findOne({});
 		if (!apiType) {
 			apiType = await serverAPIs.create({
 				airtime: 'reloadly',
 				data: 'reloadly',
 				bill: 'paga',
 			});
+		}
+		if (!limit) {
+			const limitDoc = new LimitModel();
+			await limitDoc.save();
 		}
 	};
 	await selectAPI();
@@ -259,7 +267,6 @@ router.route('/schedule/:id').put(updateSchedule).delete(deleteSchedule);
 router.route('/verify').post(postVerificationData);
 router.route('/verify/face').post(postFaceVerification);
 router.route('/popup/:popUpID').delete(deletePopUp);
-
 router.route('/referral').get(getReferrals).post(postReferral);
 router.route('/withdraw-referral').get(referralWithdraw);
 router.route('/payment-proof').post(postPaymentProof);

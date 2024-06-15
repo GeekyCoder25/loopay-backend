@@ -12,6 +12,7 @@ const {addingDecimal} = require('../utils/addingDecimal');
 const {sendMail} = require('../utils/sendEmail');
 const UserDataModel = require('../models/userData');
 const international = require('../models/international');
+const LimitModel = require('../models/limit');
 
 const initiateTransfer = async (req, res) => {
 	try {
@@ -70,6 +71,25 @@ const initiateTransfer = async (req, res) => {
 			}
 		}
 
+		const userData = await UserDataModel.findOne({email: req.user.email});
+		const limit = await LimitModel.findOne({});
+		const currentDailyLimit =
+			new Date(userData.limit.lastUpdated).getDate() === new Date().getDate()
+				? userData.limit.currentDailyLimit
+				: 0;
+
+		if (Number(amount) > limit[`level${userData.level}`]) {
+			throw new Error(
+				'Amount greater than tier level, please upgrade your account'
+			);
+		} else if (
+			currentDailyLimit + Number(amount) >
+			limit[`level${userData.level}`]
+		) {
+			throw new Error(
+				'Daily transfer limit exceeded, kindly upgrade your account or wait till tomorrow'
+			);
+		}
 		if (!wallet) throw new Error('wallet not found');
 
 		const convertToKobo = () => amount * 100;
@@ -103,6 +123,12 @@ const initiateTransfer = async (req, res) => {
 						slug,
 						accNo,
 					} = req.body;
+
+					userData.limit = {
+						currentDailyLimit: currentDailyLimit + Number(amount),
+						lastUpdated: Date.now(),
+					};
+					await userData.save();
 					const {email, phoneNumber} = req.user;
 					transaction = {
 						id,
@@ -161,7 +187,6 @@ const initiateTransfer = async (req, res) => {
 
 					req.schedule && (await req.schedule(req));
 
-					const userData = await UserDataModel.findOne({email});
 					if (userData.isEmailAlertSubscribed) {
 						await sendReceipt({
 							allCurrencies: req.body.allCurrencies,
@@ -293,6 +318,26 @@ const initiateTransferToLoopay = async (req, res) => {
 
 		if (senderWallet.balance < amountInUnits)
 			throw new Error('Insufficient funds');
+
+		const userData = await UserDataModel.findOne({email: senderWallet.email});
+		const limit = await LimitModel.findOne({});
+		const currentDailyLimit =
+			new Date(userData.limit.lastUpdated).getDate() === new Date().getDate()
+				? userData.limit.currentDailyLimit
+				: 0;
+
+		if (Number(amount) > limit[`level${userData.level}`]) {
+			throw new Error(
+				'Amount greater than tier level, please upgrade your account'
+			);
+		} else if (
+			currentDailyLimit + Number(amount) >
+			limit[`level${userData.level}`]
+		) {
+			throw new Error(
+				'Daily transfer limit exceeded, kindly upgrade your account or wait till tomorrow'
+			);
+		}
 		const transaction = {
 			id,
 			status: 'success',
@@ -347,7 +392,6 @@ const initiateTransferToLoopay = async (req, res) => {
 			};
 			await Notification.create(notification);
 
-			const userData = await UserDataModel.findOne({email: senderWallet.email});
 			if (userData.isEmailAlertSubscribed) {
 				await sendReceipt({
 					allCurrencies: req.body.allCurrencies,
@@ -393,6 +437,11 @@ const initiateTransferToLoopay = async (req, res) => {
 				});
 			}
 		}
+		userData.limit = {
+			currentDailyLimit: currentDailyLimit + Number(amount),
+			lastUpdated: Date.now(),
+		};
+		await userData.save();
 
 		senderWallet.balance -= amountInUnits;
 		sendeeWallet.balance += amountInUnits;
@@ -423,6 +472,50 @@ const initiateTransferToInternational = async (req, res) => {
 			sendFromCurrency,
 			fee,
 		} = req.body;
+
+		const twoMinutesAgo = new Date();
+		twoMinutesAgo.setMinutes(twoMinutesAgo.getMinutes() - 2);
+
+		const duplicateTransaction = await TransactionModel.findOne({
+			amount,
+			receiverAccount: receiverAccountNo,
+			destinationBank: receiverBank,
+			receiverName,
+			type: 'inter',
+			method: 'inter',
+			currency: sendFromCurrency,
+			createdAt: {$gt: twoMinutesAgo},
+		});
+
+		if (duplicateTransaction) {
+			const transactionTime = new Date(duplicateTransaction.createdAt);
+			if (transactionTime > twoMinutesAgo) {
+				throw new Error(
+					'Duplicate transfer suspected, if this is deliberate kindly wait for two minutes before trying again'
+				);
+			}
+		}
+
+		const userData = await UserDataModel.findOne({email: req.user.email});
+		const limit = await LimitModel.findOne({});
+		const currentDailyLimit =
+			new Date(userData.limit.lastUpdated).getDate() === new Date().getDate()
+				? userData.limit.currentDailyLimit
+				: 0;
+
+		if (Number(amount) > limit[`level${userData.level}`]) {
+			throw new Error(
+				'Amount greater than tier level, please upgrade your account'
+			);
+		} else if (
+			currentDailyLimit + Number(amount) >
+			limit[`level${userData.level}`]
+		) {
+			throw new Error(
+				'Daily transfer limit exceeded, kindly upgrade your account or wait till tomorrow'
+			);
+		}
+
 		const selectWallet = currency => {
 			switch (currency) {
 				case 'naira':
@@ -469,6 +562,12 @@ const initiateTransferToInternational = async (req, res) => {
 			reference: `TR${id}`,
 			currency: sendFromCurrency,
 		});
+
+		userData.limit = {
+			currentDailyLimit: currentDailyLimit + Number(amount),
+			lastUpdated: Date.now(),
+		};
+		await userData.save();
 
 		wallet.balance -= amountInUnits;
 		await wallet.save();

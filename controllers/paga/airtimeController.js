@@ -14,12 +14,10 @@ const PoundWallet = require('../../models/walletPound');
 // const principal = '3D3A120F-498C-4688-AD1C-E6151900D974';
 // const hashKey =
 // 	'4bd289fa4ba745e6a2acead0c61a63e86137c83ff6354548a7f2e2fc59970c9c45ddd98cce1c42de85788c0acb142efa29c856efff064d72aaaeeecba529dfd9';
-const PAGA_API_URL =
-	'https://mypaga.com/paga-webservices/business-rest/secured';
-const principal = '16F6C921-FC62-4C91-B2B4-BE742138B831';
-const credentials = 'zF2@u5U*Sx6dcGM';
-const hashKey =
-	'514ac2afcc6b4317a592e5d0a3786ada2c75778b9b9f48dc8a28ecfa764d6440291533a2ecfa4ab589d285f07216a497d49c89cfb7604641b687f2a55aee3f83';
+const PAGA_API_URL = process.env.PAGA_API_URL;
+const principal = process.env.PAGA_PRINCIPAL;
+const credentials = process.env.PAGA_CREDENTIALS;
+const hashKey = process.env.PAGA_HASH_KEY;
 
 const PagaGetOperators = async (req, res) => {
 	try {
@@ -37,7 +35,6 @@ const PagaGetOperators = async (req, res) => {
 		const {type, country: countryCode} = req.query;
 
 		const apiResponse = await axios.post(url, body, config);
-		console.log(apiResponse.data);
 		let response = apiResponse.data.mobileOperator;
 		return res.status(200).json(response);
 	} catch (error) {

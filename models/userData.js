@@ -68,6 +68,10 @@ const UserDataSchema = new Schema(
 		popUps: [],
 		popUpIDs: [String],
 		popUpLastQuery: Date,
+		limit: {
+			currentDailyLimit: Number,
+			lastUpdated: Date,
+		},
 	},
 	{timestamps: true}
 );

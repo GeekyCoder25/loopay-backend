@@ -18,15 +18,14 @@ const webhookHandler = async (req, res) => {
 				'Content-Type': 'application/json',
 			},
 		};
-		// const hash = crypto
-		// 	.createHmac('sha512', SECRET_KEY)
-		// 	.update(JSON.stringify(req.body))
-		// 	.digest('hex');
-		// console.log(hash, req.headers['x-paystack-signature']);
-		// if (hash == req.headers['x-paystack-signature']) {
-		// 	console.log('in');
-		// }
-		console.log(req.query);
+		const hash = crypto
+			.createHmac('sha512', SECRET_KEY)
+			.update(JSON.stringify(req.body))
+			.digest('hex');
+		console.log(hash, req.headers['x-paystack-signature']);
+		if (hash == req.headers['x-paystack-signature']) {
+			console.log('in');
+		}
 		if (req.query?.type === 'card') {
 			const transactionRef = req.query.reference;
 			const response = await axios.get(

@@ -5,7 +5,7 @@ const Webhook = new Schema(
 	{
 		event: {
 			type: String,
-			required: true,
+			// required: true,
 		},
 		data: {type: Schema.Types.Mixed, required: true},
 	},

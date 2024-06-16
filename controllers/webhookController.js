@@ -6,9 +6,39 @@ const {addingDecimal} = require('../utils/addingDecimal');
 const Notification = require('../models/notification');
 const jwt = require('jsonwebtoken');
 const {sendMail} = require('../utils/sendEmail');
+const crypto = require('crypto');
+const {default: axios} = require('axios');
 
 const webhookHandler = async (req, res) => {
 	try {
+		const SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+		const config = {
+			headers: {
+				Authorization: `Bearer ${SECRET_KEY}`,
+				'Content-Type': 'application/json',
+			},
+		};
+		// const hash = crypto
+		// 	.createHmac('sha512', SECRET_KEY)
+		// 	.update(JSON.stringify(req.body))
+		// 	.digest('hex');
+		// console.log(hash, req.headers['x-paystack-signature']);
+		// if (hash == req.headers['x-paystack-signature']) {
+		// 	console.log('in');
+		// }
+		if (req.query?.type === 'card') {
+			const transactionRef = req.query.reference;
+			const response = await axios.get(
+				`https://api.paystack.co/transaction/verify/${transactionRef}`,
+				config
+			);
+			if (response.data.status === true) {
+				return await cardWebhook(response.data);
+			}
+			res.send(200);
+			return;
+		}
+
 		const event = req.body;
 		console.log(event);
 		if (event.event === 'charge.success') {
@@ -97,8 +127,83 @@ const webhookHandler = async (req, res) => {
 		await WebhookModel.create(event);
 		res.send(200);
 	} catch (err) {
-		console.log(err.message);
+		const error =
+			err.response?.data?.message || err.data?.message || err.message || err;
+		console.log(error);
+		res.status(400).json(error);
 	}
+};
+
+const cardWebhook = async event => {
+	const userData = await UserDataModel.findOne({
+		email: event.data.customer.email,
+	});
+	const {last4, bank} = event.data.authorization;
+	const {id, amount, customer} = event.data;
+	const {email, phone, first_name, last_name} = customer;
+	const wallet = await LocalWallet.findOne({email});
+
+	const transaction = {
+		id,
+		status: event.data.status,
+		type: 'inter',
+		transactionType: 'credit',
+		method: 'card',
+		senderAccount: `Card ...${last4}`,
+		senderName: `Card ...${last4}`,
+		receiverAccount: wallet.accNo,
+		receiverName: userData.userProfile.fullName,
+		sourceBank: bank,
+		fromBalance: wallet.balance,
+		toBalance: wallet.balance + amount,
+		destinationBank: wallet.bank,
+		amount: addingDecimal(`${event.data.amount / 100}`),
+		description: 'Card deposit',
+		reference: `TR${id}`,
+		paystackReference: event.data.reference,
+		currency: event.data.currency,
+		metadata: event.data.metadata || null,
+		createdAt: event.data.paidAt,
+	};
+
+	const transactionsExists = await TransactionModel.findOne({id});
+
+	if (!transactionsExists) {
+		await TransactionModel.create({
+			email,
+			phoneNumber: phone || wallet.phoneNumber,
+			...transaction,
+		});
+
+		const notification = {
+			id,
+			email: wallet.email,
+			phoneNumber: wallet.phoneNumber,
+			type: 'transfer',
+			header: 'Credit transaction',
+			message: `${
+				event.data.currency + addingDecimal((amount / 100).toLocaleString())
+			} has been deposited to your account via card ...${event.data.last4}`,
+			adminMessage: `${first_name} ${last_name} (${email}) deposited ${
+				event.data.currency + addingDecimal((amount / 100).toLocaleString())
+			} to account using card`,
+			status: 'unread',
+			photo: '',
+			metadata: {...transaction, transactionType: 'credit'},
+		};
+
+		await Notification.create(notification);
+
+		if (userData.isEmailAlertSubscribed) {
+			await sendReceipt({
+				email,
+				transaction,
+			});
+		}
+		wallet.balance += amount;
+		await wallet.save();
+	}
+	await WebhookModel.create(event);
 };
 
 const sendReceipt = async receiptData => {

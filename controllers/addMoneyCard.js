@@ -1,6 +1,9 @@
 const {default: axios} = require('axios');
 
 const addMoneyCard = async (req, res) => {
+	const protocol = req.protocol;
+	const host = req.get('host');
+	const fullUrl = `${protocol}://${host}`;
 	try {
 		const SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 		const config = {
@@ -15,6 +18,7 @@ const addMoneyCard = async (req, res) => {
 			{
 				email: req.user.email,
 				amount: req.body.amount * 100,
+				callback_url: `${fullUrl}/api/webhook?type=card`,
 				channels: ['card'],
 			},
 			config

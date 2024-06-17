@@ -21,19 +21,8 @@ const webhookHandler = async (req, res) => {
 		};
 
 		if (req.query?.type === 'card') {
-			const transactionRef = req.query.reference;
-			const response = await axios.get(
-				`https://api.paystack.co/transaction/verify/${transactionRef}`,
-				config
-			);
-			console.log('in');
-			console.log(response.data);
-			if (response.data.status === true || response.data.status === 'success') {
-				return await cardWebhook(response.data);
-			}
 			return res.send(200);
 		}
-		console.log(req.body, req.query);
 		const hash = crypto
 			.createHmac('sha512', SECRET_KEY)
 			.update(JSON.stringify(req.body))
@@ -41,6 +30,18 @@ const webhookHandler = async (req, res) => {
 		if (hash == req.headers['x-paystack-signature']) {
 			const event = req.body;
 			if (event.event === 'charge.success') {
+				if (event?.data?.channel === 'card') {
+					const transactionRef = req.query.reference;
+					const response = await axios.get(
+						`https://api.paystack.co/transaction/verify/${transactionRef}`,
+						config
+					);
+					console.log('in');
+					console.log(response.data);
+					if (response.data.status === true) {
+						return await cardWebhook(response.data);
+					}
+				}
 				const userData = await UserDataModel.findOne({
 					email: event.data.customer.email,
 				});

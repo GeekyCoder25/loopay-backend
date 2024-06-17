@@ -27,13 +27,13 @@ const webhookHandler = async (req, res) => {
 				config
 			);
 			console.log('in');
-			console.logg(response.data);
+			console.log(response.data);
 			if (response.data.status === true || response.data.status === 'success') {
 				return await cardWebhook(response.data);
 			}
 			return res.send(200);
 		}
-		console.log('out');
+		console.log(req.body);
 		const hash = crypto
 			.createHmac('sha512', SECRET_KEY)
 			.update(JSON.stringify(req.body))

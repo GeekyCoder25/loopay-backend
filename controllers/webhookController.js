@@ -20,6 +20,8 @@ const webhookHandler = async (req, res) => {
 		};
 
 		if (req.query?.type === 'card') {
+			console.log(req.body, req.query);
+
 			const transactionRef = req.query.reference;
 			const response = await axios.get(
 				`https://api.paystack.co/transaction/verify/${transactionRef}`,
@@ -38,7 +40,6 @@ const webhookHandler = async (req, res) => {
 			.digest('hex');
 		if (hash == req.headers['x-paystack-signature']) {
 			const event = req.body;
-			// console.log(event);
 			if (event.event === 'charge.success') {
 				const userData = await UserDataModel.findOne({
 					email: event.data.customer.email,

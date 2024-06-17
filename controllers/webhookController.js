@@ -11,6 +11,7 @@ const {default: axios} = require('axios');
 
 const webhookHandler = async (req, res) => {
 	try {
+		console.log('it ran');
 		const SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 		const config = {
 			headers: {
@@ -25,12 +26,12 @@ const webhookHandler = async (req, res) => {
 				`https://api.paystack.co/transaction/verify/${transactionRef}`,
 				config
 			);
-			console.log(response.data, req.query);
+			console.log('in');
+			console.logg(response.data);
 			if (response.data.status === true || response.data.status === 'success') {
 				return await cardWebhook(response.data);
 			}
-			res.send(200);
-			return;
+			return res.send(200);
 		}
 		console.log('out');
 		const hash = crypto

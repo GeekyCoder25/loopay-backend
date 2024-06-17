@@ -20,20 +20,19 @@ const webhookHandler = async (req, res) => {
 		};
 
 		if (req.query?.type === 'card') {
-			console.log(req.body, req.query);
-
 			const transactionRef = req.query.reference;
 			const response = await axios.get(
 				`https://api.paystack.co/transaction/verify/${transactionRef}`,
 				config
 			);
+			console.log(response.data, req.query);
 			if (response.data.status === true || response.data.status === 'success') {
 				return await cardWebhook(response.data);
 			}
 			res.send(200);
 			return;
 		}
-
+		console.log('out');
 		const hash = crypto
 			.createHmac('sha512', SECRET_KEY)
 			.update(JSON.stringify(req.body))

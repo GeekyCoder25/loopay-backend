@@ -33,7 +33,7 @@ const webhookHandler = async (req, res) => {
 			}
 			return res.send(200);
 		}
-		console.log(req.body);
+		console.log(req.body, req.query);
 		const hash = crypto
 			.createHmac('sha512', SECRET_KEY)
 			.update(JSON.stringify(req.body))

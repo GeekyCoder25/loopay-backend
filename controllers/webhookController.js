@@ -30,7 +30,8 @@ const webhookHandler = async (req, res) => {
 			const event = req.body;
 			if (event.event === 'charge.success') {
 				if (event?.data?.channel === 'card') {
-					const transactionRef = req.query.reference;
+					const transactionRef = event?.data?.reference;
+					console.log(transactionRef);
 					const response = await axios.get(
 						`https://api.paystack.co/transaction/verify/${transactionRef}`,
 						config

@@ -14,13 +14,13 @@ const PoundWallet = require('../../models/walletPound');
 // const principal = '3D3A120F-498C-4688-AD1C-E6151900D974';
 // const hashKey =
 // 	'4bd289fa4ba745e6a2acead0c61a63e86137c83ff6354548a7f2e2fc59970c9c45ddd98cce1c42de85788c0acb142efa29c856efff064d72aaaeeecba529dfd9';
-const PAGA_API_URL = process.env.PAGA_API_URL;
-const principal = process.env.PAGA_PRINCIPAL;
-const credentials = process.env.PAGA_CREDENTIALS;
-const hashKey = process.env.PAGA_HASH_KEY;
 
 const PagaGetOperators = async (req, res) => {
 	try {
+		const PAGA_API_URL = process.env.PAGA_API_URL;
+		const principal = process.env.PAGA_PRINCIPAL;
+		const credentials = process.env.PAGA_CREDENTIALS;
+		const hashKey = process.env.PAGA_HASH_KEY;
 		const url = `${PAGA_API_URL}/getMobileOperators`;
 		const body = req.body;
 		const config = {
@@ -50,6 +50,10 @@ const PagaGetOperators = async (req, res) => {
 
 const PagaBuyAirtime = async (req, res) => {
 	try {
+		const PAGA_API_URL = process.env.PAGA_API_URL;
+		const principal = process.env.PAGA_PRINCIPAL;
+		const credentials = process.env.PAGA_CREDENTIALS;
+		const hashKey = process.env.PAGA_HASH_KEY;
 		const {email, phoneNumber} = req.user;
 		const {currency, id, amount, network, phoneNo, paymentCurrency} = req.body;
 
@@ -226,6 +230,10 @@ const PagaBuyAirtime = async (req, res) => {
 const PagaGetDataPlans = async (req, res) => {
 	const {provider, country: countryCode} = req.query;
 	try {
+		const PAGA_API_URL = process.env.PAGA_API_URL;
+		const principal = process.env.PAGA_PRINCIPAL;
+		const credentials = process.env.PAGA_CREDENTIALS;
+		const hashKey = process.env.PAGA_HASH_KEY;
 		const getOperators = async () => {
 			const url = `${PAGA_API_URL}/getMobileOperators`;
 			const body = {referenceNumber: req.body.referenceNumber};
@@ -294,6 +302,10 @@ const PagaGetDataPlans = async (req, res) => {
 
 const PagaBuyData = async (req, res) => {
 	try {
+		const PAGA_API_URL = process.env.PAGA_API_URL;
+		const principal = process.env.PAGA_PRINCIPAL;
+		const credentials = process.env.PAGA_CREDENTIALS;
+		const hashKey = process.env.PAGA_HASH_KEY;
 		const {email, phoneNumber} = req.user;
 		const {currency, id, amount, network, phoneNo, paymentCurrency} = req.body;
 

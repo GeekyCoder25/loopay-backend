@@ -148,8 +148,8 @@ const setupRouter = async () => {
 		const limit = await LimitModel.findOne({});
 		if (!apiType) {
 			apiType = await serverAPIs.create({
-				airtime: 'paga',
-				data: 'paga',
+				airtime: 'reloadly',
+				data: 'reloadly',
 				bill: 'paga',
 			});
 		}
@@ -217,12 +217,7 @@ const setupRouter = async () => {
 		default:
 			router
 				.route('/airtime')
-				.post(
-					accountStatus,
-					generateReference,
-					schedulePayment,
-					PagaBuyAirtime
-				);
+				.post(airtimeAPIToken, accountStatus, schedulePayment, buyAirtime);
 			break;
 	}
 
@@ -241,10 +236,10 @@ const setupRouter = async () => {
 
 			break;
 		default:
-			router.route('/data-plans').get(generateReference, PagaGetDataPlans);
+			router.route('/data-plans').get(airtimeAPIToken, getDataPlans);
 			router
 				.route('/data')
-				.post(accountStatus, generateReference, schedulePayment, PagaBuyData);
+				.post(airtimeAPIToken, accountStatus, schedulePayment, buyData);
 
 			break;
 	}

@@ -148,8 +148,8 @@ const setupRouter = async () => {
 		const limit = await LimitModel.findOne({});
 		if (!apiType) {
 			apiType = await serverAPIs.create({
-				airtime: 'reloadly',
-				data: 'reloadly',
+				airtime: 'paga',
+				data: 'paga',
 				bill: 'paga',
 			});
 		}

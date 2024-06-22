@@ -233,8 +233,6 @@ const buyAirtime = async (req, res) => {
 
 const getDataPlans = async (req, res) => {
 	try {
-		console.log(process.env.PAGA_API_URL);
-
 		const {provider, country} = req.query;
 		const url = `${req.apiConfig.URL}/operators/countries/${country}?&includeData=true`;
 		const token = req.airtimeAPIToken;

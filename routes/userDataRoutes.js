@@ -217,7 +217,12 @@ const setupRouter = async () => {
 		default:
 			router
 				.route('/airtime')
-				.post(airtimeAPIToken, accountStatus, schedulePayment, buyAirtime);
+				.post(
+					accountStatus,
+					generateReference,
+					schedulePayment,
+					PagaBuyAirtime
+				);
 			break;
 	}
 
@@ -236,10 +241,10 @@ const setupRouter = async () => {
 
 			break;
 		default:
-			router.route('/data-plans').get(airtimeAPIToken, getDataPlans);
+			router.route('/data-plans').get(generateReference, PagaGetDataPlans);
 			router
 				.route('/data')
-				.post(airtimeAPIToken, accountStatus, schedulePayment, buyData);
+				.post(accountStatus, generateReference, schedulePayment, PagaBuyData);
 
 			break;
 	}

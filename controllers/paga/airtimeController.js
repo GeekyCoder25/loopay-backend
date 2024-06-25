@@ -118,13 +118,10 @@ const PagaBuyAirtime = async (req, res) => {
 				},
 			};
 
-			console.log(body);
 			if (req.body.type === 'data') {
 				body.isDataBundle = true;
 				body.mobileOperatorServiceId = req.body.operatorId;
 			}
-
-			console.log(body);
 
 			const response = await axios.post(url, body, config);
 
@@ -231,7 +228,6 @@ const PagaGetDataPlans = async (req, res) => {
 	const {provider, country: countryCode} = req.query;
 	try {
 		const PAGA_API_URL = process.env.PAGA_API_URL;
-		console.log(PAGA_API_URL);
 		const principal = process.env.PAGA_PRINCIPAL;
 		const credentials = process.env.PAGA_CREDENTIALS;
 		const hashKey = process.env.PAGA_HASH_KEY;

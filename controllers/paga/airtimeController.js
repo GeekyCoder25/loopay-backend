@@ -225,7 +225,7 @@ const PagaBuyAirtime = async (req, res) => {
 };
 
 const PagaGetDataPlans = async (req, res) => {
-	const {provider, country: countryCode} = req.query;
+	const {provider} = req.query;
 	try {
 		const PAGA_API_URL = process.env.PAGA_API_URL;
 		const principal = process.env.PAGA_PRINCIPAL;

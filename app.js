@@ -9,7 +9,11 @@ const xss = require('xss-clean');
 const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
 const authRoutes = require('./routes/authRoutes');
-const userDataRoutes = require('./routes/userDataRoutes');
+const {
+	router: userDataRoutes,
+	dynamicRouter: userDataDynamicRoutes,
+	updateRoutes,
+} = require('./routes/userDataRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const path = require('path');
 const fileUpload = require('express-fileupload');
@@ -85,8 +89,12 @@ app.get('/api/email/unsubscribe/:token', unsubscribeEmailAlerts);
 app.post('/api/upload', protect, uploadPhoto);
 app.use('/api/auth', authRoutes);
 app.use('/api/user', protect, userDataRoutes);
+app.use('/api/user', protect, userDataDynamicRoutes);
 app.use('/api/admin', protect, adminRoutes);
 app.use('/api/webhook', webhookHandler);
+app.get('/api/admin/restart', updateRoutes, (req, res) =>
+	res.status(200).json('Routes updated')
+);
 app.post('/api/test-update', async (req, res) => {
 	await update.create(req.body);
 	res.send({message: 'New update available'});

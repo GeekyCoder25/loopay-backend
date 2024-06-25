@@ -107,6 +107,7 @@ const LimitModel = require('../models/limit');
 const {addMoneyCard} = require('../controllers/addMoneyCard');
 
 const router = express.Router();
+const dynamicRouter = express.Router();
 
 router.route('/').get(getUserData).post(postUserData).put(putUserData);
 router.get('/role', getRole);
@@ -140,8 +141,9 @@ router.route('/check-recipient').post(checkRecipient);
 router.route('/airtime/operators').get(airtimeAPIToken, getOperators);
 router.route('/get-network').get(airtimeAPIToken, getNetwork);
 
-const setupRouter = async () => {
+const updateRoutes = async (req, res, next) => {
 	let apiType;
+	dynamicRouter.stack = [];
 
 	const selectAPI = async () => {
 		apiType = await serverAPIs.findOne({});
@@ -162,37 +164,41 @@ const setupRouter = async () => {
 
 	switch (apiType.bill) {
 		case 'paga':
-			router.route('/bill-merchants').post(generateReference, PagaGetBills);
-			router
+			dynamicRouter
+				.route('/bill-merchants')
+				.post(generateReference, PagaGetBills);
+			dynamicRouter
 				.route('/bill-services')
 				.post(generateReference, PagaGetMerchantsServices);
 
-			router
+			dynamicRouter
 				.route('/bill-validate')
 				.post(generateReference, PagaValidateCustomer);
 
-			router
+			dynamicRouter
 				.route('/bill-pay')
 				.post(accountStatus, generateReference, schedulePayment, PagaPayBill);
 			break;
 		case 'reloadly':
-			router.route('/bill-merchants').post(billAPIToken, getBills);
-			router
+			dynamicRouter.route('/bill-merchants').post(billAPIToken, getBills);
+			dynamicRouter
 				.route('/bill-services')
 				.post(billAPIToken, (req, res) =>
 					res.status(200).json([{name: 'Post Paid'}, {name: 'Pre Paid'}])
 				);
-			router.route('/bill').post(billAPIToken, accountStatus, payABill);
+			dynamicRouter.route('/bill').post(billAPIToken, accountStatus, payABill);
 			break;
 		default:
-			router.route('/bill-merchants').post(generateReference, PagaGetBills);
-			router
+			dynamicRouter
+				.route('/bill-merchants')
+				.post(generateReference, PagaGetBills);
+			dynamicRouter
 				.route('/bill-services')
 				.post(generateReference, PagaGetMerchantsServices);
-			router
+			dynamicRouter
 				.route('/bill-validate')
 				.post(generateReference, PagaValidateCustomer);
-			router
+			dynamicRouter
 				.route('/bill-pay')
 				.post(accountStatus, generateReference, schedulePayment, PagaPayBill);
 			break;
@@ -200,7 +206,7 @@ const setupRouter = async () => {
 
 	switch (apiType.airtime) {
 		case 'paga':
-			router
+			dynamicRouter
 				.route('/airtime')
 				.post(
 					accountStatus,
@@ -210,12 +216,12 @@ const setupRouter = async () => {
 				);
 			break;
 		case 'reloadly':
-			router
+			dynamicRouter
 				.route('/airtime')
 				.post(airtimeAPIToken, accountStatus, schedulePayment, buyAirtime);
 			break;
 		default:
-			router
+			dynamicRouter
 				.route('/airtime')
 				.post(airtimeAPIToken, accountStatus, schedulePayment, buyAirtime);
 			break;
@@ -223,29 +229,32 @@ const setupRouter = async () => {
 
 	switch (apiType.data) {
 		case 'paga':
-			router.route('/data-plans').get(generateReference, PagaGetDataPlans);
-			router
+			dynamicRouter
+				.route('/data-plans')
+				.get(generateReference, PagaGetDataPlans);
+			dynamicRouter
 				.route('/data')
 				.post(accountStatus, generateReference, schedulePayment, PagaBuyData);
 			break;
 		case 'reloadly':
-			router.route('/data-plans').get(airtimeAPIToken, getDataPlans);
-			router
+			dynamicRouter.route('/data-plans').get(airtimeAPIToken, getDataPlans);
+			dynamicRouter
 				.route('/data')
 				.post(airtimeAPIToken, accountStatus, schedulePayment, buyData);
 
 			break;
 		default:
-			router.route('/data-plans').get(airtimeAPIToken, getDataPlans);
-			router
+			dynamicRouter.route('/data-plans').get(airtimeAPIToken, getDataPlans);
+			dynamicRouter
 				.route('/data')
 				.post(airtimeAPIToken, accountStatus, schedulePayment, buyData);
 
 			break;
 	}
+	next && next();
 };
 
-setupRouter();
+updateRoutes();
 router.route('/bill/status').get(billAPIToken, getBillsTransactions);
 router.route('/bill/status/:id').get(billAPIToken, getBillsTransactions);
 router.route('/swap').post(accountStatus, swapCurrency);
@@ -274,4 +283,4 @@ router.route('/report').post(postReport);
 router.route('/receipt').post(generateReceipt);
 router.route('/delete-account/:email').delete(deleteAccount);
 
-module.exports = router;
+module.exports = {router, dynamicRouter, updateRoutes};

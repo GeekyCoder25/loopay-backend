@@ -209,7 +209,7 @@ const initiateTransfer = async (req, res) => {
 					});
 				}
 			} else if (response.data.message.includes('insufficient')) {
-				console.log('Insufficient balance');
+				console.log('Insufficient balance on paystack');
 				return sendMail(
 					{
 						from: {

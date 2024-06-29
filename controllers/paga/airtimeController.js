@@ -181,7 +181,7 @@ const PagaBuyAirtime = async (req, res) => {
 				transaction: savedTransaction,
 			});
 		} else if (apiData.message.includes('insufficient balance')) {
-			console.log('Insufficient balance');
+			console.log('Paga Insufficient balance');
 			sendMail(
 				{
 					from: {
@@ -434,7 +434,7 @@ const PagaBuyData = async (req, res) => {
 				transaction: savedTransaction,
 			});
 		} else if (apiData.message.includes('insufficient balance')) {
-			console.log('Insufficient balance');
+			console.log('Paga Insufficient balance');
 			sendMail(
 				{
 					from: {

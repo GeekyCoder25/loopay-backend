@@ -189,7 +189,7 @@ const buyAirtime = async (req, res) => {
 				transaction: savedTransaction,
 			});
 		} else if (apiData.errorCode === 'INSUFFICIENT_BALANCE') {
-			console.log('Insufficient balance');
+			console.log('Reloadly Insufficient balance');
 			sendMail(
 				{
 					from: {
@@ -403,7 +403,7 @@ const buyData = async (req, res) => {
 				transaction: savedTransaction,
 			});
 		} else if (apiData.errorCode === 'INSUFFICIENT_BALANCE') {
-			console.log('Insufficient balance');
+			console.log('Reloadly Insufficient balance');
 			sendMail(
 				{
 					from: {

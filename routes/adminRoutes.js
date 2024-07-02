@@ -27,7 +27,10 @@ const {
 	updateInternational,
 	deleteInternational,
 } = require('../controllers/adminController');
-const {updateNotifications} = require('../controllers/notificationController');
+const {
+	updateNotifications,
+	adminUpdateNotification,
+} = require('../controllers/notificationController');
 const {getRate, updateRate} = require('../controllers/currencyController');
 const {getFees, updateFees} = require('../controllers/feesController');
 const {
@@ -55,6 +58,7 @@ router.post('/transfer/reverse', reverseTransaction);
 router.post('/finalize', finalizeWithdrawal);
 router.post('/block-transaction', blockTransaction);
 router.route('/notifications').get(getNotifications).put(updateNotifications);
+router.route('/notification/:id').put(adminUpdateNotification);
 router.route('/rate').get(getRate).put(updateRate);
 router.route('/fees').get(getFees).put(updateFees);
 router.route('/verification').get(getVerifications).put(updateVerification);

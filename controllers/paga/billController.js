@@ -7,14 +7,6 @@ const PoundWallet = require('../../models/walletPound');
 const BillTransaction = require('../../models/transaction');
 const Notification = require('../../models/notification');
 
-//! LIVE
-const PAGA_API_URL =
-	'https://mypaga.com/paga-webservices/business-rest/secured';
-const principal = '16F6C921-FC62-4C91-B2B4-BE742138B831';
-const credentials = 'zF2@u5U*Sx6dcGM';
-const hashKey =
-	'514ac2afcc6b4317a592e5d0a3786ada2c75778b9b9f48dc8a28ecfa764d6440291533a2ecfa4ab589d285f07216a497d49c89cfb7604641b687f2a55aee3f83';
-
 //? TEST
 // const PAGA_API_URL =
 // 	'https://beta.mypaga.com/paga-webservices/business-rest/secured';
@@ -25,6 +17,10 @@ const hashKey =
 
 const PagaGetBills = async (req, res) => {
 	try {
+		const PAGA_API_URL = process.env.PAGA_API_URL;
+		const principal = process.env.PAGA_PRINCIPAL;
+		const credentials = process.env.PAGA_CREDENTIALS;
+		const hashKey = process.env.PAGA_HASH_KEY;
 		const url = `${PAGA_API_URL}/getMerchants`;
 		const body = req.body;
 		const config = {
@@ -82,6 +78,10 @@ const PagaGetBills = async (req, res) => {
 
 const PagaGetMerchantsServices = async (req, res) => {
 	try {
+		const PAGA_API_URL = process.env.PAGA_API_URL;
+		const principal = process.env.PAGA_PRINCIPAL;
+		const credentials = process.env.PAGA_CREDENTIALS;
+		const hashKey = process.env.PAGA_HASH_KEY;
 		const url = `${PAGA_API_URL}/getMerchantServices`;
 		const body = {
 			referenceNumber: req.body.referenceNumber,
@@ -113,6 +113,10 @@ const PagaGetMerchantsServices = async (req, res) => {
 
 const PagaValidateCustomer = async (req, res) => {
 	try {
+		const PAGA_API_URL = process.env.PAGA_API_URL;
+		const principal = process.env.PAGA_PRINCIPAL;
+		const credentials = process.env.PAGA_CREDENTIALS;
+		const hashKey = process.env.PAGA_HASH_KEY;
 		const url = `${PAGA_API_URL}/getMerchantAccountDetails`;
 		const body = {
 			referenceNumber: req.body.referenceNumber,
@@ -149,15 +153,13 @@ const PagaValidateCustomer = async (req, res) => {
 
 const PagaPayBill = async (req, res) => {
 	try {
+		const PAGA_API_URL = process.env.PAGA_API_URL;
+		const principal = process.env.PAGA_PRINCIPAL;
+		const credentials = process.env.PAGA_CREDENTIALS;
+		const hashKey = process.env.PAGA_HASH_KEY;
 		const query = Object.keys(req.query)[0];
 		const {email, phoneNumber} = req.user;
-		const {
-			amount,
-			provider,
-			referenceId,
-			subscriberAccountNumber,
-			paymentCurrency,
-		} = req.body;
+		const {amount, provider, referenceId, paymentCurrency} = req.body;
 
 		let nairaAmount = amount;
 		let rate;
@@ -241,7 +243,7 @@ const PagaPayBill = async (req, res) => {
 		if (response.data.integrationStatus !== 'SUCCESSFUL') {
 			console.log(response.data);
 			throw new Error(
-				response.data.message.includes('insufficient balance')
+				response.data.message.includes('Paga insufficient balance')
 					? 'Server error'
 					: response.data.message
 			);
@@ -254,7 +256,7 @@ const PagaPayBill = async (req, res) => {
 			email,
 			phoneNumber,
 			id,
-			status: 'successful',
+			status: 'success',
 			debitAccount: wallet.loopayAccNo,
 			transactionType: 'bill',
 			billType: query,
@@ -270,6 +272,7 @@ const PagaPayBill = async (req, res) => {
 		if (rate) {
 			transaction.rate = `1 ${paymentCurrency} = ${rate.toFixed(2)} NGN`;
 		}
+		const subscriberAccountNumber = req.body.meterNo;
 		const notification = {
 			email,
 			id,

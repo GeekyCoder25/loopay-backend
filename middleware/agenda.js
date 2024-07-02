@@ -827,7 +827,7 @@ const payBill = async (_id, transactionData, user, queryObject) => {
 			email,
 			phoneNumber,
 			id,
-			status: 'successful',
+			status: 'success',
 			debitAccount: wallet.loopayAccNo,
 			transactionType: 'bill',
 			billType: query,

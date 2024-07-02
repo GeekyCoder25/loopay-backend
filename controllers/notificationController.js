@@ -10,16 +10,23 @@ const updateNotification = async (req, res) => {
 	await Notification.findByIdAndUpdate(req.params.id, {
 		status: 'read',
 	});
-	res.status(200).json('Update succesful');
+	res.status(200).json('Update successful');
+};
+const adminUpdateNotification = async (req, res) => {
+	await Notification.findByIdAndUpdate(req.params.id, {
+		adminStatus: 'read',
+	});
+	res.status(200).json('Update successful');
 };
 
 const updateNotifications = async (req, res) => {
 	await Notification.updateMany({}, {adminStatus: 'read'});
-	res.status(200).json('Update succesful');
+	res.status(200).json('Update successful');
 };
 
 module.exports = {
 	getNotifications,
 	updateNotification,
+	adminUpdateNotification,
 	updateNotifications,
 };

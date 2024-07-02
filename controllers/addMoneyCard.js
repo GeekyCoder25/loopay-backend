@@ -20,6 +20,7 @@ const addMoneyCard = async (req, res) => {
 				amount: req.body.amount * 100,
 				callback_url: `${fullUrl}/api/webhook?type=card`,
 				channels: ['card'],
+				metadata: {cancel_action: `${fullUrl}/webview-cancel.html`},
 			},
 			config
 		);

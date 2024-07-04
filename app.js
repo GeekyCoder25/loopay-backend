@@ -42,7 +42,7 @@ app.use(helmet());
 // Prevent XSS attacks
 app.use(xss());
 
-app.set('trust proxy', true);
+app.set('trust proxy', false);
 
 // Rate limiting
 const limiter = rateLimit({

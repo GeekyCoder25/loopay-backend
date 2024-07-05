@@ -81,9 +81,9 @@ cloudinary.config({
 	api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-if (process.env.NODE_ENV === 'development') {
-	app.use(morgan('dev'));
-}
+// if (process.env.NODE_ENV === 'development') {
+app.use(morgan('dev'));
+// }
 
 app.get('/api/email/unsubscribe/:token', unsubscribeEmailAlerts);
 app.post('/api/upload', protect, uploadPhoto);
@@ -95,10 +95,6 @@ app.use('/api/webhook', webhookHandler);
 app.get('/api/admin/restart', updateRoutes, (req, res) =>
 	res.status(200).json('Routes updated')
 );
-app.post('/api/test-update', async (req, res) => {
-	await update.create(req.body);
-	res.send({message: 'New update available'});
-});
 app.get('/api/network', (req, res) => {
 	console.log('network request');
 	res.send({network: true});

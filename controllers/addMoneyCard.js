@@ -26,6 +26,7 @@ const addMoneyCard = async (req, res) => {
 		);
 
 		if (response.status === 200) {
+			console.log(response.data);
 			return res.status(200).json(response.data);
 		}
 		throw new Error(response.data);

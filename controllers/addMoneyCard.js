@@ -16,9 +16,9 @@ const addMoneyCard = async (req, res) => {
 		const response = await axios.post(
 			'https://api.paystack.co/transaction/initialize',
 			{
-				email: 'zclwcnvyg@emltmp.com',
+				email: req.user.email,
 				amount: req.body.amount * 100,
-				callback_url: `${fullUrl}/api/webhook?type=card`,
+				callback_url: `${fullUrl}/card-success.html`,
 				channels: ['card'],
 				metadata: {cancel_action: `${fullUrl}/webview-cancel.html`},
 			},
@@ -26,7 +26,6 @@ const addMoneyCard = async (req, res) => {
 		);
 
 		if (response.status === 200) {
-			console.log(response.data);
 			return res.status(200).json(response.data);
 		}
 		throw new Error(response.data);

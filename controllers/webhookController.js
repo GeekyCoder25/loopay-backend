@@ -18,10 +18,6 @@ const webhookHandler = async (req, res) => {
 				'Content-Type': 'application/json',
 			},
 		};
-
-		if (req.query?.type === 'card') {
-			return;
-		}
 		const hash = crypto
 			.createHmac('sha512', SECRET_KEY)
 			.update(JSON.stringify(req.body))
@@ -37,91 +33,92 @@ const webhookHandler = async (req, res) => {
 						config
 					);
 					if (response.data.status === true) {
-						return await cardWebhook(response.data);
+						await cardWebhook(response.data);
 					}
-				}
-				const userData = await UserDataModel.findOne({
-					email: event.data.customer.email,
-				});
-				const {
-					sender_bank_account_number,
-					account_name,
-					sender_name,
-					sender_bank,
-					receiver_bank_account_number,
-					receiver_bank,
-					narration,
-				} = event.data.authorization;
-
-				const {id, amount, customer} = event.data;
-				const {email, phone} = customer;
-				const wallet = await LocalWallet.findOne({email});
-
-				const transaction = {
-					id,
-					status: event.data.status,
-					type: 'inter',
-					transactionType: 'credit',
-					method: 'inter',
-					senderAccount: sender_bank_account_number,
-					senderName: account_name || sender_name || 'An external user',
-					receiverAccount: receiver_bank_account_number,
-					receiverName: userData.userProfile.fullName,
-					sourceBank: sender_bank || 'External bank',
-					fromBalance: wallet.balance,
-					toBalance: wallet.balance + amount,
-					destinationBank: receiver_bank,
-					amount: addingDecimal(`${event.data.amount / 100}`),
-					description: narration || '',
-					reference: `TR${id}`,
-					paystackReference: event.data.reference,
-					currency: event.data.currency,
-					metadata: event.data.metadata || null,
-					createdAt: event.data.paidAt,
-				};
-
-				const transactionsExists = await TransactionModel.findOne({id});
-
-				if (!transactionsExists) {
-					await TransactionModel.create({
-						email,
-						phoneNumber: phone || wallet.phoneNumber,
-						...transaction,
+				} else {
+					const userData = await UserDataModel.findOne({
+						email: event.data.customer.email,
 					});
+					const {
+						sender_bank_account_number,
+						account_name,
+						sender_name,
+						sender_bank,
+						receiver_bank_account_number,
+						receiver_bank,
+						narration,
+					} = event.data.authorization;
 
-					const notification = {
+					const {id, amount, customer} = event.data;
+					const {email, phone} = customer;
+					const wallet = await LocalWallet.findOne({email});
+
+					const transaction = {
 						id,
-						email: wallet.email,
-						phoneNumber: wallet.phoneNumber,
-						type: 'transfer',
-						header: 'Credit transaction',
-						message: `${
-							account_name || sender_name || 'An external user'
-						} has sent you ${
-							event.data.currency +
-							addingDecimal((amount / 100).toLocaleString())
-						}`,
-						adminMessage: `${
-							account_name || sender_name || 'An external user'
-						} sent ${
-							event.data.currency +
-							addingDecimal((amount / 100).toLocaleString())
-						} to ${userData.userProfile.fullName}`,
-						status: 'unread',
-						photo: '',
-						metadata: {...transaction, transactionType: 'credit'},
+						status: event.data.status,
+						type: 'inter',
+						transactionType: 'credit',
+						method: 'inter',
+						senderAccount: sender_bank_account_number,
+						senderName: account_name || sender_name || 'An external user',
+						receiverAccount: receiver_bank_account_number,
+						receiverName: userData.userProfile.fullName,
+						sourceBank: sender_bank || 'External bank',
+						fromBalance: wallet.balance,
+						toBalance: wallet.balance + amount,
+						destinationBank: receiver_bank,
+						amount: addingDecimal(`${event.data.amount / 100}`),
+						description: narration || '',
+						reference: `TR${id}`,
+						paystackReference: event.data.reference,
+						currency: event.data.currency,
+						metadata: event.data.metadata || null,
+						createdAt: event.data.paidAt,
 					};
 
-					await Notification.create(notification);
+					const transactionsExists = await TransactionModel.findOne({id});
 
-					if (userData.isEmailAlertSubscribed) {
-						await sendReceipt({
+					if (!transactionsExists) {
+						await TransactionModel.create({
 							email,
-							transaction,
+							phoneNumber: phone || wallet.phoneNumber,
+							...transaction,
 						});
+
+						const notification = {
+							id,
+							email: wallet.email,
+							phoneNumber: wallet.phoneNumber,
+							type: 'transfer',
+							header: 'Credit transaction',
+							message: `${
+								account_name || sender_name || 'An external user'
+							} has sent you ${
+								event.data.currency +
+								addingDecimal((amount / 100).toLocaleString())
+							}`,
+							adminMessage: `${
+								account_name || sender_name || 'An external user'
+							} sent ${
+								event.data.currency +
+								addingDecimal((amount / 100).toLocaleString())
+							} to ${userData.userProfile.fullName}`,
+							status: 'unread',
+							photo: '',
+							metadata: {...transaction, transactionType: 'credit'},
+						};
+
+						await Notification.create(notification);
+
+						if (userData.isEmailAlertSubscribed) {
+							await sendReceipt({
+								email,
+								transaction,
+							});
+						}
+						wallet.balance += amount;
+						await wallet.save();
 					}
-					wallet.balance += amount;
-					await wallet.save();
 				}
 			}
 			await WebhookModel.create(event);

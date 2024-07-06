@@ -194,6 +194,7 @@ const postFaceVerification = async (req, res) => {
 						verificationStatus: true,
 					});
 				} catch (err) {
+					console.log(err.message);
 					res.status(400).json({message: err.message});
 				}
 			}

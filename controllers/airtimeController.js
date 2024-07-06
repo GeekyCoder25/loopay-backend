@@ -7,6 +7,7 @@ const {addingDecimal} = require('../utils/addingDecimal');
 const AirtimeTransaction = require('../models/transaction');
 const {default: axios} = require('axios');
 const {sendMail} = require('../utils/sendEmail');
+const airtimeBeneficiary = require('../models/airtimeBeneficiary');
 
 const getOperators = async (req, res) => {
 	try {
@@ -181,6 +182,13 @@ const buyAirtime = async (req, res) => {
 				savedTransaction = await AirtimeTransaction.create(transaction);
 				await Notification.create(notification);
 			}
+
+			await airtimeBeneficiary.findOneAndUpdate(
+				{email, phoneNo, network},
+				{email, phoneNo, network},
+				{upsert: true}
+			);
+
 			req.schedule && (await req.schedule(req));
 			res.status(200).json({
 				status: 'success',
@@ -396,6 +404,12 @@ const buyData = async (req, res) => {
 				savedTransaction = await AirtimeTransaction.create(transaction);
 				await Notification.create(notification);
 			}
+			await airtimeBeneficiary.findOneAndUpdate(
+				{email, phoneNo, network},
+				{email, phoneNo, network},
+				{upsert: true}
+			);
+
 			req.schedule && (await req.schedule(req));
 			res.status(200).json({
 				status: 'success',

@@ -8,6 +8,7 @@ const LocalWallet = require('../../models/wallet');
 const DollarWallet = require('../../models/walletDollar');
 const EuroWallet = require('../../models/walletEuro');
 const PoundWallet = require('../../models/walletPound');
+const airtimeBeneficiary = require('../../models/airtimeBeneficiary');
 // const PAGA_API_URL =
 // 	'https://beta.mypaga.com/paga-webservices/business-rest/secured';
 // const credentials = 'xT3*wEXcDRy7Ry5';
@@ -173,6 +174,13 @@ const PagaBuyAirtime = async (req, res) => {
 				savedTransaction = await Transaction.create(transaction);
 				await Notification.create(notification);
 			}
+
+			await airtimeBeneficiary.findOneAndUpdate(
+				{email, phoneNo, network},
+				{email, phoneNo, network},
+				{upsert: true}
+			);
+
 			req.schedule && (await req.schedule(req));
 			res.status(200).json({
 				status: 'success',
@@ -426,6 +434,13 @@ const PagaBuyData = async (req, res) => {
 				savedTransaction = await Transaction.create(transaction);
 				await Notification.create(notification);
 			}
+
+			await airtimeBeneficiary.findOneAndUpdate(
+				{email, phoneNo, network},
+				{email, phoneNo, network},
+				{upsert: true}
+			);
+
 			req.schedule && (await req.schedule(req));
 			res.status(200).json({
 				status: 'success',

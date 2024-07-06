@@ -105,6 +105,10 @@ const {postReport} = require('../controllers/reportController');
 const {generateReceipt} = require('../controllers/receiptController');
 const LimitModel = require('../models/limit');
 const {addMoneyCard} = require('../controllers/addMoneyCard');
+const {
+	getAirtimeBeneficiaries,
+	deleteAirtimeBeneficiary,
+} = require('../controllers/airtimeBeneficiaryController');
 
 const router = express.Router();
 const dynamicRouter = express.Router();
@@ -119,6 +123,11 @@ router.route('/session/:id').put(updateSession).delete(deleteSession);
 router.route('/get-tag/:senderTagName').post(getTagName);
 router.route('/get-phone').post(getPhone);
 router.route('/tag-name').post(createTagName);
+router.route('/beneficiary').get(getBeneficiaries).post(postBeneficiary);
+router
+	.route('/beneficiary/airtime')
+	.get(getAirtimeBeneficiaries)
+	.delete(deleteAirtimeBeneficiary);
 router.route('/beneficiary').get(getBeneficiaries).post(postBeneficiary);
 router.delete('/beneficiary/:tagName', deleteBeneficiary);
 router.route('/wallet').get(getWallet).post(postWallet);

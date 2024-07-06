@@ -33,7 +33,7 @@ const postReport = async (req, res) => {
 
 const getReports = async (req, res) => {
 	try {
-		const reports = await ReportModel.find();
+		const reports = await ReportModel.find().sort('-createdAt');
 		res.status(200).json(reports);
 	} catch (error) {
 		console.log(error.message);

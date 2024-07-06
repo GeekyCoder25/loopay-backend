@@ -41,7 +41,18 @@ const getReports = async (req, res) => {
 	}
 };
 
+const deleteReport = async (req, res) => {
+	try {
+		const report = await ReportModel.findByIdAndDelete(req.params.id);
+		res.status(200).json(report);
+	} catch (error) {
+		console.log(error.message);
+		res.status(400).json("Couldn't delete report");
+	}
+};
+
 module.exports = {
 	postReport,
 	getReports,
+	deleteReport,
 };

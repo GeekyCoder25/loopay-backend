@@ -181,10 +181,10 @@ const cardWebhook = async event => {
 			header: 'Credit transaction',
 			message: `${
 				event.data.currency + addingDecimal((amount / 100).toLocaleString())
-			} has been deposited to your account via card ...${event.data.last4}`,
+			} has been deposited to your account via card ...${last4}`,
 			adminMessage: `${first_name} ${last_name} (${email}) deposited ${
 				event.data.currency + addingDecimal((amount / 100).toLocaleString())
-			} to account using card`,
+			} to account using card ...${last4}`,
 			status: 'unread',
 			photo: '',
 			metadata: {...transaction, transactionType: 'credit'},

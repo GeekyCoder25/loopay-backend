@@ -41,7 +41,7 @@ const {
 } = require('../controllers/popUpController');
 const {reverseTransaction} = require('../controllers/transferController');
 const {getAPIs, updateAPIs} = require('../controllers/serverAPIS');
-const {getReports} = require('../controllers/reportController');
+const {getReports, deleteReport} = require('../controllers/reportController');
 
 const router = express.Router();
 
@@ -74,6 +74,7 @@ router.route('/proof').get(getPaymentProofs);
 router.route('/approve').post(approveProof);
 router.route('/decline/:id').delete(declineProof);
 router.route('/report').get(getReports);
+router.route('/report/:id').delete(deleteReport);
 router.route('/international').get(getInternational);
 router
 	.route('/international/:id')

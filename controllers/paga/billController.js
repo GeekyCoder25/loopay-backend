@@ -221,7 +221,7 @@ const PagaPayBill = async (req, res) => {
 
 		const url = `${PAGA_API_URL}/merchantPayment`;
 		const body = {
-			referenceNumber: req.body.referenceNumber,bugs fixes
+			referenceNumber: req.body.referenceNumber,
 			amount: nairaAmount,
 			merchantAccount: req.body.billerId,
 			merchantReferenceNumber: req.body.meterNo,

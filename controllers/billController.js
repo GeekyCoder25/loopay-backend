@@ -5,6 +5,9 @@ const EuroWallet = require('../models/walletEuro');
 const PoundWallet = require('../models/walletPound');
 const Notification = require('../models/notification');
 const BillTransaction = require('../models/transaction');
+const FeesModal = require('../models/fees');
+const uuid = require('uuid').v4;
+
 const getBills = async (req, res) => {
 	try {
 		const {type, country: countryCode} = req.query;
@@ -53,7 +56,7 @@ const payABill = async (req, res) => {
 			paymentCurrency,
 		} = req.body;
 
-		let nairaAmount = amount;
+		let nairaAmount = Number(amount);
 		let rate;
 
 		const selectWallet = currency => {
@@ -70,39 +73,43 @@ const payABill = async (req, res) => {
 		};
 		const wallet = await selectWallet(paymentCurrency).findOne({phoneNumber});
 
-		if (wallet.balance < amount * 100) {
-			return res.status(400).json('Insufficient balance');
-		}
 		if (paymentCurrency && paymentCurrency !== 'NGN') {
 			const getRate = async () => {
 				const apiData = await axios.get(
 					`https://open.er-api.com/v6/latest/NGN`
 				);
 				const rates = apiData.data.rates;
-				const rate =
-					rates[paymentCurrency] >= 1
-						? rates[paymentCurrency]
-						: 1 / rates[paymentCurrency];
+				const rate = rates[paymentCurrency];
 				return rate;
 			};
 			const rateCalculate = await getRate();
 			rate = rateCalculate;
-			nairaAmount = Math.floor(amount * rate);
-			if (nairaAmount < provider.minLocalTransactionAmount) {
-				const num = provider.minLocalTransactionAmount / rateCalculate;
-				const precision = 2;
-				const roundedNum = Math.ceil(num * 10 ** precision) / 10 ** precision;
-				return res
-					.status(400)
-					.json(`Minimum amount in ${paymentCurrency} is ${roundedNum}`);
-			} else if (nairaAmount > provider.maxLocalTransactionAmount) {
-				const num = provider.maxLocalTransactionAmount / rateCalculate;
-				const precision = 2;
-				const roundedNum = Math.ceil(num * 10 ** precision) / 10 ** precision;
-				return res
-					.status(400)
-					.json(`Maximum amount in ${paymentCurrency} is ${roundedNum}`);
-			}
+			nairaAmount = amount * rate;
+		}
+		if (nairaAmount < provider.minLocalTransactionAmount) {
+			const num = provider.minLocalTransactionAmount / rate;
+			const precision = 2;
+			const roundedNum = Math.ceil(num * 10 ** precision) / 10 ** precision;
+			return res
+				.status(400)
+				.json(`Minimum amount in ${paymentCurrency} is ${roundedNum}`);
+		} else if (nairaAmount > provider.maxLocalTransactionAmount) {
+			const num = provider.maxLocalTransactionAmount / rate;
+			const precision = 2;
+			const roundedNum = Math.ceil(num * 10 ** precision) / 10 ** precision;
+			return res
+				.status(400)
+				.json(`Maximum amount in ${paymentCurrency} is ${roundedNum}`);
+		}
+
+		const feeDoc = await FeesModal.findOne({feeName: 'bill'});
+		let fee = feeDoc.amount || 100;
+
+		if (paymentCurrency !== 'NGN') {
+			fee = fee * rate;
+		}
+		if (wallet.balance < (Number(amount) + fee) * 100) {
+			return res.status(400).json('Insufficient balance');
 		}
 
 		const url = `${req.apiConfig.URL}/pay`;
@@ -125,8 +132,9 @@ const payABill = async (req, res) => {
 			additionalInfo: metadata,
 		});
 		const response = await axios.post(url, body, config);
+
 		if (response.data.status === 'PROCESSING') {
-			wallet.balance -= amount * 100;
+			wallet.balance -= (Number(amount) + fee) * 100;
 			await wallet.save();
 			const id = referenceId;
 			const transaction = {
@@ -141,8 +149,11 @@ const payABill = async (req, res) => {
 				amount,
 				reference: id,
 				currency: wallet.currency,
+				fromBalance: wallet.balance,
+				toBalance: wallet.balance - (Number(amount) + fee) * 100,
 				metadata: response.data,
 			};
+
 			if (rate) {
 				transaction.rate = `1 ${paymentCurrency} = ${rate.toFixed(2)} NGN`;
 			}
@@ -157,12 +168,32 @@ const payABill = async (req, res) => {
 				status: 'unread',
 				metadata: {...transaction, apiResponse: response.data},
 			};
-
+			const feeNotification = {
+				email,
+				id: uuid(),
+				transactionId: referenceId,
+				phoneNumber,
+				type: 'fee',
+				header: `${query} purchase fee charge`,
+				message: `Your have been charged ${
+					wallet.currencyDetails.symbol + fee.toLocaleString()
+				} for the purchase fee of ${provider.name}`,
+				adminMessage: `${req.user.firstName} ${
+					req.user.lastName
+				} have been charged ${
+					wallet.currencyDetails.symbol + fee.toLocaleString()
+				} for the purchase fee of purchased ${
+					provider.name
+				} to ${'subscriberAccountNumber'}`,
+				status: 'unread',
+				metadata: {...transaction, apiResponse: response.data},
+			};
 			const transactionExists = await BillTransaction.findOne({id});
 			let savedTransaction = transactionExists;
 			if (!transactionExists) {
 				savedTransaction = await BillTransaction.create(transaction);
 				await Notification.create(notification);
+				await Notification.create(feeNotification);
 			}
 			return res
 				.status(200)

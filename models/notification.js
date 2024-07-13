@@ -9,6 +9,7 @@ const NotificationSchema = new Schema(
 			type: String,
 			required: [true, 'Please input notification ID'],
 		},
+		transactionId: String,
 		email: {
 			type: String,
 			required: [true, 'Please input your email address'],

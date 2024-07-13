@@ -6,8 +6,10 @@ const EuroWallet = require('../../models/walletEuro');
 const PoundWallet = require('../../models/walletPound');
 const BillTransaction = require('../../models/transaction');
 const Notification = require('../../models/notification');
-
+const FeesModal = require('../../models/fees');
+const uuid = require('uuid').v4;
 //? TEST
+
 // const PAGA_API_URL =
 // 	'https://beta.mypaga.com/paga-webservices/business-rest/secured';
 // const principal = '3D3A120F-498C-4688-AD1C-E6151900D974';
@@ -161,7 +163,7 @@ const PagaPayBill = async (req, res) => {
 		const {email, phoneNumber} = req.user;
 		const {amount, provider, referenceId, paymentCurrency} = req.body;
 
-		let nairaAmount = amount;
+		let nairaAmount = Number(amount);
 		let rate;
 
 		const selectWallet = currency => {
@@ -178,44 +180,48 @@ const PagaPayBill = async (req, res) => {
 		};
 		const wallet = await selectWallet(paymentCurrency).findOne({phoneNumber});
 
-		if (wallet.balance < amount * 100) {
-			return res.status(400).json('Insufficient balance');
-		}
 		if (paymentCurrency && paymentCurrency !== 'NGN') {
 			const getRate = async () => {
 				const apiData = await axios.get(
 					`https://open.er-api.com/v6/latest/NGN`
 				);
 				const rates = apiData.data.rates;
-				const rate =
-					rates[paymentCurrency] >= 1
-						? rates[paymentCurrency]
-						: 1 / rates[paymentCurrency];
+				const rate = rates[paymentCurrency];
 				return rate;
 			};
 			const rateCalculate = await getRate();
 			rate = rateCalculate;
-			nairaAmount = Math.floor(amount * rate);
-			if (nairaAmount < provider.minLocalTransactionAmount) {
-				const num = provider.minLocalTransactionAmount / rateCalculate;
-				const precision = 2;
-				const roundedNum = Math.ceil(num * 10 ** precision) / 10 ** precision;
-				return res
-					.status(400)
-					.json(`Minimum amount in ${paymentCurrency} is ${roundedNum}`);
-			} else if (nairaAmount > provider.maxLocalTransactionAmount) {
-				const num = provider.maxLocalTransactionAmount / rateCalculate;
-				const precision = 2;
-				const roundedNum = Math.ceil(num * 10 ** precision) / 10 ** precision;
-				return res
-					.status(400)
-					.json(`Maximum amount in ${paymentCurrency} is ${roundedNum}`);
-			}
+			nairaAmount = amount * rate;
+		}
+		if (nairaAmount < provider.minLocalTransactionAmount) {
+			const num = provider.minLocalTransactionAmount / rate;
+			const precision = 2;
+			const roundedNum = Math.ceil(num * 10 ** precision) / 10 ** precision;
+			return res
+				.status(400)
+				.json(`Minimum amount in ${paymentCurrency} is ${roundedNum}`);
+		} else if (nairaAmount > provider.maxLocalTransactionAmount) {
+			const num = provider.maxLocalTransactionAmount / rate;
+			const precision = 2;
+			const roundedNum = Math.ceil(num * 10 ** precision) / 10 ** precision;
+			return res
+				.status(400)
+				.json(`Maximum amount in ${paymentCurrency} is ${roundedNum}`);
+		}
+
+		const feeDoc = await FeesModal.findOne({feeName: 'bill'});
+		let fee = feeDoc?.amount || 100;
+
+		if (paymentCurrency !== 'NGN') {
+			fee = fee * rate;
+		}
+		if (wallet.balance < (Number(amount) + fee) * 100) {
+			return res.status(400).json('Insufficient balance');
 		}
 
 		const url = `${PAGA_API_URL}/merchantPayment`;
 		const body = {
-			referenceNumber: req.body.referenceNumber,
+			referenceNumber: req.body.referenceNumber,bugs fixes
 			amount: nairaAmount,
 			merchantAccount: req.body.billerId,
 			merchantReferenceNumber: req.body.meterNo,
@@ -241,7 +247,6 @@ const PagaPayBill = async (req, res) => {
 
 		const response = await axios.post(url, apiBody, config);
 		if (response.data.integrationStatus !== 'SUCCESSFUL') {
-			console.log(response.data);
 			throw new Error(
 				response.data.message.includes('Paga insufficient balance')
 					? 'Server error'
@@ -249,7 +254,7 @@ const PagaPayBill = async (req, res) => {
 			);
 		}
 		const token = response.data.additionalProperties?.token?.split(': ')[1];
-		wallet.balance -= amount * 100;
+		wallet.balance -= (Number(amount) + fee) * 100;
 		await wallet.save();
 		const id = referenceId;
 		const transaction = {
@@ -266,7 +271,7 @@ const PagaPayBill = async (req, res) => {
 			reference: id,
 			currency: wallet.currency,
 			fromBalance: wallet.balance,
-			toBalance: wallet.balance - amount * 100,
+			toBalance: wallet.balance - (Number(amount) + fee) * 100,
 			metadata: response.data,
 		};
 		if (rate) {
@@ -285,11 +290,33 @@ const PagaPayBill = async (req, res) => {
 			metadata: {...transaction, apiResponse: response.data},
 		};
 
+		const feeNotification = {
+			email,
+			id: uuid(),
+			transactionId: referenceId,
+			phoneNumber,
+			type: 'fee',
+			header: `${query} purchase fee charge`,
+			message: `Your have been charged ${
+				wallet.currencyDetails.symbol + fee.toLocaleString()
+			} for the purchase fee of ${provider.name}`,
+			adminMessage: `${req.user.firstName} ${
+				req.user.lastName
+			} have been charged ${
+				wallet.currencyDetails.symbol + fee.toLocaleString()
+			} for the purchase fee of purchased ${
+				provider.name
+			} to ${'subscriberAccountNumber'}`,
+			status: 'unread',
+			metadata: {...transaction, apiResponse: response.data},
+		};
+
 		const transactionExists = await BillTransaction.findOne({id});
 		let savedTransaction = transactionExists;
 		if (!transactionExists) {
 			savedTransaction = await BillTransaction.create(transaction);
 			await Notification.create(notification);
+			await Notification.create(feeNotification);
 		}
 
 		response.data.token = token;

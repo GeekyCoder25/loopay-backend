@@ -20,6 +20,7 @@ const addMoneyCard = async (req, res) => {
 				amount: req.body.amount * 100,
 				callback_url: `${fullUrl}/card-success.html`,
 				channels: ['card'],
+				currency: req.query?.currency || '',
 				metadata: {cancel_action: `${fullUrl}/webview-cancel.html`},
 			},
 			config
@@ -30,8 +31,9 @@ const addMoneyCard = async (req, res) => {
 		}
 		throw new Error(response.data);
 	} catch (err) {
-		console.log('error', err.data?.message || err.message);
-		res.status(400).json(err.message);
+		const error = err.response?.data?.message || err.message;
+		console.log('error', error);
+		res.status(400).json(error);
 	}
 };
 

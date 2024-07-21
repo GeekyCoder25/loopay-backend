@@ -25,7 +25,6 @@ const morgan = require('morgan');
 const {unsubscribeEmailAlerts} = require('./controllers/emailAlertController');
 require('colors');
 dotEnv.config();
-const update = require('./models/test');
 
 // eslint-disable-next-line no-undef
 const PORT = process.env.PORT;
@@ -61,8 +60,6 @@ mongoose
 	.connect(dbURI, {
 		useNewUrlParser: true,
 		useUnifiedTopology: true,
-		// useCreateIndex: true,
-		// useFindAndModify: false,
 	})
 	.then(mongo => {
 		console.log(`mongodb running on ${mongo.connection.host.rainbow.bold}`);

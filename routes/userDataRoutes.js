@@ -142,10 +142,9 @@ router
 	.route('/transfer/international')
 	.post(accountStatus, schedulePayment, initiateTransferToInternational);
 router.route('/transaction').get(getTransactions);
-router.route('/transferrecipient').get(getTransactions);
 router.route('/banks').get(listBanks);
-router.route('/savedbanks').get(getRecipients).post(postRecipient);
-router.delete('/savedBanks/:id', deleteRecipient);
+router.route('/saved/bank').get(getRecipients).post(postRecipient);
+router.delete('/saved/bank/:id', deleteRecipient);
 router.route('/check-recipient').post(checkRecipient);
 router.route('/airtime/operators').get(airtimeAPIToken, getOperators);
 router.route('/get-network').get(airtimeAPIToken, getNetwork);

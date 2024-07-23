@@ -117,7 +117,7 @@ const initiateTransfer = async (req, res) => {
 						senderPhoto,
 						amount,
 						id,
-						reason,
+						reason = 'Sent from loopay',
 						currency,
 						metadata,
 						slug,
@@ -267,7 +267,7 @@ const initiateTransferToLoopay = async (req, res) => {
 			amount,
 			currency,
 			id,
-			description,
+			description = 'Sent from loopay',
 			metadata,
 		} = req.body;
 
@@ -464,7 +464,7 @@ const initiateTransferToInternational = async (req, res) => {
 	try {
 		const {
 			amount,
-			description = '',
+			description = 'Sent from loopay',
 			id,
 			receiverAccountNo,
 			receiverBank,
@@ -820,7 +820,7 @@ const sendReceipt = async receiptData => {
 				<main style="max-width: 800px; margin-top: 50px; padding: 20px;">
 					<h1 style="text-transform: capitalize">
 						${transactionType} Transaction Alert -
-						[₦${Number(amount).toLocaleString()}]
+						[${currencySymbol}${Number(amount).toLocaleString()}]
 						<!-- <span style="display: none">${reference}</span> -->
 					</h1>
 					<img

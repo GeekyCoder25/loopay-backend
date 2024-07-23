@@ -2,6 +2,9 @@ const WebhookModel = require('../models/webhook');
 const TransactionModel = require('../models/transaction');
 const UserDataModel = require('../models/userData');
 const LocalWallet = require('../models/wallet');
+const DollarWallet = require('../models/walletDollar');
+const EuroWallet = require('../models/walletEuro');
+const PoundWallet = require('../models/walletPound');
 const {addingDecimal} = require('../utils/addingDecimal');
 const Notification = require('../models/notification');
 const jwt = require('jsonwebtoken');
@@ -49,9 +52,32 @@ const webhookHandler = async (req, res) => {
 						narration,
 					} = event.data.authorization;
 
-					const {id, amount, customer} = event.data;
+					const {id, amount, customer, currency} = event.data;
 					const {email, phone} = customer;
-					const wallet = await LocalWallet.findOne({email});
+					const selectWallet = currency => {
+						switch (currency) {
+							case 'naira':
+								return LocalWallet;
+							case 'NGN':
+								return LocalWallet;
+							case 'dollar':
+								return DollarWallet;
+							case 'USD':
+								return DollarWallet;
+							case 'EUR':
+								return EuroWallet;
+							case 'euro':
+								return EuroWallet;
+							case 'pound':
+								return PoundWallet;
+							case 'GBP':
+								return PoundWallet;
+							default:
+								return LocalWallet;
+						}
+					};
+					const currencyWallet = selectWallet(currency);
+					const wallet = await currencyWallet.findOne({email});
 
 					const transaction = {
 						id,
@@ -71,7 +97,7 @@ const webhookHandler = async (req, res) => {
 						description: narration || '',
 						reference: `TR${id}`,
 						paystackReference: event.data.reference,
-						currency: event.data.currency,
+						currency,
 						metadata: event.data.metadata || null,
 						createdAt: event.data.paidAt,
 					};
@@ -137,10 +163,32 @@ const cardWebhook = async event => {
 		email: event.data.customer.email,
 	});
 	const {last4, bank} = event.data.authorization;
-	const {id, amount, customer} = event.data;
+	const {id, amount, customer, currency} = event.data;
 	const {email, phone, first_name, last_name} = customer;
-	const wallet = await LocalWallet.findOne({email});
-
+	const selectWallet = currency => {
+		switch (currency) {
+			case 'naira':
+				return LocalWallet;
+			case 'NGN':
+				return LocalWallet;
+			case 'dollar':
+				return DollarWallet;
+			case 'USD':
+				return DollarWallet;
+			case 'EUR':
+				return EuroWallet;
+			case 'euro':
+				return EuroWallet;
+			case 'pound':
+				return PoundWallet;
+			case 'GBP':
+				return PoundWallet;
+			default:
+				return LocalWallet;
+		}
+	};
+	const currencyWallet = selectWallet(currency);
+	const wallet = await currencyWallet.findOne({email});
 	const transaction = {
 		id,
 		status: event.data.status,
@@ -149,17 +197,17 @@ const cardWebhook = async event => {
 		method: 'card',
 		senderAccount: `Card ...${last4}`,
 		senderName: `Card ...${last4}`,
-		receiverAccount: wallet.accNo,
+		receiverAccount: wallet.accNo || wallet.loopayAccNo,
 		receiverName: userData.userProfile.fullName,
 		sourceBank: bank,
 		fromBalance: wallet.balance,
 		toBalance: wallet.balance + amount,
-		destinationBank: wallet.bank,
+		destinationBank: wallet.bank || 'Loopay Bank',
 		amount: addingDecimal(`${event.data.amount / 100}`),
 		description: 'Card deposit',
 		reference: `TR${id}`,
 		paystackReference: event.data.reference,
-		currency: event.data.currency,
+		currency,
 		metadata: event.data.metadata || null,
 		createdAt: event.data.paidAt,
 	};
@@ -215,11 +263,36 @@ const sendReceipt = async receiptData => {
 		sourceBank,
 		senderAccount,
 		receiverAccount,
-		description,
+		description = 'Sent from loopay',
 		reference,
+		currency,
 	} = transaction;
 
-	const currencySymbol = '₦';
+	const selectWallet = currency => {
+		switch (currency) {
+			case 'naira':
+				return LocalWallet;
+			case 'NGN':
+				return LocalWallet;
+			case 'dollar':
+				return DollarWallet;
+			case 'USD':
+				return DollarWallet;
+			case 'EUR':
+				return EuroWallet;
+			case 'euro':
+				return EuroWallet;
+			case 'pound':
+				return PoundWallet;
+			case 'GBP':
+				return PoundWallet;
+			default:
+				return LocalWallet;
+		}
+	};
+	const currencyWallet = selectWallet(currency);
+	const wallet = await currencyWallet.findOne({email});
+	const currencySymbol = wallet.currencyDetails.symbol;
 
 	const shareReceiptData = () => {
 		return [
@@ -279,7 +352,7 @@ const sendReceipt = async receiptData => {
 				<main style="max-width: 800px; margin-top: 50px; padding: 20px;">
 					<h1 style="text-transform: capitalize">
 						${transactionType} Transaction Alert -
-						[₦${Number(amount).toLocaleString()}]
+						[${currencySymbol}${Number(amount).toLocaleString()}]
 						<!-- <span style="display: none">${reference}</span> -->
 					</h1>
 					<img

@@ -1,5 +1,6 @@
 const BeneficiaryModel = require('../models/beneficiary');
 const UserDataModel = require('../models/userData');
+const WalletModel = require('../models/wallet');
 
 const getBeneficiaries = async (req, res) => {
 	try {
@@ -16,9 +17,12 @@ const getBeneficiaries = async (req, res) => {
 		await Promise.all(
 			beneficiaries.map(async beneficiary => {
 				const result = await UserDataModel.findOne({email: beneficiary.email});
+				const wallet = await WalletModel.findOne({email: beneficiary.email});
 				if (result) {
 					beneficiariesAfterPhotoCheck.push({
 						...beneficiary,
+						accNo: wallet.accNo,
+						phoneNumber: wallet.phoneNumber,
 						photo: result.photoURL || '',
 						tagName: result.tagName,
 						fullName: result.userProfile.fullName,
@@ -29,7 +33,6 @@ const getBeneficiaries = async (req, res) => {
 		);
 		beneficiaries = beneficiariesAfterPhotoCheck;
 		result.beneficiaries = beneficiariesAfterPhotoCheck;
-		await result.save();
 		const pluralS = beneficiaries.length > 1 ? 'ies' : 'y';
 		return res.status(200).json({
 			message: `${beneficiaries.length} beneficiar${pluralS} found`,
@@ -44,14 +47,7 @@ const postBeneficiary = async (req, res) => {
 	try {
 		const {email} = req.user;
 		let beneficiaries;
-		const requiredKeys = [
-			'fullName',
-			'phoneNumber',
-			'photo',
-			'tagName',
-			'email',
-			'accNo',
-		];
+		const requiredKeys = ['email'];
 		let unavailableKeys = [];
 		requiredKeys.forEach(key => {
 			if (!Object.keys(req.body).includes(key)) {
@@ -68,7 +64,7 @@ const postBeneficiary = async (req, res) => {
 			const previousBeneficiaries = beneficiariesExist.beneficiaries;
 			const previousBeneficiariesNotTheSameWithNewBeneficiary =
 				previousBeneficiaries.filter(
-					beneficiary => beneficiary.tagName !== req.body.tagName
+					beneficiary => beneficiary.email !== req.body.email
 				);
 			beneficiaries = [
 				req.body,
@@ -83,7 +79,10 @@ const postBeneficiary = async (req, res) => {
 				}
 			);
 		} else {
-			await BeneficiaryModel.create({email, beneficiaries: [req.body]});
+			await BeneficiaryModel.create({
+				email,
+				beneficiaries: [{email: req.body.email}],
+			});
 		}
 		return res.status(200).json({
 			message: 'Beneficiary added successfully',
@@ -100,10 +99,12 @@ const deleteBeneficiary = async (req, res) => {
 		const beneficiariesExist = await BeneficiaryModel.findOne({email});
 		let beneficiaries;
 		let previousBeneficiaries;
+		previousBeneficiaries = beneficiariesExist.beneficiaries;
+		const result = await UserDataModel.findOne({tagName: req.params.tagName});
 		if (beneficiariesExist) {
-			previousBeneficiaries = beneficiariesExist.beneficiaries;
+			if (!result) throw new Error('No beneficiary found with this tag name');
 			const filteredBeneficiaries = previousBeneficiaries.filter(
-				beneficiary => beneficiary.tagName !== req.params.tagName
+				beneficiary => beneficiary.email !== result.email
 			);
 			beneficiaries = filteredBeneficiaries;
 			await BeneficiaryModel.findOneAndUpdate(
@@ -118,7 +119,7 @@ const deleteBeneficiary = async (req, res) => {
 			throw new Error('No beneficiary to delete');
 		}
 		const deletedBeneficiary = previousBeneficiaries.find(
-			beneficiary => beneficiary.tagName === req.params.tagName
+			beneficiary => beneficiary.email === result.email
 		);
 		return res.status(200).json(deletedBeneficiary);
 	} catch (err) {

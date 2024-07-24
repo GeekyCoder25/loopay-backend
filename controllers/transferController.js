@@ -146,7 +146,7 @@ const initiateTransfer = async (req, res) => {
 						destinationBank: bankName,
 						destinationBankSlug: slug,
 						amount,
-						description: reason,
+						description: reason || 'Sent from loopay',
 						reference: response.data.data.reference,
 						transferCode: response.data.data.transfer_code,
 						currency,
@@ -267,7 +267,7 @@ const initiateTransferToLoopay = async (req, res) => {
 			amount,
 			currency,
 			id,
-			description = 'Sent from loopay',
+			description,
 			metadata,
 		} = req.body;
 
@@ -352,7 +352,7 @@ const initiateTransferToLoopay = async (req, res) => {
 			sourceBank: 'Loopay',
 			destinationBank: 'Loopay',
 			amount,
-			description,
+			description: description || 'Sent from loopay',
 			reference: `TR${id}`,
 			currency,
 			metadata: metadata || null,
@@ -558,7 +558,7 @@ const initiateTransferToInternational = async (req, res) => {
 			sourceBank: 'Loopay',
 			destinationBank: receiverBank,
 			amount,
-			description,
+			description: description || 'Sent from loopay',
 			reference: `TR${id}`,
 			currency: sendFromCurrency,
 		});
@@ -770,7 +770,11 @@ const sendReceipt = async receiptData => {
 				value: transactionType === 'credit' ? sourceBank : destinationBank,
 			},
 			{key: 'Reference ID', value: reference},
-			{key: 'Narration', value: description, noTransform: true},
+			{
+				key: 'Narration',
+				value: description || 'Sent from loopay',
+				noTransform: true,
+			},
 			{key: 'Status', value: status},
 		];
 	};

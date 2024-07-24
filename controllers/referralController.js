@@ -33,7 +33,6 @@ const getReferrals = async (req, res) => {
 			})
 		);
 		referral.referrals = referralsAfterupdateCheck;
-		await referral.save();
 		referral.balance = referral.balance / 100;
 		res.status(200).json(referral);
 	} catch (err) {
@@ -55,7 +54,7 @@ const postReferral = async (req, res, {referrerEmail, refereeEmail}) => {
 		else if (referralEmail === email) {
 			throw new Error("You can't refer yourself");
 		} else if (!referralUser) {
-			throw new Error('not a new user');
+			// throw new Error('not a new user');
 		}
 
 		if (referralsExists) {
@@ -93,12 +92,6 @@ const postReferral = async (req, res, {referrerEmail, refereeEmail}) => {
 		} else {
 			const bodyData = {
 				email: referralUserData.email,
-				fullName: referralUserData.userProfile.fullName,
-				phoneNumber: referralUserData.userProfile.phoneNumber,
-				photo: referralUserData.photoURL || '',
-				tagName: referralUserData.tagName,
-				verified:
-					referralUserData.verificationStatus === 'verified' ? true : false,
 			};
 			await ReferralModel.create({
 				email,

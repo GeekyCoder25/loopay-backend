@@ -43,10 +43,27 @@ const getAllAdminInfo = async (req, res) => {
 					},
 				},
 				{
+					$addFields: {
+						amountDouble: {
+							$convert: {
+								input: '$amount',
+								to: 'double',
+								onError: null, // Set to null if conversion fails
+								onNull: null, // Set to null if the value is already null
+							},
+						},
+					},
+				},
+				{
+					$match: {
+						amountDouble: {$ne: null}, // Filter out documents where amountDouble is null
+					},
+				},
+				{
 					$group: {
 						_id: null,
 						[currency]: {
-							$sum: {$toDouble: '$amount'}, // Assuming the amount field is stored as a string, convert it to a number
+							$sum: '$amountDouble',
 						},
 					},
 				},

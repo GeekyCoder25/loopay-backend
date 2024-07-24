@@ -20,25 +20,25 @@ const ReferralSchema = new Schema(
 					required: [true, 'Please input your email address'],
 					validate: [isEmail, 'Invalid email address'],
 				},
-				fullName: {
-					type: String,
-					required: [true, "Please provide the user's name"],
-				},
-				phoneNumber: {
-					type: String,
-					required: [true, "Please provide the user's phone Number"],
-					unique: true,
-				},
-				photo: {
-					type: String,
-					unique: true,
-				},
-				tagName: {
-					type: String,
-					required: [true, "Please provide user loopay's tag name"],
-					unique: true,
-				},
-				verified: Boolean,
+				// fullName: {
+				// 	type: String,
+				// 	required: [true, "Please provide the user's name"],
+				// },
+				// phoneNumber: {
+				// 	type: String,
+				// 	required: [true, "Please provide the user's phone Number"],
+				// 	unique: true,
+				// },
+				// photo: {
+				// 	type: String,
+				// 	unique: true,
+				// },
+				// tagName: {
+				// 	type: String,
+				// 	required: [true, "Please provide user loopay's tag name"],
+				// 	unique: true,
+				// },
+				// verified: Boolean,
 			},
 		},
 	},

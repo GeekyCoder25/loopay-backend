@@ -17,11 +17,14 @@ const addMoneyCard = async (req, res) => {
 			'https://api.paystack.co/transaction/initialize',
 			{
 				email: req.user.email,
-				amount: req.body.amount * 100,
+				amount: Math.ceil(req.body.amount * 100),
 				callback_url: `${fullUrl}/card-success.html`,
 				channels: ['card'],
 				currency: req.query?.currency || '',
-				metadata: {cancel_action: `${fullUrl}/webview-cancel.html`},
+				metadata: {
+					cancel_action: `${fullUrl}/webview-cancel.html`,
+					fee: req.body.fee * 100,
+				},
 			},
 			config
 		);

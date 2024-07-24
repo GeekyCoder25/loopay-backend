@@ -163,8 +163,10 @@ const cardWebhook = async event => {
 		email: event.data.customer.email,
 	});
 	const {last4, bank} = event.data.authorization;
-	const {id, amount, customer, currency} = event.data;
+	const {id, amount, customer, currency, metadata} = event.data;
 	const {email, phone, first_name, last_name} = customer;
+	const amountMinusFee = amount - Number(metadata.fee);
+
 	const selectWallet = currency => {
 		switch (currency) {
 			case 'naira':
@@ -201,9 +203,9 @@ const cardWebhook = async event => {
 		receiverName: userData.userProfile.fullName,
 		sourceBank: bank,
 		fromBalance: wallet.balance,
-		toBalance: wallet.balance + amount,
+		toBalance: wallet.balance + amountMinusFee,
 		destinationBank: wallet.bank || 'Loopay Bank',
-		amount: addingDecimal(`${event.data.amount / 100}`),
+		amount: addingDecimal(`${amountMinusFee / 100}`),
 		description: 'Card deposit',
 		reference: `TR${id}`,
 		paystackReference: event.data.reference,
@@ -228,10 +230,12 @@ const cardWebhook = async event => {
 			type: 'transfer',
 			header: 'Credit transaction',
 			message: `${
-				event.data.currency + addingDecimal((amount / 100).toLocaleString())
+				event.data.currency +
+				addingDecimal((amountMinusFee / 100).toLocaleString())
 			} has been deposited to your account via card ...${last4}`,
 			adminMessage: `${first_name} ${last_name} (${email}) deposited ${
-				event.data.currency + addingDecimal((amount / 100).toLocaleString())
+				event.data.currency +
+				addingDecimal((amountMinusFee / 100).toLocaleString())
 			} to account using card ...${last4}`,
 			status: 'unread',
 			photo: '',
@@ -246,7 +250,7 @@ const cardWebhook = async event => {
 				transaction,
 			});
 		}
-		wallet.balance += amount;
+		wallet.balance += amountMinusFee;
 		await wallet.save();
 	}
 	await WebhookModel.create(event);

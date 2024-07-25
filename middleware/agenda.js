@@ -95,7 +95,7 @@ const initiateTransferToLoopay = async (_id, transactionData, user) => {
 			amount,
 			currency,
 			id,
-			description = 'Sent from loopay',
+			description = 'Sent from Loopay',
 			metadata,
 		} = transactionData;
 
@@ -266,7 +266,7 @@ const initiateTransferToOthers = async (_id, transactionData, user) => {
 					senderPhoto,
 					amount,
 					id,
-					reason = 'Sent from loopay',
+					reason = 'Sent from Loopay',
 					currency,
 					metadata,
 					slug,

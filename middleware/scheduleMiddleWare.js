@@ -21,7 +21,7 @@ const handleSchedule = async req => {
 			title,
 			start,
 			end,
-			description = 'Sent from loopay',
+			description = 'Sent from Loopay',
 		} = scheduleData;
 
 		const {period} = periodObject;

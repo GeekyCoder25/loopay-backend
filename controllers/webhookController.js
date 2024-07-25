@@ -267,7 +267,7 @@ const sendReceipt = async receiptData => {
 		sourceBank,
 		senderAccount,
 		receiverAccount,
-		description = 'Sent from loopay',
+		description,
 		reference,
 		currency,
 	} = transaction;

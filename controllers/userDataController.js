@@ -51,11 +51,14 @@ const getUserData = async (req, res) => {
 			await userData.save();
 		}
 
-		const result = Object.assign(userData, {
+		const result = {
+			...userData.toObject(),
 			sessionTime: req.sessionTime,
-			pin: userData.pin ? true : false,
+			pin: !!userData.pin,
 			popUps,
-		});
+		};
+		result.pin = !!result.pin;
+		console.log(result);
 		res.status(200).json(result);
 	} catch (err) {
 		console.log(err.message);
@@ -86,9 +89,7 @@ const putUserData = async (req, res) => {
 				runValidators: true,
 			}
 		).select(excludedFieldsInArray);
-		const updateData = Object.assign(result, {
-			pin: result.pin ? true : false,
-		});
+		const updateData = {...result.toObject(), pin: !!result.pin};
 		return res.status(200).json({...req.body, updateData});
 	} catch (err) {
 		console.log(err.message);

@@ -1207,12 +1207,12 @@ const declineProof = async (req, res) => {
 			type: 'proof',
 			header: 'Proof declined',
 			message: `Your payment proof of ${
-				currency + addingDecimal(Number(amount).toLocaleString())
+				currency + addingDecimal(Number(amount))
 			} has been declined`,
 			adminMessage: `${req.user.firstName} ${
 				req.user.lastName
 			} declined #${tagName} proof of ${
-				currency + addingDecimal(Number(amount).toLocaleString())
+				currency + addingDecimal(Number(amount))
 			}`,
 			status: 'unread',
 			photo: user.photoURL,

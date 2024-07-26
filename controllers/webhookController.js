@@ -11,6 +11,9 @@ const jwt = require('jsonwebtoken');
 const {sendMail} = require('../utils/sendEmail');
 const crypto = require('crypto');
 const {default: axios} = require('axios');
+const pushNotification = require('../models/pushNotification');
+const {default: Expo} = require('expo-server-sdk');
+const sendPushNotification = require('../utils/pushNotification');
 
 const webhookHandler = async (req, res) => {
 	try {
@@ -45,14 +48,14 @@ const webhookHandler = async (req, res) => {
 					const {
 						sender_bank_account_number,
 						account_name,
-						sender_name,
 						sender_bank,
 						receiver_bank_account_number,
 						receiver_bank,
 						narration,
 					} = event.data.authorization;
 
-					const {id, amount, customer, currency} = event.data;
+					const {id, amount, customer, currency, reference, metadata, paidAt} =
+						event.data;
 					const {email, phone} = customer;
 					const selectWallet = currency => {
 						switch (currency) {
@@ -86,20 +89,20 @@ const webhookHandler = async (req, res) => {
 						transactionType: 'credit',
 						method: 'inter',
 						senderAccount: sender_bank_account_number,
-						senderName: account_name || sender_name || 'An external user',
+						senderName: account_name || 'An external user',
 						receiverAccount: receiver_bank_account_number,
 						receiverName: userData.userProfile.fullName,
 						sourceBank: sender_bank || 'External bank',
 						fromBalance: wallet.balance,
 						toBalance: wallet.balance + amount,
 						destinationBank: receiver_bank,
-						amount: addingDecimal(`${event.data.amount / 100}`),
+						amount: amount / 100,
 						description: narration || '',
 						reference: `TR${id}`,
-						paystackReference: event.data.reference,
+						paystackReference: reference,
 						currency,
-						metadata: event.data.metadata || null,
-						createdAt: event.data.paidAt,
+						metadata: metadata || null,
+						createdAt: paidAt,
 					};
 
 					const transactionsExists = await TransactionModel.findOne({id});
@@ -117,17 +120,11 @@ const webhookHandler = async (req, res) => {
 							phoneNumber: wallet.phoneNumber,
 							type: 'transfer',
 							header: 'Credit transaction',
-							message: `${
-								account_name || sender_name || 'An external user'
-							} has sent you ${
-								event.data.currency +
-								addingDecimal((amount / 100).toLocaleString())
+							message: `${account_name || 'An external user'} has sent you ${
+								event.data.currency + addingDecimal(amount / 100)
 							}`,
-							adminMessage: `${
-								account_name || sender_name || 'An external user'
-							} sent ${
-								event.data.currency +
-								addingDecimal((amount / 100).toLocaleString())
+							adminMessage: `${account_name || 'An external user'} sent ${
+								event.data.currency + addingDecimal(amount / 100)
 							} to ${userData.userProfile.fullName}`,
 							status: 'unread',
 							photo: '',
@@ -135,7 +132,6 @@ const webhookHandler = async (req, res) => {
 						};
 
 						await Notification.create(notification);
-
 						if (userData.isEmailAlertSubscribed) {
 							await sendReceipt({
 								email,
@@ -144,6 +140,25 @@ const webhookHandler = async (req, res) => {
 						}
 						wallet.balance += amount;
 						await wallet.save();
+						const expoPushToken = (
+							await pushNotification.findOne({
+								email: event.data.customer.email,
+							})
+						)?.token;
+						if (expoPushToken) {
+							if (Expo.isExpoPushToken(expoPushToken)) {
+								await sendPushNotification({
+									token: expoPushToken,
+									title: 'Incoming Credit Transaction',
+									message: `${account_name || 'An external user'} sent you ${
+										wallet.currencyDetails.symbol
+									}${addingDecimal(amount / 100)} to your ${
+										wallet.currencyDetails.code
+									} account`,
+									data: {notificationType: 'transaction', data: transaction},
+								});
+							}
+						}
 					}
 				}
 			}
@@ -230,12 +245,10 @@ const cardWebhook = async event => {
 			type: 'transfer',
 			header: 'Credit transaction',
 			message: `${
-				event.data.currency +
-				addingDecimal((amountMinusFee / 100).toLocaleString())
+				event.data.currency + addingDecimal(amountMinusFee / 100)
 			} has been deposited to your account via card ...${last4}`,
 			adminMessage: `${first_name} ${last_name} (${email}) deposited ${
-				event.data.currency +
-				addingDecimal((amountMinusFee / 100).toLocaleString())
+				event.data.currency + addingDecimal(amountMinusFee / 100)
 			} to account using card ...${last4}`,
 			status: 'unread',
 			photo: '',

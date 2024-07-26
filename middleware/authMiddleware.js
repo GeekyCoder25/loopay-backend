@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const SessionModel = require('../models/session');
+const PushNotificationModel = require('../models/pushNotification');
 // const {handlePhoneNumber} = require('../utils/checkPhoneNumber');
 
 const protect = async (req, res, next) => {
@@ -57,9 +58,9 @@ const protect = async (req, res, next) => {
 							runValidators: true,
 						}
 					);
-					// return res
-					// 	.status(401)
-					// 	.json('Your account has been logged in on another device');
+					return res
+						.status(401)
+						.json('Your account has been logged in on another device');
 				}
 			}
 		} catch (err) {

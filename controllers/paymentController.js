@@ -56,7 +56,7 @@ const postPaymentProof = async (req, res) => {
 					</div>
 					<p>
 						User ${req.user.email} just submitted a payment proof of
-						${body.currency}${addingDecimal(Number(body.amount).toLocaleString())},
+						${body.currency}${addingDecimal(Number(body.amount))},
 						<a href=${result.secure_url}>click here</a> to view image proof
 						<br />
 					</p>

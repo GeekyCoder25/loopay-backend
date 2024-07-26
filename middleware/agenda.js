@@ -168,11 +168,11 @@ const initiateTransferToLoopay = async (_id, transactionData, user) => {
 				phoneNumber,
 				type: 'transfer',
 				header: 'Schedule debit transaction',
-				message: `You sent ${
-					currency + addingDecimal(Number(amount).toLocaleString())
-				} ${user.firstName} ${user.lastName}`,
+				message: `You sent ${currency + addingDecimal(Number(amount))} ${
+					user.firstName
+				} ${user.lastName}`,
 				adminMessage: `${user.firstName} ${user.lastName} sent ${
-					currency + addingDecimal(Number(amount).toLocaleString())
+					currency + addingDecimal(Number(amount))
 				} to ${fullName}`,
 				status: 'unread',
 				photo: senderPhoto,
@@ -195,10 +195,10 @@ const initiateTransferToLoopay = async (_id, transactionData, user) => {
 				type: 'transfer',
 				header: 'Credit transaction',
 				message: `${user.firstName} ${user.lastName} has sent you ${
-					currency + addingDecimal(Number(amount).toLocaleString())
+					currency + addingDecimal(Number(amount))
 				}`,
 				adminMessage: `${user.firstName} ${user.lastName} sent ${
-					currency + addingDecimal(Number(amount).toLocaleString())
+					currency + addingDecimal(Number(amount))
 				} to ${fullName}`,
 				status: 'unread',
 				photo: senderPhoto,
@@ -303,10 +303,10 @@ const initiateTransferToOthers = async (_id, transactionData, user) => {
 					type: 'transfer',
 					header: 'Debit transaction',
 					message: `You sent ${
-						currency + addingDecimal(Number(amount).toLocaleString())
+						currency + addingDecimal(Number(amount))
 					} to ${name}`,
 					adminMessage: `${user.firstName} ${user.lastName} sent ${
-						currency + addingDecimal(Number(amount).toLocaleString())
+						currency + addingDecimal(Number(amount))
 					} to an external bank account ${name}`,
 					status: 'unread',
 					photo: senderPhoto,

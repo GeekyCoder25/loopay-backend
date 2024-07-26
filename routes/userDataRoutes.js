@@ -109,12 +109,14 @@ const {
 	getAirtimeBeneficiaries,
 	deleteAirtimeBeneficiary,
 } = require('../controllers/airtimeBeneficiaryController');
+const { postToken } = require('../controllers/pushNotifiactionController');
 
 const router = express.Router();
 const dynamicRouter = express.Router();
 
 router.route('/').get(getUserData).post(postUserData).put(putUserData);
 router.get('/role', getRole);
+router.post('/push-token', postToken);
 router.post('/profile', updateProfile);
 router.post('/set-pin', setTransactionPin);
 router.post('/check-pin', checkTransactionPin);

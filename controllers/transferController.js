@@ -162,10 +162,10 @@ const initiateTransfer = async (req, res) => {
 						type: 'transfer',
 						header: 'Debit transaction',
 						message: `You sent ${
-							currency + addingDecimal(Number(amount).toLocaleString())
+							currency + addingDecimal(Number(amount))
 						} to ${name}`,
 						adminMessage: `${req.user.firstName} ${req.user.lastName} sent ${
-							currency + addingDecimal(Number(amount).toLocaleString())
+							currency + addingDecimal(Number(amount))
 						} to an external bank account ${name}`,
 						status: 'unread',
 						photo: senderPhoto,
@@ -380,11 +380,11 @@ const initiateTransferToLoopay = async (req, res) => {
 				phoneNumber,
 				type: 'transfer',
 				header: 'Debit transaction',
-				message: `You sent ${
-					currency + addingDecimal(Number(amount).toLocaleString())
-				} ${req.user.firstName} ${req.user.lastName}`,
+				message: `You sent ${currency + addingDecimal(Number(amount))} ${
+					req.user.firstName
+				} ${req.user.lastName}`,
 				adminMessage: `${req.user.firstName} ${req.user.lastName} sent ${
-					currency + addingDecimal(Number(amount).toLocaleString())
+					currency + addingDecimal(Number(amount))
 				} to ${fullName}`,
 				status: 'unread',
 				photo: senderPhoto,
@@ -417,10 +417,10 @@ const initiateTransferToLoopay = async (req, res) => {
 				type: 'transfer',
 				header: 'Credit transaction',
 				message: `${req.user.firstName} ${req.user.lastName} has sent you ${
-					currency + addingDecimal(Number(amount).toLocaleString())
+					currency + addingDecimal(Number(amount))
 				}`,
 				adminMessage: `${req.user.firstName} ${req.user.lastName} sent ${
-					currency + addingDecimal(Number(amount).toLocaleString())
+					currency + addingDecimal(Number(amount))
 				} to ${fullName}`,
 				status: 'unread',
 				photo: senderPhoto,
@@ -736,25 +736,21 @@ const sendReceipt = async receiptData => {
 				{key: 'Swap to currency', value: swapTo},
 				{
 					key: 'Swap from amount',
-					value: `${swapFromSymbol}${addingDecimal(
-						Number(swapFromAmount).toLocaleString()
-					)}`,
+					value: `${swapFromSymbol}${addingDecimal(Number(swapFromAmount))}`,
 				},
 				{
 					key: 'Swap to amount',
-					value: `${swapToSymbol}${addingDecimal(
-						Number(swapToAmount).toLocaleString()
-					)}`,
+					value: `${swapToSymbol}${addingDecimal(Number(swapToAmount))}`,
 				},
 				{
 					key: 'Swap Rate',
 					value:
 						swapRate < 1
 							? `${swapToSymbol}1 = ${swapFromSymbol}${addingDecimal(
-									Number(1 / swapRate || 0).toLocaleString()
+									Number(1 / swapRate || 0)
 							  )}`
 							: `${swapFromSymbol}1 = ${swapToSymbol}
-              ${addingDecimal(Number(swapRate || 0).toLocaleString())}`,
+              ${addingDecimal(Number(swapRate || 0))}`,
 				},
 				{key: 'Reference Id', value: reference},
 				{key: 'Status', value: status},

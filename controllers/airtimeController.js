@@ -164,12 +164,12 @@ const buyAirtime = async (req, res) => {
 				type: 'airtime',
 				header: 'Airtime Purchase',
 				message: `You purchased NGN${addingDecimal(
-					Number(amount).toLocaleString()
+					Number(amount)
 				)} airtime to ${phoneNo}`,
 				adminMessage: `${req.user.firstName} ${
 					req.user.lastName
 				} purchased ${network} airtime recharge of NGN${addingDecimal(
-					Number(amount).toLocaleString()
+					Number(amount)
 				)} to ${phoneNo}`,
 				status: 'unread',
 				photo: network,
@@ -216,9 +216,9 @@ const buyAirtime = async (req, res) => {
 						/>
 					</div>
 					<p>
-						A customer trying to buy ₦${Number(
-							nairaAmount
-						).toLocaleString()} airtime recharge just experienced a <b>server error</b>  due to insufficient funds
+						A customer trying to buy ₦${addingDecimal(
+							Number(nairaAmount)
+						)} airtime recharge just experienced a <b>server error</b>  due to insufficient funds
 						in your Reloadly airtime API account dashboard, recharge now so you
 						customers can experience seamless experience while transacting.
 						<a href="https://dashboard.reloadly.com/">Click here</a> to go to API dashboard

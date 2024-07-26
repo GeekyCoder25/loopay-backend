@@ -80,25 +80,21 @@ const generateReceipt = async (req, res) => {
 					{key: 'Swap to currency', value: swapTo},
 					{
 						key: 'Swap from amount',
-						value: `${swapFromSymbol}${addingDecimal(
-							Number(swapFromAmount).toLocaleString()
-						)}`,
+						value: `${swapFromSymbol}${addingDecimal(Number(swapFromAmount))}`,
 					},
 					{
 						key: 'Swap to amount',
-						value: `${swapToSymbol}${addingDecimal(
-							Number(swapToAmount).toLocaleString()
-						)}`,
+						value: `${swapToSymbol}${addingDecimal(Number(swapToAmount))}`,
 					},
 					{
 						key: 'Swap Rate',
 						value:
 							swapRate < 1
 								? `${swapToSymbol}1 = ${swapFromSymbol}${addingDecimal(
-										Number(1 / swapRate || 0).toLocaleString()
+										Number(1 / swapRate || 0)
 								  )}`
 								: `${swapFromSymbol}1 = ${swapToSymbol}
-              ${addingDecimal(Number(swapRate || 0).toLocaleString())}`,
+              ${addingDecimal(Number(swapRate || 0))}`,
 					},
 					{key: 'Reference Id', value: reference},
 					{key: 'Status', value: status},

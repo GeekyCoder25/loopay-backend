@@ -53,10 +53,10 @@ const postFundRequest = async (req, res) => {
 			type: 'request',
 			header: 'Fund request',
 			message: `${userData.userProfile.fullName} has requested ${
-				currency + addingDecimal(amount.toLocaleString())
+				currency + addingDecimal(amount)
 			} from you`,
 			adminMessage: `${userData.userProfile.fullName} requested ${
-				currency + addingDecimal(amount.toLocaleString())
+				currency + addingDecimal(amount)
 			} from ${requesteeUserData.userProfile.fullName}`,
 			status: 'unread',
 			photo: userData.photoURL,
@@ -152,13 +152,11 @@ const confirmRequest = async (req, res) => {
 				message: `${
 					userData.userProfile.fullName
 				} has approved your request and sent you ${
-					currency + addingDecimal(amount.toLocaleString())
+					currency + addingDecimal(amount)
 				}`,
 				adminMessage: `${userData.userProfile.fullName} has approved ${
 					requesterUserData.userProfile.fullName
-				} fund request and sent ${
-					currency + addingDecimal(amount.toLocaleString())
-				}`,
+				} fund request and sent ${currency + addingDecimal(amount)}`,
 			});
 			wallet.balance -= amountInUnits;
 			requesterWallet.balance += toReceive * 100;
@@ -172,11 +170,11 @@ const confirmRequest = async (req, res) => {
 				...notification,
 				header: 'Request Denied',
 				message: `${userData.userProfile.fullName} has denied your request of ${
-					currency + addingDecimal(amount.toLocaleString())
+					currency + addingDecimal(amount)
 				}`,
 				adminMessage: `${userData.userProfile.fullName} has denied ${
 					requesterUserData.userProfile.fullName
-				} request for ${currency + addingDecimal(amount.toLocaleString())}`,
+				} request for ${currency + addingDecimal(amount)}`,
 			});
 			await request.deleteOne();
 			res.status(200).json('Request declined');
@@ -185,13 +183,13 @@ const confirmRequest = async (req, res) => {
 				...notification,
 				header: 'Request Denied',
 				message: `${userData.userProfile.fullName} has denied your request of ${
-					currency + addingDecimal(amount.toLocaleString())
+					currency + addingDecimal(amount)
 				}`,
 				adminMessage: `${
 					userData.userProfile.fullName
 				} has denied and blocked ${
 					requesterUserData.userProfile.fullName
-				} request for ${currency + addingDecimal(amount.toLocaleString())}`,
+				} request for ${currency + addingDecimal(amount)}`,
 			});
 			await request.deleteOne();
 			await UserData.updateOne(

@@ -34,7 +34,6 @@ const getWallet = async (req, res) => {
 		walletDollar.balance = convertToNaira(walletDollar.balance);
 		walletEuro.balance = convertToNaira(walletEuro.balance);
 		walletPound.balance = convertToNaira(walletPound.balance);
-
 		res.status(200).json({walletLocal, walletDollar, walletEuro, walletPound});
 	} catch (err) {
 		res.status(400).json(err.message);

@@ -1,13 +1,8 @@
-const addingDecimal = value => {
-	if (!value.includes('.')) {
-		return value + '.00';
-	} else if (value.split('.')[1].length === 0) {
-		return value + '00';
-	} else if (value.split('.')[1].length === 1) {
-		return value + '0';
-	}
-	return value;
-};
+const addingDecimal = new Intl.NumberFormat('en-US', {
+	style: 'decimal',
+	minimumFractionDigits: 2,
+	maximumFractionDigits: 2,
+}).format;
 
 module.exports = {
 	addingDecimal,

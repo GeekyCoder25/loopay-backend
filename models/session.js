@@ -23,6 +23,10 @@ const SessionSchema = new Schema(
 					type: String,
 					required: [true, 'Please provide the device name'],
 				},
+				deviceModel: {
+					type: String,
+					required: [true, 'Please provide the device model name'],
+				},
 				deviceID: {
 					type: String,
 					required: [true, 'Please provide the device unique ID'],

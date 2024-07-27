@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const SessionModel = require('../models/session');
-const PushNotificationModel = require('../models/pushNotification');
 // const {handlePhoneNumber} = require('../utils/checkPhoneNumber');
 
 const protect = async (req, res, next) => {

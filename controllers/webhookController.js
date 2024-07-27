@@ -31,6 +31,7 @@ const webhookHandler = async (req, res) => {
 
 		if (hash == req.headers['x-paystack-signature']) {
 			const event = req.body;
+			console.log(event);
 			if (event.event === 'charge.success') {
 				if (event?.data?.channel === 'card') {
 					const transactionRef = event?.data?.reference;
@@ -140,11 +141,8 @@ const webhookHandler = async (req, res) => {
 						}
 						wallet.balance += amount;
 						await wallet.save();
-						const expoPushToken = (
-							await pushNotification.findOne({
-								email: event.data.customer.email,
-							})
-						)?.token;
+						const expoPushToken = (await pushNotification.findOne({email}))
+							?.token;
 						if (expoPushToken) {
 							if (Expo.isExpoPushToken(expoPushToken)) {
 								await sendPushNotification({
@@ -265,6 +263,22 @@ const cardWebhook = async event => {
 		}
 		wallet.balance += amountMinusFee;
 		await wallet.save();
+
+		const expoPushToken = (await pushNotification.findOne({email}))?.token;
+		if (expoPushToken) {
+			if (Expo.isExpoPushToken(expoPushToken)) {
+				await sendPushNotification({
+					token: expoPushToken,
+					title: 'Incoming Credit Card Transaction',
+					message: `${wallet.currencyDetails.symbol}${addingDecimal(
+						amount / 100
+					)}has added to your ${
+						wallet.currencyDetails.code
+					} account via card ...${last4}`,
+					data: {notificationType: 'transaction', data: transaction},
+				});
+			}
+		}
 	}
 	await WebhookModel.create(event);
 };

@@ -19,7 +19,7 @@ const addMoneyCard = async (req, res) => {
 				email: req.user.email,
 				amount: Math.ceil(req.body.amount * 100),
 				callback_url: `${fullUrl}/card-success.html`,
-				channels: ['card'],
+				// channels: ['card'],
 				currency: req.query?.currency || '',
 				metadata: {
 					cancel_action: `${fullUrl}/webview-cancel.html`,

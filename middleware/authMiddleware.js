@@ -58,9 +58,7 @@ const protect = async (req, res, next) => {
 							runValidators: true,
 						}
 					);
-					return res
-						.status(401)
-						.json('Your account has been logged in on another device');
+					// return res.status(401).json('Session active on another device');
 				}
 			}
 		} catch (err) {

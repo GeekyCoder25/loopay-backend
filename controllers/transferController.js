@@ -13,6 +13,9 @@ const {sendMail} = require('../utils/sendEmail');
 const UserDataModel = require('../models/userData');
 const international = require('../models/international');
 const LimitModel = require('../models/limit');
+const pushNotification = require('../models/pushNotification');
+const {default: Expo} = require('expo-server-sdk');
+const sendPushNotification = require('../utils/pushNotification');
 
 const initiateTransfer = async (req, res) => {
 	try {
@@ -360,13 +363,17 @@ const initiateTransferToLoopay = async (req, res) => {
 		};
 		const senderTransactionExists = await TransactionModel.findOne({
 			id,
+			transactionType: 'debit',
 		});
 		const sendeeTransactionExists = await TransactionModel.findOne({
 			id,
+			transactionType: 'credit',
 		});
-		let savedTransaction = senderTransactionExists;
+		let senderTransaction = senderTransactionExists;
+		let sendeeTransaction = sendeeTransactionExists;
+
 		if (!senderTransactionExists) {
-			savedTransaction = await TransactionModel.create({
+			senderTransaction = await TransactionModel.create({
 				email: senderWallet.email,
 				phoneNumber: req.user.phoneNumber,
 				transactionType: 'debit',
@@ -380,7 +387,7 @@ const initiateTransferToLoopay = async (req, res) => {
 				phoneNumber,
 				type: 'transfer',
 				header: 'Debit transaction',
-				message: `You sent ${currency + addingDecimal(Number(amount))} ${
+				message: `You sent ${currency + addingDecimal(Number(amount))} to ${
 					req.user.firstName
 				} ${req.user.lastName}`,
 				adminMessage: `${req.user.firstName} ${req.user.lastName} sent ${
@@ -396,12 +403,12 @@ const initiateTransferToLoopay = async (req, res) => {
 				await sendReceipt({
 					allCurrencies: req.body.allCurrencies,
 					email: userData.email,
-					transaction: savedTransaction,
+					transaction: senderTransaction,
 				});
 			}
 		}
 		if (!sendeeTransactionExists) {
-			const sendeeTransaction = await TransactionModel.create({
+			sendeeTransaction = await TransactionModel.create({
 				email: sendeeWallet.email,
 				phoneNumber: sendeeWallet.phoneNumber,
 				transactionType: 'credit',
@@ -449,10 +456,47 @@ const initiateTransferToLoopay = async (req, res) => {
 		await sendeeWallet.save();
 		req.schedule && (await req.schedule(req));
 
+		const expoPushToken = (
+			await pushNotification.findOne({email: sendeeWallet.email})
+		)?.token;
+		if (expoPushToken) {
+			if (Expo.isExpoPushToken(expoPushToken)) {
+				await sendPushNotification({
+					token: expoPushToken,
+					title: 'Credit Transfer Successful',
+					message: `${userData.userProfile.fullName} sent you ${
+						sendeeWallet.currencyDetails.symbol
+					}${addingDecimal(amount)} to your ${
+						sendeeWallet.currencyDetails.code
+					} account`,
+					data: {notificationType: 'transaction', data: sendeeTransaction},
+				});
+			}
+		}
+
+		const expoPushToken2 = (
+			await pushNotification.findOne({email: senderWallet.email})
+		)?.token;
+
+		if (expoPushToken2) {
+			if (Expo.isExpoPushToken(expoPushToken2)) {
+				await sendPushNotification({
+					token: expoPushToken2,
+					title: 'Debit Transfer Successful',
+					message: `You sent ${
+						senderWallet.currencyDetails.symbol
+					}${addingDecimal(amount)} to ${req.user.firstName} ${
+						req.user.lastName
+					}`,
+					data: {notificationType: 'transaction', data: senderTransaction},
+				});
+			}
+		}
+
 		res.status(200).json({
 			message: 'Transfer Successful',
 			...req.body,
-			transaction: savedTransaction,
+			transaction: senderTransaction,
 		});
 	} catch (err) {
 		console.log(err.message);
@@ -486,7 +530,6 @@ const initiateTransferToInternational = async (req, res) => {
 			currency: sendFromCurrency,
 			createdAt: {$gt: twoMinutesAgo},
 		});
-
 		if (duplicateTransaction) {
 			const transactionTime = new Date(duplicateTransaction.createdAt);
 			if (transactionTime > twoMinutesAgo) {
@@ -668,6 +711,7 @@ const reverseTransaction = async (req, res) => {
 
 const sendReceipt = async receiptData => {
 	const {allCurrencies, email, transaction} = receiptData;
+	if (!allCurrencies) return;
 	const {
 		status,
 		receiverName,

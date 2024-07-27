@@ -10,6 +10,8 @@ const postToken = async (req, res) => {
 		} else if (!Expo.isExpoPushToken(token)) {
 			throw new Error('Invalid token provided');
 		}
+
+		await PushNotificationModel.findOneAndDelete({token});
 		await PushNotificationModel.findOneAndUpdate(
 			{email},
 			{

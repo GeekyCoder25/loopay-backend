@@ -49,6 +49,7 @@ const webhookHandler = async (req, res) => {
 					const {
 						sender_bank_account_number,
 						account_name,
+						sender_name,
 						sender_bank,
 						receiver_bank_account_number,
 						receiver_bank,
@@ -90,7 +91,7 @@ const webhookHandler = async (req, res) => {
 						transactionType: 'credit',
 						method: 'inter',
 						senderAccount: sender_bank_account_number,
-						senderName: account_name || 'An external user',
+						senderName: account_name || sender_name || 'An external user',
 						receiverAccount: receiver_bank_account_number,
 						receiverName: userData.userProfile.fullName,
 						sourceBank: sender_bank || 'External bank',
@@ -121,12 +122,16 @@ const webhookHandler = async (req, res) => {
 							phoneNumber: wallet.phoneNumber,
 							type: 'transfer',
 							header: 'Credit transaction',
-							message: `${account_name || 'An external user'} has sent you ${
+							message: `${
+								account_name || sender_name || 'An external user'
+							} has sent you ${
 								event.data.currency + addingDecimal(amount / 100)
 							}`,
-							adminMessage: `${account_name || 'An external user'} sent ${
-								event.data.currency + addingDecimal(amount / 100)
-							} to ${userData.userProfile.fullName}`,
+							adminMessage: `${
+								account_name || sender_name || 'An external user'
+							} sent ${event.data.currency + addingDecimal(amount / 100)} to ${
+								userData.userProfile.fullName
+							}`,
 							status: 'unread',
 							photo: '',
 							metadata: {...transaction, transactionType: 'credit'},
@@ -148,11 +153,11 @@ const webhookHandler = async (req, res) => {
 								await sendPushNotification({
 									token: expoPushToken,
 									title: 'Incoming Credit Transaction',
-									message: `${account_name || 'An external user'} sent you ${
-										wallet.currencyDetails.symbol
-									}${addingDecimal(amount / 100)} to your ${
-										wallet.currencyDetails.code
-									} account`,
+									message: `${
+										account_name || sender_name || 'An external user'
+									} sent you ${wallet.currencyDetails.symbol}${addingDecimal(
+										amount / 100
+									)} to your ${wallet.currencyDetails.code} account`,
 									data: {notificationType: 'transaction', data: transaction},
 								});
 							}
@@ -218,7 +223,7 @@ const cardWebhook = async event => {
 		fromBalance: wallet.balance,
 		toBalance: wallet.balance + amountMinusFee,
 		destinationBank: wallet.bank || 'Loopay Bank',
-		amount: addingDecimal(`${amountMinusFee / 100}`),
+		amount: amountMinusFee / 100,
 		description: 'Card deposit',
 		reference: `TR${id}`,
 		paystackReference: event.data.reference,
@@ -271,8 +276,8 @@ const cardWebhook = async event => {
 					token: expoPushToken,
 					title: 'Incoming Credit Card Transaction',
 					message: `${wallet.currencyDetails.symbol}${addingDecimal(
-						amount / 100
-					)}has added to your ${
+						amountMinusFee / 100
+					)} has been added to your ${
 						wallet.currencyDetails.code
 					} account via card ...${last4}`,
 					data: {notificationType: 'transaction', data: transaction},
@@ -516,7 +521,141 @@ module.exports = {
 	webhookHandler,
 };
 
-const webhookSample = {
+const webhookLiveSample = {
+	event: 'charge.success',
+	data: {
+		id: 4018390851,
+		domain: 'live',
+		status: 'success',
+		reference: '100004240727031605117242819003',
+		amount: 10000,
+		message: null,
+		gateway_response: 'Approved',
+		paid_at: '2024-07-27T03:16:45.000Z',
+		created_at: '2024-07-27T03:16:45.000Z',
+		channel: 'dedicated_nuban',
+		currency: 'NGN',
+		ip_address: null,
+		metadata: {
+			receiver_account_number: '9300691729',
+			receiver_bank: 'Wema Bank',
+			custom_fields: [Array],
+		},
+		fees_breakdown: {amount: '100', formula: null, type: 'paystack'},
+		log: null,
+		fees: 100,
+		fees_split: null,
+		authorization: {
+			authorization_code: 'AUTH_ycajymqsg7',
+			bin: '907XXX',
+			last4: 'X599',
+			exp_month: '06',
+			exp_year: '2024',
+			channel: 'dedicated_nuban',
+			card_type: 'transfer',
+			bank: 'OPay Digital Services Limited (OPay)',
+			country_code: 'NG',
+			brand: 'Managed Account',
+			reusable: false,
+			signature: null,
+			account_name: null,
+			sender_country: 'NG',
+			sender_bank: 'OPay Digital Services Limited (OPay)',
+			sender_bank_account_number: 'XXXXXX2599',
+			sender_name: 'TOYIB ADEOLA LAWAL',
+			narration: '09073002599/9300691729/TRILUXYWAYSLI/L',
+			receiver_bank_account_number: '9300691729',
+			receiver_bank: 'Wema Bank',
+		},
+		customer: {
+			id: 163472468,
+			first_name: 'Toyyib',
+			last_name: 'Lawal',
+			email: 'toyibe233@gmail.com',
+			customer_code: 'CUS_qyxn4dkoa2iyuo9',
+			phone: '+2349030582706',
+			metadata: {},
+			risk_action: 'default',
+			international_format_phone: '+2349030582706',
+		},
+		plan: {},
+		subaccount: {},
+		split: {},
+		order_id: null,
+		paidAt: '2024-07-27T03:16:45.000Z',
+		requested_amount: 10000,
+		pos_transaction_data: null,
+		source: null,
+	},
+};
+
+const webhookTestSample = {
+	event: 'charge.success',
+	data: {
+		id: 4018394236,
+		domain: 'test',
+		status: 'success',
+		reference: '17220504894941q3e25clz3kedna',
+		amount: 20000,
+		message: null,
+		gateway_response: 'Approved',
+		paid_at: '2024-07-27T03:21:29.000Z',
+		created_at: '2024-07-27T03:21:29.000Z',
+		channel: 'dedicated_nuban',
+		currency: 'NGN',
+		ip_address: null,
+		metadata: {
+			receiver_account_number: '1238073915',
+			receiver_bank: 'Test Bank',
+			custom_fields: [Array],
+		},
+		fees_breakdown: null,
+		log: null,
+		fees: 200,
+		fees_split: null,
+		authorization: {
+			authorization_code: 'AUTH_ahqod536ra',
+			bin: '008XXX',
+			last4: 'X553',
+			exp_month: '06',
+			exp_year: '2024',
+			channel: 'dedicated_nuban',
+			card_type: 'transfer',
+			bank: null,
+			country_code: 'NG',
+			brand: 'Managed Account',
+			reusable: false,
+			signature: null,
+			account_name: null,
+			sender_country: 'NG',
+			sender_bank: null,
+			sender_bank_account_number: 'XXXXXX4553',
+			receiver_bank_account_number: '1238073915',
+			receiver_bank: 'Test Bank',
+		},
+		customer: {
+			id: 132987957,
+			first_name: 'John',
+			last_name: 'Doe',
+			email: 'toyibe233@gmail.com',
+			customer_code: 'CUS_2y2mxrldxxp8tkk',
+			phone: '9030582706',
+			metadata: [Object],
+			risk_action: 'default',
+			international_format_phone: '+9030582706',
+		},
+		plan: {},
+		subaccount: {},
+		split: {},
+		order_id: null,
+		paidAt: '2024-07-27T03:21:29.000Z',
+		requested_amount: 20000,
+		pos_transaction_data: null,
+		source: null,
+	},
+};
+
+const cardSample = {
 	event: 'charge.success',
 	data: {
 		id: 3019783140,

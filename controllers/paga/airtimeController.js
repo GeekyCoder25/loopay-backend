@@ -9,6 +9,9 @@ const DollarWallet = require('../../models/walletDollar');
 const EuroWallet = require('../../models/walletEuro');
 const PoundWallet = require('../../models/walletPound');
 const airtimeBeneficiary = require('../../models/airtimeBeneficiary');
+const pushNotification = require('../../models/pushNotification');
+const {default: Expo} = require('expo-server-sdk');
+const sendPushNotification = require('../../utils/pushNotification');
 // const PAGA_API_URL =
 // 	'https://beta.mypaga.com/paga-webservices/business-rest/secured';
 // const credentials = 'xT3*wEXcDRy7Ry5';
@@ -56,8 +59,8 @@ const PagaBuyAirtime = async (req, res) => {
 		const credentials = process.env.PAGA_CREDENTIALS;
 		const hashKey = process.env.PAGA_HASH_KEY;
 		const {email, phoneNumber} = req.user;
-		const {currency, id, amount, network, phoneNo, paymentCurrency} = req.body;
-
+		const {currency, id, network, phoneNo, paymentCurrency} = req.body;
+		let {amount} = req.body;
 		let nairaAmount = amount;
 		let rate;
 
@@ -129,6 +132,9 @@ const PagaBuyAirtime = async (req, res) => {
 			return response.data;
 		};
 		const apiData = await connectWithAPI();
+
+		amount = Math.ceil(amount);
+
 		if (apiData.transactionId) {
 			wallet.balance -= amount * 100;
 			await wallet.save();
@@ -154,15 +160,17 @@ const PagaBuyAirtime = async (req, res) => {
 				id,
 				phoneNumber,
 				type: 'airtime',
-				header: 'Airtime Purchase',
-				message: `You purchased NGN${addingDecimal(
-					Number(amount).toLocaleString()
-				)} airtime to ${phoneNo}`,
+				header: 'Airtime Purchase Successful',
+				message: `Your purchase of ${
+					wallet.currencyDetails.symbol
+				}${addingDecimal(
+					amount
+				)} airtime to ${phoneNo} has been processed successfully`,
 				adminMessage: `${req.user.firstName} ${
 					req.user.lastName
-				} purchased ${network} airtime recharge of NGN${addingDecimal(
-					Number(amount).toLocaleString()
-				)} to ${phoneNo}`,
+				} purchased ${network} airtime recharge of ${
+					wallet.currencyDetails.symbol
+				}${addingDecimal(amount)} to ${phoneNo}`,
 				status: 'unread',
 				photo: network,
 				metadata: {...transaction, network},
@@ -182,6 +190,22 @@ const PagaBuyAirtime = async (req, res) => {
 			);
 
 			req.schedule && (await req.schedule(req));
+
+			const expoPushToken = (await pushNotification.findOne({email}))?.token;
+			if (expoPushToken) {
+				if (Expo.isExpoPushToken(expoPushToken)) {
+					await sendPushNotification({
+						token: expoPushToken,
+						title: 'Airtime Purchase Successful',
+						message: `Your purchase of ${
+							wallet.currencyDetails.symbol
+						}${addingDecimal(
+							amount
+						)} airtime to ${phoneNo} has been processed successfully`,
+						data: {notificationType: 'transaction', data: transaction},
+					});
+				}
+			}
 			res.status(200).json({
 				status: 'success',
 				message: 'Airtime purchase successful',
@@ -208,9 +232,9 @@ const PagaBuyAirtime = async (req, res) => {
 						/>
 					</div>
 					<p>
-						A customer trying to buy ₦${Number(
+						A customer trying to buy ₦${addingDecimal(
 							nairaAmount
-						).toLocaleString()} airtime recharge just experienced a <b>server error</b>  due to insufficient funds
+						)} airtime recharge just experienced a <b>server error</b>  due to insufficient funds
 						in your Paga airtime API account dashboard, recharge now so you
 						customers can experience seamless experience while transacting.
 						<a href="https://www.mypaga.com/paga-business/">Click here</a> to go to API dashboard
@@ -312,8 +336,8 @@ const PagaBuyData = async (req, res) => {
 		const credentials = process.env.PAGA_CREDENTIALS;
 		const hashKey = process.env.PAGA_HASH_KEY;
 		const {email, phoneNumber} = req.user;
-		const {currency, id, amount, network, phoneNo, paymentCurrency} = req.body;
-
+		const {currency, id, network, phoneNo, paymentCurrency, plan} = req.body;
+		let {amount} = req.body;
 		let nairaAmount = amount;
 		let rate;
 
@@ -389,6 +413,7 @@ const PagaBuyData = async (req, res) => {
 			return response.data;
 		};
 		const apiData = await connectWithAPI();
+		amount = Math.ceil(amount);
 		if (apiData.transactionId) {
 			wallet.balance -= amount * 100;
 			await wallet.save();
@@ -414,15 +439,9 @@ const PagaBuyData = async (req, res) => {
 				id,
 				phoneNumber,
 				type: 'airtime',
-				header: 'Airtime Purchase',
-				message: `You purchased NGN${addingDecimal(
-					Number(amount).toLocaleString()
-				)} airtime to ${phoneNo}`,
-				adminMessage: `${req.user.firstName} ${
-					req.user.lastName
-				} purchased ${network} airtime recharge of NGN${addingDecimal(
-					Number(amount).toLocaleString()
-				)} to ${phoneNo}`,
+				header: 'Data Purchase Successful',
+				message: `Your purchase of ${plan.value} to ${phoneNo} was successful`,
+				adminMessage: `${req.user.firstName} ${req.user.lastName} purchased ${network} data plan of ${plan.value} to ${phoneNo}`,
 				status: 'unread',
 				photo: network,
 				metadata: {...transaction, network},
@@ -442,6 +461,17 @@ const PagaBuyData = async (req, res) => {
 			);
 
 			req.schedule && (await req.schedule(req));
+			const expoPushToken = (await pushNotification.findOne({email}))?.token;
+			if (expoPushToken) {
+				if (Expo.isExpoPushToken(expoPushToken)) {
+					await sendPushNotification({
+						token: expoPushToken,
+						title: 'Data Purchase Successful',
+						message: `Your purchase of ${plan.value} to ${phoneNo} was successful`,
+						data: {notificationType: 'transaction', data: transaction},
+					});
+				}
+			}
 			res.status(200).json({
 				status: 'success',
 				message: 'Airtime purchase successful',
@@ -468,9 +498,9 @@ const PagaBuyData = async (req, res) => {
 						/>
 					</div>
 					<p>
-						A customer trying to buy ₦${Number(
+						A customer trying to buy ₦${addingDecimal(
 							nairaAmount
-						).toLocaleString()} data recharge just experienced a <b>server error</b>  due to insufficient funds
+						)} data recharge just experienced a <b>server error</b>  due to insufficient funds
 						in your Paga data API account dashboard, recharge now so you
 						customers can experience seamless experience while transacting.
 						<a href="https://www.mypaga.com/paga-business/">Click here</a> to go to API dashboard

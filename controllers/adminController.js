@@ -18,6 +18,10 @@ const {addingDecimal} = require('../utils/addingDecimal');
 const ReportModel = require('../models/report');
 const PopUp = require('../models/popUp');
 const international = require('../models/international');
+const pushNotification = require('../models/pushNotification');
+const {default: Expo} = require('expo-server-sdk');
+const sendPushNotification = require('../utils/pushNotification');
+const selectWallet = require('../services/selectWallet');
 const cloudinary = require('cloudinary').v2;
 
 const getAllAdminInfo = async (req, res) => {
@@ -1129,47 +1133,27 @@ const approveProof = async (req, res) => {
 	try {
 		const {email, _id, tagName, amount, currency, type: method} = req.body;
 
-		const selectWallet = currency => {
-			switch (currency) {
-				case 'NGN':
-					return LocalWallet;
-				case 'USD':
-					return DollarWallet;
-				case 'EUR':
-					return EuroWallet;
-				case 'GBP':
-					return PoundWallet;
-				default:
-					return LocalWallet;
-			}
-		};
 		const currencyWallet = selectWallet(currency);
-
-		const senderWallet = await currencyWallet.findOne({
-			email: req.user.email,
-		});
-		const sendeeWallet = await currencyWallet.findOne({email});
+		const wallet = await currencyWallet.findOne({email});
 		await UserData.findOne({email});
-		if (sendeeWallet?.tagName !== tagName)
+		if (wallet?.tagName !== tagName)
 			throw new Error('Invalid Account Transfer');
 
 		const convertToKobo = () => amount * 100;
-		if (senderWallet.balance < convertToKobo())
-			throw new Error('Insufficient funds');
 
 		const data = await PaymentProof.findByIdAndRemove(_id);
 		const user = await UserData.findOne({email});
-		await Transaction.create({
-			email: sendeeWallet.email,
-			phoneNumber: sendeeWallet.phoneNumber,
+		const transaction = await Transaction.create({
+			email: wallet.email,
+			phoneNumber: wallet.phoneNumber,
 			transactionType: 'credit',
 			method,
 			id: _id,
 			status: 'success',
 			type: 'intra',
-			senderAccount: senderWallet.loopayAccNo,
+			senderAccount: null,
 			senderPhoto: '',
-			receiverAccount: sendeeWallet.loopayAccNo,
+			receiverAccount: wallet.loopayAccNo,
 			receiverName: user.userProfile.fullName,
 			receiverPhoto: user.photoURL || '',
 			sourceBank: 'Loopay',
@@ -1181,10 +1165,22 @@ const approveProof = async (req, res) => {
 			createdAt: new Date(),
 		});
 
-		senderWallet.balance -= convertToKobo();
-		sendeeWallet.balance += convertToKobo();
-		await senderWallet.save();
-		await sendeeWallet.save();
+		wallet.balance += convertToKobo();
+		await wallet.save();
+
+		const expoPushToken = (await pushNotification.findOne({email}))?.token;
+		if (expoPushToken) {
+			if (Expo.isExpoPushToken(expoPushToken)) {
+				await sendPushNotification({
+					token: expoPushToken,
+					title: 'Credit Transaction Successful',
+					message: `${
+						wallet.currencyDetails.symbol + addingDecimal(amount)
+					} has been deposited to you ${wallet.currencyCode} account`,
+					data: {notificationType: 'transaction', data: transaction},
+				});
+			}
+		}
 		res.status(200).json({
 			message: 'Transaction approved successfully',
 			data,
@@ -1200,6 +1196,9 @@ const declineProof = async (req, res) => {
 		const {id} = req.params;
 		const {amount, email, currency, tagName} = req.body;
 		const user = await UserData.findOne({email});
+		const currencyWallet = selectWallet(currency);
+		const wallet = await currencyWallet.findOne({email});
+
 		const notification = {
 			email,
 			id,
@@ -1207,18 +1206,30 @@ const declineProof = async (req, res) => {
 			type: 'proof',
 			header: 'Proof declined',
 			message: `Your payment proof of ${
-				currency + addingDecimal(Number(amount))
+				currency + addingDecimal(amount)
 			} has been declined`,
 			adminMessage: `${req.user.firstName} ${
 				req.user.lastName
-			} declined #${tagName} proof of ${
-				currency + addingDecimal(Number(amount))
-			}`,
+			} declined #${tagName} proof of ${currency + addingDecimal(amount)}`,
 			status: 'unread',
 			photo: user.photoURL,
 		};
-		const data = await PaymentProof.findByIdAndRemove({_id: id});
+		// const data = await PaymentProof.findByIdAndRemove({_id: id});
 		await Notification.create(notification);
+
+		const expoPushToken = (await pushNotification.findOne({email}))?.token;
+		if (expoPushToken) {
+			if (Expo.isExpoPushToken(expoPushToken)) {
+				await sendPushNotification({
+					token: expoPushToken,
+					title: 'Proof declined',
+					message: `Your payment proof of ${
+						wallet.currencyDetails.symbol + addingDecimal(amount)
+					} has been declined`,
+					data: {notificationType: 'notification', data: notification},
+				});
+			}
+		}
 		cloudinary.api.delete_resources(
 			`loopay/payment-proofs/${email}_${req.user._id}`,
 			{
@@ -1228,7 +1239,7 @@ const declineProof = async (req, res) => {
 		);
 		res.status(200).json({
 			message: 'Transaction declined successfully',
-			data,
+			// data,
 		});
 	} catch (err) {
 		console.log(err.message);

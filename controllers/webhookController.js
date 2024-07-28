@@ -1,10 +1,6 @@
 const WebhookModel = require('../models/webhook');
 const TransactionModel = require('../models/transaction');
 const UserDataModel = require('../models/userData');
-const LocalWallet = require('../models/wallet');
-const DollarWallet = require('../models/walletDollar');
-const EuroWallet = require('../models/walletEuro');
-const PoundWallet = require('../models/walletPound');
 const {addingDecimal} = require('../utils/addingDecimal');
 const Notification = require('../models/notification');
 const jwt = require('jsonwebtoken');
@@ -14,6 +10,7 @@ const {default: axios} = require('axios');
 const pushNotification = require('../models/pushNotification');
 const {default: Expo} = require('expo-server-sdk');
 const sendPushNotification = require('../utils/pushNotification');
+const selectWallet = require('../services/selectWallet');
 
 const webhookHandler = async (req, res) => {
 	try {
@@ -31,7 +28,6 @@ const webhookHandler = async (req, res) => {
 
 		if (hash == req.headers['x-paystack-signature']) {
 			const event = req.body;
-			console.log(event);
 			if (event.event === 'charge.success') {
 				if (event?.data?.channel === 'card') {
 					const transactionRef = event?.data?.reference;
@@ -59,28 +55,7 @@ const webhookHandler = async (req, res) => {
 					const {id, amount, customer, currency, reference, metadata, paidAt} =
 						event.data;
 					const {email, phone} = customer;
-					const selectWallet = currency => {
-						switch (currency) {
-							case 'naira':
-								return LocalWallet;
-							case 'NGN':
-								return LocalWallet;
-							case 'dollar':
-								return DollarWallet;
-							case 'USD':
-								return DollarWallet;
-							case 'EUR':
-								return EuroWallet;
-							case 'euro':
-								return EuroWallet;
-							case 'pound':
-								return PoundWallet;
-							case 'GBP':
-								return PoundWallet;
-							default:
-								return LocalWallet;
-						}
-					};
+
 					const currencyWallet = selectWallet(currency);
 					const wallet = await currencyWallet.findOne({email});
 
@@ -185,28 +160,6 @@ const cardWebhook = async event => {
 	const {email, phone, first_name, last_name} = customer;
 	const amountMinusFee = amount - Number(metadata.fee);
 
-	const selectWallet = currency => {
-		switch (currency) {
-			case 'naira':
-				return LocalWallet;
-			case 'NGN':
-				return LocalWallet;
-			case 'dollar':
-				return DollarWallet;
-			case 'USD':
-				return DollarWallet;
-			case 'EUR':
-				return EuroWallet;
-			case 'euro':
-				return EuroWallet;
-			case 'pound':
-				return PoundWallet;
-			case 'GBP':
-				return PoundWallet;
-			default:
-				return LocalWallet;
-		}
-	};
 	const currencyWallet = selectWallet(currency);
 	const wallet = await currencyWallet.findOne({email});
 	const transaction = {
@@ -304,28 +257,6 @@ const sendReceipt = async receiptData => {
 		currency,
 	} = transaction;
 
-	const selectWallet = currency => {
-		switch (currency) {
-			case 'naira':
-				return LocalWallet;
-			case 'NGN':
-				return LocalWallet;
-			case 'dollar':
-				return DollarWallet;
-			case 'USD':
-				return DollarWallet;
-			case 'EUR':
-				return EuroWallet;
-			case 'euro':
-				return EuroWallet;
-			case 'pound':
-				return PoundWallet;
-			case 'GBP':
-				return PoundWallet;
-			default:
-				return LocalWallet;
-		}
-	};
 	const currencyWallet = selectWallet(currency);
 	const wallet = await currencyWallet.findOne({email});
 	const currencySymbol = wallet.currencyDetails.symbol;

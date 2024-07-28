@@ -8,6 +8,9 @@ const AirtimeTransaction = require('../models/transaction');
 const {default: axios} = require('axios');
 const {sendMail} = require('../utils/sendEmail');
 const airtimeBeneficiary = require('../models/airtimeBeneficiary');
+const pushNotification = require('../models/pushNotification');
+const sendPushNotification = require('../utils/pushNotification');
+const {default: Expo} = require('expo-server-sdk');
 
 const getOperators = async (req, res) => {
 	try {
@@ -162,15 +165,17 @@ const buyAirtime = async (req, res) => {
 				id,
 				phoneNumber,
 				type: 'airtime',
-				header: 'Airtime Purchase',
-				message: `You purchased NGN${addingDecimal(
-					Number(amount)
-				)} airtime to ${phoneNo}`,
+				header: 'Airtime Purchase Successful',
+				message: `Your purchase of ${
+					wallet.currencyDetails.symbol
+				}${addingDecimal(
+					amount
+				)} airtime to ${phoneNo} has been processed successfully`,
 				adminMessage: `${req.user.firstName} ${
 					req.user.lastName
-				} purchased ${network} airtime recharge of NGN${addingDecimal(
-					Number(amount)
-				)} to ${phoneNo}`,
+				} purchased ${network} airtime recharge of ${
+					wallet.currencyDetails.symbol
+				}${addingDecimal(amount)} to ${phoneNo}`,
 				status: 'unread',
 				photo: network,
 				metadata: {...transaction, network},
@@ -190,6 +195,23 @@ const buyAirtime = async (req, res) => {
 			);
 
 			req.schedule && (await req.schedule(req));
+
+			const expoPushToken = (await pushNotification.findOne({email}))?.token;
+			if (expoPushToken) {
+				if (Expo.isExpoPushToken(expoPushToken)) {
+					await sendPushNotification({
+						token: expoPushToken,
+						title: 'Airtime Purchase Successful',
+						message: `Your purchase of ${
+							wallet.currencyDetails.symbol
+						}${addingDecimal(
+							amount
+						)} airtime to ${phoneNo} has been processed successfully`,
+						data: {notificationType: 'transaction', data: transaction},
+					});
+				}
+			}
+
 			res.status(200).json({
 				status: 'success',
 				message: 'Airtime purchase successful',
@@ -390,7 +412,7 @@ const buyData = async (req, res) => {
 				id,
 				phoneNumber,
 				type: 'data',
-				header: 'Data Purchase',
+				header: 'Data Purchase Successful',
 				message: `Your purchase of ${plan.value} to ${phoneNo} was successful`,
 				adminMessage: `${req.user.firstName} ${req.user.lastName} purchased ${network} data plan of ${plan.value} to ${phoneNo}`,
 				status: 'unread',
@@ -411,6 +433,19 @@ const buyData = async (req, res) => {
 			);
 
 			req.schedule && (await req.schedule(req));
+
+			const expoPushToken = (await pushNotification.findOne({email}))?.token;
+			if (expoPushToken) {
+				if (Expo.isExpoPushToken(expoPushToken)) {
+					await sendPushNotification({
+						token: expoPushToken,
+						title: 'Data Purchase Successful',
+						message: `Your purchase of ${plan.value} to ${phoneNo} was successful`,
+						adminMessage: `${req.user.firstName} ${req.user.lastName} purchased ${network} data plan of ${plan.value} to ${phoneNo}`,
+						data: {notificationType: 'transaction', data: transaction},
+					});
+				}
+			}
 			res.status(200).json({
 				status: 'success',
 				message: 'Data purchase successful',

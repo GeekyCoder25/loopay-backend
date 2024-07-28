@@ -12,6 +12,12 @@ const addMoneyCard = async (req, res) => {
 				'Content-Type': 'application/json',
 			},
 		};
+		const channelArray = [];
+		if (req.query.ussd) {
+			channelArray.push('ussd');
+		} else if (!req.query.apple) {
+			channelArray.push('card');
+		}
 
 		const response = await axios.post(
 			'https://api.paystack.co/transaction/initialize',
@@ -19,7 +25,7 @@ const addMoneyCard = async (req, res) => {
 				email: req.user.email,
 				amount: Math.ceil(req.body.amount * 100),
 				callback_url: `${fullUrl}/card-success.html`,
-				// channels: ['card'],
+				channels: channelArray,
 				currency: req.query?.currency || '',
 				metadata: {
 					cancel_action: `${fullUrl}/webview-cancel.html`,

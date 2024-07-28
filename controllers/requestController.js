@@ -7,6 +7,10 @@ const PoundWallet = require('../models/walletPound');
 const TransactionModel = require('../models/transaction');
 const Notification = require('../models/notification');
 const {addingDecimal} = require('../utils/addingDecimal');
+const pushNotification = require('../models/pushNotification');
+const {default: Expo} = require('expo-server-sdk');
+const sendPushNotification = require('../utils/pushNotification');
+const selectWallet = require('../services/selectWallet');
 
 const getFundRequest = async (req, res) => {
 	try {
@@ -26,7 +30,8 @@ const postFundRequest = async (req, res) => {
 	const {amount, currency, description, fee, id, tagName} = req.body;
 	try {
 		const {email, phoneNumber} = req.user;
-		const wallet = await LocalWallet.findOne({email});
+		const currencyWallet = selectWallet(currency);
+		const wallet = await currencyWallet.findOne({email});
 		const userData = await UserData.findOne({email});
 		const requesteeUserData = await UserData.findOne({tagName});
 
@@ -51,18 +56,34 @@ const postFundRequest = async (req, res) => {
 			email: requesteeUserData.email,
 			phoneNumber,
 			type: 'request',
-			header: 'Fund request',
+			header: 'Incoming Fund request',
 			message: `${userData.userProfile.fullName} has requested ${
-				currency + addingDecimal(amount)
+				wallet.currencyDetails.symbol + addingDecimal(amount)
 			} from you`,
 			adminMessage: `${userData.userProfile.fullName} requested ${
-				currency + addingDecimal(amount)
+				wallet.currencyDetails.symbol + addingDecimal(amount)
 			} from ${requesteeUserData.userProfile.fullName}`,
 			status: 'unread',
 			photo: userData.photoURL,
 		};
 
-		await Notification.create(notification);
+		const savedNotification = await Notification.create(notification);
+		const expoPushToken = (
+			await pushNotification.findOne({email: requesteeUserData.email})
+		)?.token;
+		if (expoPushToken) {
+			if (Expo.isExpoPushToken(expoPushToken)) {
+				await sendPushNotification({
+					token: expoPushToken,
+					title: 'Incoming Fund request',
+					message: `${userData.userProfile.fullName} has requested ${
+						wallet.currencyDetails.symbol + addingDecimal(amount)
+					} from you`,
+					data: {notificationType: 'notification', data: savedNotification},
+				});
+			}
+		}
+
 		res.status(200).json('Request sent');
 	} catch (err) {
 		res.status(400).json(err.message);
@@ -93,7 +114,8 @@ const confirmRequest = async (req, res) => {
 
 		const request = await RequestModel.findById(_id);
 		const selectedWallet = selectWallet(currency);
-		const wallet = await selectedWallet.findOne({tagName: requesteeAccount});
+		const currencyWallet = selectWallet(currency);
+		const wallet = await currencyWallet.findOne({tagName: requesteeAccount});
 		const requesterWallet = await selectedWallet.findOne({
 			tagName: requesterAccount,
 		});
@@ -146,56 +168,109 @@ const confirmRequest = async (req, res) => {
 				transactionType: 'credit',
 				...transaction,
 			});
-			await Notification.create({
+			const savedNotification = await Notification.create({
 				...notification,
 				header: 'Request Approval',
 				message: `${
 					userData.userProfile.fullName
 				} has approved your request and sent you ${
-					currency + addingDecimal(amount)
+					wallet.currencyDetails.symbol + addingDecimal(amount)
 				}`,
 				adminMessage: `${userData.userProfile.fullName} has approved ${
 					requesterUserData.userProfile.fullName
-				} fund request and sent ${currency + addingDecimal(amount)}`,
+				} fund request and sent ${
+					wallet.currencyDetails.symbol + addingDecimal(amount)
+				}`,
 			});
 			wallet.balance -= amountInUnits;
 			requesterWallet.balance += toReceive * 100;
 			await wallet.save();
 			await requesterWallet.save();
 			await request.deleteOne();
+			const expoPushToken = (
+				await pushNotification.findOne({email: requesterWallet.email})
+			)?.token;
+			if (expoPushToken) {
+				if (Expo.isExpoPushToken(expoPushToken)) {
+					await sendPushNotification({
+						token: expoPushToken,
+						title: 'Request Fund Approval',
+						message: `${
+							userData.userProfile.fullName
+						} has approved your request and sent you ${
+							wallet.currencyDetails.symbol + addingDecimal(amount)
+						}`,
+						data: {notificationType: 'notification', data: savedNotification},
+					});
+				}
+			}
 
 			res.status(200).json('Request accepted successfully');
 		} else if (status === 'decline') {
-			await Notification.create({
+			const savedNotification = await Notification.create({
 				...notification,
-				header: 'Request Denied',
+				header: 'Request Fund Denied',
 				message: `${userData.userProfile.fullName} has denied your request of ${
-					currency + addingDecimal(amount)
+					wallet.currencyDetails.symbol + addingDecimal(amount)
 				}`,
 				adminMessage: `${userData.userProfile.fullName} has denied ${
 					requesterUserData.userProfile.fullName
-				} request for ${currency + addingDecimal(amount)}`,
+				} request for ${wallet.currencyDetails.symbol + addingDecimal(amount)}`,
 			});
 			await request.deleteOne();
+			const expoPushToken = (
+				await pushNotification.findOne({email: requesterWallet.email})
+			)?.token;
+			if (expoPushToken) {
+				if (Expo.isExpoPushToken(expoPushToken)) {
+					await sendPushNotification({
+						token: expoPushToken,
+						title: 'Request Fund Denied',
+						message: `${
+							userData.userProfile.fullName
+						} has denied your request of ${
+							wallet.currencyDetails.symbol + addingDecimal(amount)
+						}`,
+						data: {notificationType: 'notification', data: savedNotification},
+					});
+				}
+			}
 			res.status(200).json('Request declined');
 		} else if (status === 'block') {
-			await Notification.create({
+			const savedNotification = await Notification.create({
 				...notification,
-				header: 'Request Denied',
+				header: 'Request Fund Denied',
 				message: `${userData.userProfile.fullName} has denied your request of ${
-					currency + addingDecimal(amount)
+					wallet.currencyDetails.symbol + addingDecimal(amount)
 				}`,
 				adminMessage: `${
 					userData.userProfile.fullName
 				} has denied and blocked ${
 					requesterUserData.userProfile.fullName
-				} request for ${currency + addingDecimal(amount)}`,
+				} request for ${wallet.currencyDetails.symbol + addingDecimal(amount)}`,
 			});
 			await request.deleteOne();
 			await UserData.updateOne(
 				{email},
 				{$push: {blockedUsers: {$each: [requesterWallet.email], $position: 0}}}
 			);
+			const expoPushToken = (
+				await pushNotification.findOne({email: requesterWallet.email})
+			)?.token;
+			if (expoPushToken) {
+				if (Expo.isExpoPushToken(expoPushToken)) {
+					await sendPushNotification({
+						token: expoPushToken,
+						title: 'Request Fund Denied',
+						message: `${
+							userData.userProfile.fullName
+						} has denied your request of ${
+							wallet.currencyDetails.symbol + addingDecimal(amount)
+						}`,
+						data: {notificationType: 'notification', data: savedNotification},
+					});
+				}
+			}
 			res.status(200).json('User blocked');
 		}
 	} catch (err) {

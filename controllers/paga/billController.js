@@ -7,6 +7,9 @@ const PoundWallet = require('../../models/walletPound');
 const BillTransaction = require('../../models/transaction');
 const Notification = require('../../models/notification');
 const FeesModal = require('../../models/fees');
+const pushNotification = require('../../models/pushNotification');
+const sendPushNotification = require('../../utils/pushNotification');
+const {default: Expo} = require('expo-server-sdk');
 const uuid = require('uuid').v4;
 //? TEST
 
@@ -283,7 +286,9 @@ const PagaPayBill = async (req, res) => {
 			id,
 			phoneNumber,
 			type: 'bill',
-			header: `${query} purchase`,
+			header: `${
+				query[0].toUpperCase() + query.slice(1, query.length)
+			} Purchase Successful`,
 			message: `Your purchase of ${provider.name} to ${subscriberAccountNumber} was successful`,
 			adminMessage: `${req.user.firstName} ${req.user.lastName} purchased ${provider.name} to ${subscriberAccountNumber}`,
 			status: 'unread',
@@ -296,7 +301,9 @@ const PagaPayBill = async (req, res) => {
 			transactionId: referenceId,
 			phoneNumber,
 			type: 'fee',
-			header: `${query} purchase fee charge`,
+			header: `${
+				query[0].toUpperCase() + query.slice(1, query.length)
+			} purchase fee charge`,
 			message: `Your have been charged ${
 				wallet.currencyDetails.symbol + fee.toLocaleString()
 			} for the purchase fee of ${provider.name}`,
@@ -321,6 +328,20 @@ const PagaPayBill = async (req, res) => {
 
 		response.data.token = token;
 		req.schedule && (await req.schedule(req));
+
+		const expoPushToken = (await pushNotification.findOne({email}))?.token;
+		if (expoPushToken) {
+			if (Expo.isExpoPushToken(expoPushToken)) {
+				await sendPushNotification({
+					token: expoPushToken,
+					title: `${
+						query[0].toUpperCase() + query.slice(1, query.length)
+					} Purchase Successful`,
+					message: `Your purchase of ${provider.name} to ${subscriberAccountNumber} was successful`,
+					data: {notificationType: 'transaction', data: transaction},
+				});
+			}
+		}
 		return res
 			.status(200)
 			.json({...response.data, transaction: savedTransaction});

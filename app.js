@@ -92,6 +92,18 @@ app.use('/api/webhook', webhookHandler);
 app.get('/api/admin/restart', updateRoutes, (req, res) =>
 	res.status(200).json('Routes updated')
 );
+app.get(
+	'/.well-known/apple-developer-merchantid-domain-association',
+	(req, res) => {
+		res.sendFile(
+			path.join(
+				__dirname,
+				'public',
+				'apple-developer-merchantid-domain-association'
+			)
+		);
+	}
+);
 app.get('/api/network', (req, res) => {
 	console.log('network request');
 	res.send({network: true});

@@ -95,13 +95,17 @@ app.get('/api/admin/restart', updateRoutes, (req, res) =>
 app.get(
 	'/.well-known/apple-developer-merchantid-domain-association',
 	(req, res) => {
-		res.sendFile(
-			path.join(
-				__dirname,
-				'public',
-				'apple-developer-merchantid-domain-association'
-			)
+		const filePath = path.join(
+			__dirname,
+			'public',
+			'apple-developer-merchantid-domain-association'
 		);
+		res.setHeader('Content-Type', 'text/plain');
+		res.sendFile(filePath, err => {
+			if (err) {
+				res.status(404).send('File not found');
+			}
+		});
 	}
 );
 app.get('/api/network', (req, res) => {

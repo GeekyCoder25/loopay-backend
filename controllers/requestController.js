@@ -72,16 +72,14 @@ const postFundRequest = async (req, res) => {
 			await pushNotification.findOne({email: requesteeUserData.email})
 		)?.token;
 		if (expoPushToken) {
-			if (Expo.isExpoPushToken(expoPushToken)) {
-				await sendPushNotification({
-					token: expoPushToken,
-					title: 'Incoming Fund request',
-					message: `${userData.userProfile.fullName} has requested ${
-						wallet.currencyDetails.symbol + addingDecimal(amount)
-					} from you`,
-					data: {notificationType: 'notification', data: savedNotification},
-				});
-			}
+			await sendPushNotification({
+				token: expoPushToken,
+				title: 'Incoming Fund request',
+				message: `${userData.userProfile.fullName} has requested ${
+					wallet.currencyDetails.symbol + addingDecimal(amount)
+				} from you`,
+				data: {notificationType: 'notification', data: savedNotification},
+			});
 		}
 
 		res.status(200).json('Request sent');
@@ -149,6 +147,8 @@ const confirmRequest = async (req, res) => {
 			description: request.description,
 			reference: `TR${id}`,
 			currency,
+			fromBalance: wallet.balance,
+			toBalance: wallet.balance - amountInUnits,
 			createdAt: new Date(),
 		};
 
@@ -191,18 +191,16 @@ const confirmRequest = async (req, res) => {
 				await pushNotification.findOne({email: requesterWallet.email})
 			)?.token;
 			if (expoPushToken) {
-				if (Expo.isExpoPushToken(expoPushToken)) {
-					await sendPushNotification({
-						token: expoPushToken,
-						title: 'Request Fund Approval',
-						message: `${
-							userData.userProfile.fullName
-						} has approved your request and sent you ${
-							wallet.currencyDetails.symbol + addingDecimal(amount)
-						}`,
-						data: {notificationType: 'notification', data: savedNotification},
-					});
-				}
+				await sendPushNotification({
+					token: expoPushToken,
+					title: 'Request Fund Approval',
+					message: `${
+						userData.userProfile.fullName
+					} has approved your request and sent you ${
+						wallet.currencyDetails.symbol + addingDecimal(amount)
+					}`,
+					data: {notificationType: 'notification', data: savedNotification},
+				});
 			}
 
 			res.status(200).json('Request accepted successfully');
@@ -222,18 +220,16 @@ const confirmRequest = async (req, res) => {
 				await pushNotification.findOne({email: requesterWallet.email})
 			)?.token;
 			if (expoPushToken) {
-				if (Expo.isExpoPushToken(expoPushToken)) {
-					await sendPushNotification({
-						token: expoPushToken,
-						title: 'Request Fund Denied',
-						message: `${
-							userData.userProfile.fullName
-						} has denied your request of ${
-							wallet.currencyDetails.symbol + addingDecimal(amount)
-						}`,
-						data: {notificationType: 'notification', data: savedNotification},
-					});
-				}
+				await sendPushNotification({
+					token: expoPushToken,
+					title: 'Request Fund Denied',
+					message: `${
+						userData.userProfile.fullName
+					} has denied your request of ${
+						wallet.currencyDetails.symbol + addingDecimal(amount)
+					}`,
+					data: {notificationType: 'notification', data: savedNotification},
+				});
 			}
 			res.status(200).json('Request declined');
 		} else if (status === 'block') {
@@ -258,18 +254,16 @@ const confirmRequest = async (req, res) => {
 				await pushNotification.findOne({email: requesterWallet.email})
 			)?.token;
 			if (expoPushToken) {
-				if (Expo.isExpoPushToken(expoPushToken)) {
-					await sendPushNotification({
-						token: expoPushToken,
-						title: 'Request Fund Denied',
-						message: `${
-							userData.userProfile.fullName
-						} has denied your request of ${
-							wallet.currencyDetails.symbol + addingDecimal(amount)
-						}`,
-						data: {notificationType: 'notification', data: savedNotification},
-					});
-				}
+				await sendPushNotification({
+					token: expoPushToken,
+					title: 'Request Fund Denied',
+					message: `${
+						userData.userProfile.fullName
+					} has denied your request of ${
+						wallet.currencyDetails.symbol + addingDecimal(amount)
+					}`,
+					data: {notificationType: 'notification', data: savedNotification},
+				});
 			}
 			res.status(200).json('User blocked');
 		}

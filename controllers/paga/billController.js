@@ -331,16 +331,14 @@ const PagaPayBill = async (req, res) => {
 
 		const expoPushToken = (await pushNotification.findOne({email}))?.token;
 		if (expoPushToken) {
-			if (Expo.isExpoPushToken(expoPushToken)) {
-				await sendPushNotification({
-					token: expoPushToken,
-					title: `${
-						query[0].toUpperCase() + query.slice(1, query.length)
-					} Purchase Successful`,
-					message: `Your purchase of ${provider.name} to ${subscriberAccountNumber} was successful`,
-					data: {notificationType: 'transaction', data: transaction},
-				});
-			}
+			await sendPushNotification({
+				token: expoPushToken,
+				title: `${
+					query[0].toUpperCase() + query.slice(1, query.length)
+				} Purchase Successful`,
+				message: `Your purchase of ${provider.name} to ${subscriberAccountNumber} was successful`,
+				data: {notificationType: 'transaction', data: transaction},
+			});
 		}
 		return res
 			.status(200)

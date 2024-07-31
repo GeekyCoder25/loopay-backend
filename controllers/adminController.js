@@ -1170,16 +1170,14 @@ const approveProof = async (req, res) => {
 
 		const expoPushToken = (await pushNotification.findOne({email}))?.token;
 		if (expoPushToken) {
-			if (Expo.isExpoPushToken(expoPushToken)) {
-				await sendPushNotification({
-					token: expoPushToken,
-					title: 'Credit Transaction Successful',
-					message: `${
-						wallet.currencyDetails.symbol + addingDecimal(amount)
-					} has been deposited to you ${wallet.currencyCode} account`,
-					data: {notificationType: 'transaction', data: transaction},
-				});
-			}
+			await sendPushNotification({
+				token: expoPushToken,
+				title: 'Credit Transaction Successful',
+				message: `${
+					wallet.currencyDetails.symbol + addingDecimal(amount)
+				} has been deposited to you ${wallet.currencyCode} account`,
+				data: {notificationType: 'transaction', data: transaction},
+			});
 		}
 		res.status(200).json({
 			message: 'Transaction approved successfully',
@@ -1219,16 +1217,14 @@ const declineProof = async (req, res) => {
 
 		const expoPushToken = (await pushNotification.findOne({email}))?.token;
 		if (expoPushToken) {
-			if (Expo.isExpoPushToken(expoPushToken)) {
-				await sendPushNotification({
-					token: expoPushToken,
-					title: 'Proof declined',
-					message: `Your payment proof of ${
-						wallet.currencyDetails.symbol + addingDecimal(amount)
-					} has been declined`,
-					data: {notificationType: 'notification', data: notification},
-				});
-			}
+			await sendPushNotification({
+				token: expoPushToken,
+				title: 'Proof declined',
+				message: `Your payment proof of ${
+					wallet.currencyDetails.symbol + addingDecimal(amount)
+				} has been declined`,
+				data: {notificationType: 'notification', data: notification},
+			});
 		}
 		cloudinary.api.delete_resources(
 			`loopay/payment-proofs/${email}_${req.user._id}`,

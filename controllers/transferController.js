@@ -14,7 +14,6 @@ const UserDataModel = require('../models/userData');
 const international = require('../models/international');
 const LimitModel = require('../models/limit');
 const pushNotification = require('../models/pushNotification');
-const {default: Expo} = require('expo-server-sdk');
 const sendPushNotification = require('../utils/pushNotification');
 
 const initiateTransfer = async (req, res) => {
@@ -460,18 +459,16 @@ const initiateTransferToLoopay = async (req, res) => {
 			await pushNotification.findOne({email: sendeeWallet.email})
 		)?.token;
 		if (expoPushToken) {
-			if (Expo.isExpoPushToken(expoPushToken)) {
-				await sendPushNotification({
-					token: expoPushToken,
-					title: 'Credit Transfer Successful',
-					message: `${userData.userProfile.fullName} sent you ${
-						sendeeWallet.currencyDetails.symbol
-					}${addingDecimal(amount)} to your ${
-						sendeeWallet.currencyDetails.code
-					} account`,
-					data: {notificationType: 'transaction', data: sendeeTransaction},
-				});
-			}
+			await sendPushNotification({
+				token: expoPushToken,
+				title: 'Credit Transfer Successful',
+				message: `${userData.userProfile.fullName} sent you ${
+					sendeeWallet.currencyDetails.symbol
+				}${addingDecimal(amount)} to your ${
+					sendeeWallet.currencyDetails.code
+				} account`,
+				data: {notificationType: 'transaction', data: sendeeTransaction},
+			});
 		}
 
 		const expoPushToken2 = (
@@ -479,18 +476,16 @@ const initiateTransferToLoopay = async (req, res) => {
 		)?.token;
 
 		if (expoPushToken2) {
-			if (Expo.isExpoPushToken(expoPushToken2)) {
-				await sendPushNotification({
-					token: expoPushToken2,
-					title: 'Debit Transfer Successful',
-					message: `You sent ${
-						senderWallet.currencyDetails.symbol
-					}${addingDecimal(amount)} to ${req.user.firstName} ${
-						req.user.lastName
-					}`,
-					data: {notificationType: 'transaction', data: senderTransaction},
-				});
-			}
+			await sendPushNotification({
+				token: expoPushToken2,
+				title: 'Debit Transfer Successful',
+				message: `You sent ${
+					senderWallet.currencyDetails.symbol
+				}${addingDecimal(amount)} to ${req.user.firstName} ${
+					req.user.lastName
+				}`,
+				data: {notificationType: 'transaction', data: senderTransaction},
+			});
 		}
 
 		res.status(200).json({

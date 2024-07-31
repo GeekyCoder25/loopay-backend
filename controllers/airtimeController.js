@@ -198,18 +198,16 @@ const buyAirtime = async (req, res) => {
 
 			const expoPushToken = (await pushNotification.findOne({email}))?.token;
 			if (expoPushToken) {
-				if (Expo.isExpoPushToken(expoPushToken)) {
-					await sendPushNotification({
-						token: expoPushToken,
-						title: 'Airtime Purchase Successful',
-						message: `Your purchase of ${
-							wallet.currencyDetails.symbol
-						}${addingDecimal(
-							amount
-						)} airtime to ${phoneNo} has been processed successfully`,
-						data: {notificationType: 'transaction', data: transaction},
-					});
-				}
+				await sendPushNotification({
+					token: expoPushToken,
+					title: 'Airtime Purchase Successful',
+					message: `Your purchase of ${
+						wallet.currencyDetails.symbol
+					}${addingDecimal(
+						amount
+					)} airtime to ${phoneNo} has been processed successfully`,
+					data: {notificationType: 'transaction', data: transaction},
+				});
 			}
 
 			res.status(200).json({
@@ -436,15 +434,13 @@ const buyData = async (req, res) => {
 
 			const expoPushToken = (await pushNotification.findOne({email}))?.token;
 			if (expoPushToken) {
-				if (Expo.isExpoPushToken(expoPushToken)) {
-					await sendPushNotification({
-						token: expoPushToken,
-						title: 'Data Purchase Successful',
-						message: `Your purchase of ${plan.value} to ${phoneNo} was successful`,
-						adminMessage: `${req.user.firstName} ${req.user.lastName} purchased ${network} data plan of ${plan.value} to ${phoneNo}`,
-						data: {notificationType: 'transaction', data: transaction},
-					});
-				}
+				await sendPushNotification({
+					token: expoPushToken,
+					title: 'Data Purchase Successful',
+					message: `Your purchase of ${plan.value} to ${phoneNo} was successful`,
+					adminMessage: `${req.user.firstName} ${req.user.lastName} purchased ${network} data plan of ${plan.value} to ${phoneNo}`,
+					data: {notificationType: 'transaction', data: transaction},
+				});
 			}
 			res.status(200).json({
 				status: 'success',

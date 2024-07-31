@@ -124,18 +124,16 @@ const webhookHandler = async (req, res) => {
 						const expoPushToken = (await pushNotification.findOne({email}))
 							?.token;
 						if (expoPushToken) {
-							if (Expo.isExpoPushToken(expoPushToken)) {
-								await sendPushNotification({
-									token: expoPushToken,
-									title: 'Incoming Credit Transaction',
-									message: `${
-										account_name || sender_name || 'An external user'
-									} sent you ${wallet.currencyDetails.symbol}${addingDecimal(
-										amount / 100
-									)} to your ${wallet.currencyDetails.code} account`,
-									data: {notificationType: 'transaction', data: transaction},
-								});
-							}
+							await sendPushNotification({
+								token: expoPushToken,
+								title: 'Incoming Credit Transaction',
+								message: `${
+									account_name || sender_name || 'An external user'
+								} sent you ${wallet.currencyDetails.symbol}${addingDecimal(
+									amount / 100
+								)} to your ${wallet.currencyDetails.code} account`,
+								data: {notificationType: 'transaction', data: transaction},
+							});
 						}
 					}
 				}
@@ -224,18 +222,16 @@ const cardWebhook = async event => {
 
 		const expoPushToken = (await pushNotification.findOne({email}))?.token;
 		if (expoPushToken) {
-			if (Expo.isExpoPushToken(expoPushToken)) {
-				await sendPushNotification({
-					token: expoPushToken,
-					title: 'Incoming Credit Card Transaction',
-					message: `${wallet.currencyDetails.symbol}${addingDecimal(
-						amountMinusFee / 100
-					)} has been added to your ${
-						wallet.currencyDetails.code
-					} account via card ...${last4}`,
-					data: {notificationType: 'transaction', data: transaction},
-				});
-			}
+			await sendPushNotification({
+				token: expoPushToken,
+				title: 'Incoming Credit Card Transaction',
+				message: `${wallet.currencyDetails.symbol}${addingDecimal(
+					amountMinusFee / 100
+				)} has been added to your ${
+					wallet.currencyDetails.code
+				} account via card ...${last4}`,
+				data: {notificationType: 'transaction', data: transaction},
+			});
 		}
 	}
 	await WebhookModel.create(event);

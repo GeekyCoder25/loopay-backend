@@ -23,6 +23,7 @@ const {uploadPhoto} = require('./controllers/uploadPhoto');
 const {webhookHandler} = require('./controllers/webhookController');
 const morgan = require('morgan');
 const {unsubscribeEmailAlerts} = require('./controllers/emailAlertController');
+const {deleteAccount} = require('./controllers/userDataController');
 require('colors');
 dotEnv.config();
 
@@ -85,6 +86,7 @@ app.use(morgan('dev'));
 app.get('/api/email/unsubscribe/:token', unsubscribeEmailAlerts);
 app.post('/api/upload', protect, uploadPhoto);
 app.use('/api/auth', authRoutes);
+app.get('/delete-account/:email', deleteAccount);
 app.use('/api/user', protect, userDataRoutes);
 app.use('/api/user', protect, userDataDynamicRoutes);
 app.use('/api/admin', protect, adminRoutes);

@@ -49,14 +49,14 @@ const protect = async (req, res, next) => {
 					const sessionsAfterDelete = previousSessionsData.filter(
 						session => session.deviceID !== req.sessionID
 					);
-					await SessionModel.findOneAndUpdate(
-						{email: req.user.email},
-						{sessions: sessionsAfterDelete},
-						{
-							new: true,
-							runValidators: true,
-						}
-					);
+					// await SessionModel.findOneAndUpdate(
+					// 	{email: req.user.email},
+					// 	{sessions: sessionsAfterDelete},
+					// 	{
+					// 		new: true,
+					// 		runValidators: true,
+					// 	}
+					// );
 					return res.status(401).json('Session active on another device');
 				}
 			}

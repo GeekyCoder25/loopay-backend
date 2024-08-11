@@ -52,7 +52,7 @@ const postSession = async (req, res) => {
 			if (sessionsID.includes(req.body.deviceID)) {
 				return res.status(400).json('Each device must have a unique ID');
 			}
-			previousSessionsData.shift();
+			// previousSessionsData.shift();
 			previousSessionsData.forEach(session => (session.status = 'inactive'));
 			sessions = [req.body, ...previousSessionsData];
 			await SessionModel.findOneAndUpdate(

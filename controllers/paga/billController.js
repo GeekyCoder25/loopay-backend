@@ -273,8 +273,8 @@ const PagaPayBill = async (req, res) => {
 			amount,
 			reference: id,
 			currency: wallet.currency,
-			fromBalance: wallet.balance,
-			toBalance: wallet.balance - (Number(amount) + fee) * 100,
+			fromBalance: wallet.balance + (Number(amount) + fee) * 100,
+			toBalance: wallet.balance,
 			metadata: response.data,
 		};
 		if (rate) {

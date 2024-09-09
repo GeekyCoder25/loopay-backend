@@ -150,6 +150,8 @@ const PagaBuyAirtime = async (req, res) => {
 				amount,
 				reference: apiData.transactionId,
 				currency,
+				fromBalance: wallet.balance + amount * 100,
+				toBalance: wallet.balance,
 				metadata: apiData,
 			};
 			if (rate) {
@@ -427,6 +429,8 @@ const PagaBuyData = async (req, res) => {
 				amount,
 				reference: apiData.transactionId,
 				currency,
+				fromBalance: wallet.balance + amount * 100,
+				toBalance: wallet.balance,
 				metadata: apiData,
 			};
 			if (rate) {

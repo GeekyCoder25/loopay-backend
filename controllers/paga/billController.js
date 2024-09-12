@@ -304,7 +304,7 @@ const PagaPayBill = async (req, res) => {
 			header: `${
 				query[0].toUpperCase() + query.slice(1, query.length)
 			} purchase fee charge`,
-			message: `Your have been charged ${
+			message: `Your account has been charged ${
 				wallet.currencyDetails.symbol + fee.toLocaleString()
 			} for the purchase fee of ${provider.name}`,
 			adminMessage: `${req.user.firstName} ${

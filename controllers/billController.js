@@ -175,7 +175,7 @@ const payABill = async (req, res) => {
 				phoneNumber,
 				type: 'fee',
 				header: `${query} purchase fee charge`,
-				message: `Your have been charged ${
+				message: `Your account has been charged ${
 					wallet.currencyDetails.symbol + fee.toLocaleString()
 				} for the purchase fee of ${provider.name}`,
 				adminMessage: `${req.user.firstName} ${

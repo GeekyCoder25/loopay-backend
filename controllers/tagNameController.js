@@ -15,7 +15,7 @@ const getTagName = async (req, res) => {
 			}
 			tagName = syntaxCheck[1];
 		}
-		tagName = tagName.toLowerCase();
+		// tagName = tagName.toLowerCase();
 		let result = await UserDataModel.findOne({
 			$or: [{tagName}, {'userProfile.userName': tagName}],
 		});

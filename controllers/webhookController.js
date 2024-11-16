@@ -52,9 +52,18 @@ const webhookHandler = async (req, res) => {
 						narration,
 					} = event.data.authorization;
 
-					const {id, amount, customer, currency, reference, metadata, paidAt} =
-						event.data;
+					const {
+						id,
+						amount,
+						customer,
+						currency,
+						reference,
+						metadata,
+						paidAt,
+						fees,
+					} = event.data;
 					const {email, phone} = customer;
+					const amountMinusFee = amount - Number(fees);
 
 					const currencyWallet = selectWallet(currency);
 					const wallet = await currencyWallet.findOne({email});
@@ -73,8 +82,8 @@ const webhookHandler = async (req, res) => {
 						fromBalance: wallet.balance,
 						toBalance: wallet.balance + amount,
 						destinationBank: receiver_bank,
-						amount: amount / 100,
 						description: narration || '',
+						amount: amountMinusFee / 100,
 						reference: `TR${id}`,
 						paystackReference: reference,
 						currency,

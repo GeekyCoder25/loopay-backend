@@ -22,6 +22,7 @@ const sendPushNotification = async ({
 			title: title || '',
 			body: message,
 			data: data || {},
+			ttl: 86400,
 		},
 	]);
 

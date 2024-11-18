@@ -79,10 +79,10 @@ const webhookHandler = async (req, res) => {
 						receiverName: userData.userProfile.fullName,
 						sourceBank: sender_bank || 'External bank',
 						fromBalance: wallet.balance,
-						toBalance: wallet.balance + amount,
+						toBalance: wallet.balance + amountMinusFee,
 						destinationBank: receiver_bank,
 						description: narration || '',
-						amount: amountMinusFee / 100,
+						amount: amount / 100,
 						reference: `TR${id}`,
 						paystackReference: reference,
 						currency,
@@ -127,7 +127,7 @@ const webhookHandler = async (req, res) => {
 								transaction,
 							});
 						}
-						wallet.balance += amount;
+						wallet.balance += amountMinusFee;
 						await wallet.save();
 						const expoPushToken = (await pushNotification.findOne({email}))
 							?.token;

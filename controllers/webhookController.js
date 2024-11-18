@@ -8,7 +8,6 @@ const {sendMail} = require('../utils/sendEmail');
 const crypto = require('crypto');
 const {default: axios} = require('axios');
 const pushNotification = require('../models/pushNotification');
-const {default: Expo} = require('expo-server-sdk');
 const sendPushNotification = require('../utils/pushNotification');
 const selectWallet = require('../services/selectWallet');
 

@@ -972,7 +972,7 @@ const sendReceipt = async receiptData => {
 								<!-- <span style="display: none">${reference}</span> -->
 							</div>
 							<img
-								src="https://res.cloudinary.com/geekycoder/image/upload/v1703481253/loopay/qrcode.png"
+								src="https://res.cloudinary.com/geekycoder/image/upload/v1732228943/loopay/qrcode.png"
 								style="
 							width: 200px;
 							height: 200px;

@@ -289,7 +289,7 @@ const generateReceipt = async (req, res) => {
 							confirmation and fraud proof verification.
 						</div>
 						<img
-							src="https://res.cloudinary.com/geekycoder/image/upload/v1703481253/loopay/qrcode.png"
+							src="https://res.cloudinary.com/geekycoder/image/upload/v1732228943/loopay/qrcode.png"
 						/>
 					</footer>
 				</div>
